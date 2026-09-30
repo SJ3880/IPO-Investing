@@ -218,6 +218,30 @@ def fetch_daily(code, count=1400):
     return out
 
 
+def load_or_fetch(code, listed):
+    """저장해 둔 일봉이 있으면 최근 15거래일만 받아 이어 붙인다(빠름).
+    겹치는 날 가격이 다르면(액면분할·무상증자 등으로 과거 가격이 수정된 경우) 전체를 새로 받는다."""
+    p = PRICES / f"{code}.json"
+    since = listed.isoformat()
+    if p.exists():
+        try:
+            old = json.loads(p.read_text("utf-8"))
+        except Exception:
+            old = []
+        if old:
+            recent = fetch_daily(code, count=15)
+            if recent:
+                have = {b[0]: b for b in old}
+                overlap = [b for b in recent if b[0] in have]
+                same = all(have[b[0]][4] == b[4] for b in overlap)
+                if overlap and same:
+                    merged = {b[0]: b for b in old}
+                    merged.update({b[0]: b for b in recent})
+                    return [merged[d] for d in sorted(merged) if d >= since], "recent"
+    time.sleep(0.1)
+    return [b for b in fetch_daily(code) if b[0] >= since], "full"
+
+
 def fetch_market(code):
     """시가총액·PER·PBR·외국인소진율 등 (네이버 모바일, 실패해도 무시)"""
     try:
@@ -314,11 +338,13 @@ def main():
     manual = load_manual_offers()
 
     universe, items, missing = [], [], []
+    n_fetch = {"full": 0, "recent": 0}
     for i, row in listings.iterrows():
         code, name, listed = row["code"], str(row["name"]), row["listed"]
         show = listed >= show_since
         try:
-            bars = [b for b in fetch_daily(code) if b[0] >= listed.isoformat()]
+            bars, how = load_or_fetch(code, listed)
+            n_fetch[how] += 1
         except Exception as e:
             log(f"  - {name}({code}) 시세 실패: {e}")
             if code in prev and show:
@@ -329,11 +355,10 @@ def main():
         m38 = match_row(name, listed, offers38, -7, 7)
         offer = manual.get(code) or (m38 or {}).get("offer") or (prev.get(code) or {}).get("offer")
         universe.append({"code": code, "listed": listed.isoformat(), "offer": offer, "bars": bars})
+        (PRICES / f"{code}.json").write_text(json.dumps(bars, separators=(",", ":")), "utf-8")
         if not show:
-            time.sleep(0.1)
             continue
 
-        (PRICES / f"{code}.json").write_text(json.dumps(bars, separators=(",", ":")), "utf-8")
         if not offer:
             missing.append((code, name))
         dm = match_row(name, listed, demand38, -60, 0) or {}
@@ -356,7 +381,8 @@ def main():
         })
         if (i + 1) % 25 == 0:
             log(f"  … {i + 1}/{len(listings)}")
-        time.sleep(0.15)
+
+    log(f"[시세] 최근분만 갱신 {n_fetch['recent']}개, 전체 새로 받음 {n_fetch['full']}개")
 
     # ---- 확률 모델
     log(f"[모델] 표본 종목 {len(universe)}개로 학습")
