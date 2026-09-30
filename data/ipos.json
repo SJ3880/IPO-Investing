@@ -1,5 +1,5 @@
 {
- "updated": "2026-09-30 20:32",
+ "updated": "2026-09-30 21:48",
  "count": 156,
  "dart": true,
  "ai": false,
@@ -55,9 +55,36 @@
    "instComp": 868.641,
    "commit": 4.05,
    "uw38": "대신증권",
+   "band": [
+    12400,
+    14600
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 15.27,
+   "tradeValue20": 774121616730,
    "prob": null,
-   "listingType": null,
+   "sectorStats": {
+    "n": 4,
+    "firstMed": 64.5,
+    "nowMed": -17.3,
+    "aboveOffer": 25
+   },
+   "uwStats": [
+    {
+     "n": 39,
+     "firstMed": 53.4,
+     "nowMed": -50.8,
+     "aboveOffer": 28,
+     "name": "대신증권"
+    }
+   ],
+   "track": null,
+   "trackManual": false,
    "marcap": "3,180억",
+   "marcapNum": 318000000000,
+   "marcapAtOffer": 275864527629,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": false
   },
   {
@@ -85,12 +112,36 @@
    "instComp": 123.191,
    "commit": 0.27,
    "uw38": "한국투자증권",
-   "prob": null,
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "band": [
+    13000,
+    15000
    ],
+   "bandPos": "밴드 하단 미달(-23%)",
+   "firstDayRet": 45.0,
+   "tradeValue20": 710577616620,
+   "prob": null,
+   "sectorStats": {
+    "n": 19,
+    "firstMed": 25.7,
+    "nowMed": -38.4,
+    "aboveOffer": 16
+   },
+   "uwStats": [
+    {
+     "n": 56,
+     "firstMed": 25.4,
+     "nowMed": -37.4,
+     "aboveOffer": 25,
+     "name": "한국투자증권"
+    }
+   ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "3,581억",
+   "marcapNum": 358100000000,
+   "marcapAtOffer": 196434448711,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -118,12 +169,43 @@
    "instComp": 1109.371,
    "commit": 18.14,
    "uw38": "유진투자증권,미래에셋증권",
-   "prob": null,
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "band": [
+    15000,
+    18000
    ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 50.28,
+   "tradeValue20": 482599981375,
+   "prob": null,
+   "sectorStats": {
+    "n": 44,
+    "firstMed": 21.9,
+    "nowMed": -65.1,
+    "aboveOffer": 18
+   },
+   "uwStats": [
+    {
+     "n": 9,
+     "firstMed": 53.3,
+     "nowMed": -33.0,
+     "aboveOffer": 22,
+     "name": "유진투자증권"
+    },
+    {
+     "n": 57,
+     "firstMed": 22.7,
+     "nowMed": -48.8,
+     "aboveOffer": 28,
+     "name": "미래에셋증권"
+    }
+   ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "3,990억",
+   "marcapNum": 399000000000,
+   "marcapAtOffer": 184864864865,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -151,11 +233,31 @@
    "instComp": 1248.471,
    "commit": 3.65,
    "uw38": "대신증권",
-   "prob": null,
-   "listingType": [
-    "기술특례"
+   "band": [
+    10000,
+    12000
    ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 280.83,
+   "tradeValue20": 380327838588,
+   "prob": null,
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 38,
+     "firstMed": 53.4,
+     "nowMed": -50.8,
+     "aboveOffer": 26,
+     "name": "대신증권"
+    }
+   ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "2,009억",
+   "marcapNum": 200900000000,
+   "marcapAtOffer": 120239401496,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -183,12 +285,36 @@
    "instComp": 219.561,
    "commit": 8.98,
    "uw38": "대신증권",
-   "prob": null,
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "band": [
+    13800,
+    15800
    ],
+   "bandPos": "밴드 하단 미달(-28%)",
+   "firstDayRet": 269.0,
+   "tradeValue20": 400887361777,
+   "prob": null,
+   "sectorStats": {
+    "n": 43,
+    "firstMed": 0.5,
+    "nowMed": -66.3,
+    "aboveOffer": 16
+   },
+   "uwStats": [
+    {
+     "n": 37,
+     "firstMed": 43.2,
+     "nowMed": -52.5,
+     "aboveOffer": 24,
+     "name": "대신증권"
+    }
+   ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "2,058억",
+   "marcapNum": 205800000000,
+   "marcapAtOffer": 122136498516,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -216,6 +342,13 @@
    "instComp": 63.411,
    "commit": 0.17,
    "uw38": "한국투자증권",
+   "band": [
+    13000,
+    16000
+   ],
+   "bandPos": "밴드 하단 미달(-23%)",
+   "firstDayRet": 135.0,
+   "tradeValue20": 339588916379,
    "prob": {
     "p": 40.1,
     "p10": 30.1,
@@ -223,11 +356,28 @@
     "med": -10.5,
     "n": 95
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 16,
+    "firstMed": 46.8,
+    "nowMed": -36.5,
+    "aboveOffer": 31
+   },
+   "uwStats": [
+    {
+     "n": 55,
+     "firstMed": 25.4,
+     "nowMed": -38.4,
+     "aboveOffer": 24,
+     "name": "한국투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "3,417억",
+   "marcapNum": 341700000000,
+   "marcapAtOffer": 187644151565,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -255,6 +405,13 @@
    "instComp": 101.911,
    "commit": 15.08,
    "uw38": "DB증권",
+   "band": [
+    23000,
+    28000
+   ],
+   "bandPos": "밴드 하단",
+   "firstDayRet": -39.43,
+   "tradeValue20": 18223454592,
    "prob": {
     "p": 50.9,
     "p10": 39.2,
@@ -262,11 +419,20 @@
     "med": 0.8,
     "n": 101
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
-   ],
+   "sectorStats": {
+    "n": 18,
+    "firstMed": 33.2,
+    "nowMed": -37.2,
+    "aboveOffer": 17
+   },
+   "uwStats": [],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "663억",
+   "marcapNum": 66300000000,
+   "marcapAtOffer": 126129032258,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -294,6 +460,13 @@
    "instComp": 743.491,
    "commit": 1.26,
    "uw38": "삼성증권",
+   "band": [
+    30000,
+    41200
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -30.46,
+   "tradeValue20": 15785035700,
    "prob": {
     "p": 45.9,
     "p10": 32.8,
@@ -301,11 +474,28 @@
     "med": -3.0,
     "n": 99
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 42,
+    "firstMed": 21.9,
+    "nowMed": -66.3,
+    "aboveOffer": 17
+   },
+   "uwStats": [
+    {
+     "n": 38,
+     "firstMed": 21.2,
+     "nowMed": -44.7,
+     "aboveOffer": 18,
+     "name": "삼성증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1,788억",
+   "marcapNum": 178800000000,
+   "marcapAtOffer": 238014862682,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -333,6 +523,13 @@
    "instComp": 213.311,
    "commit": null,
    "uw38": "미래에셋증권,삼성증권",
+   "band": [
+    24800,
+    28400
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -34.58,
+   "tradeValue20": 1599977402,
    "prob": {
     "p": 43.6,
     "p10": 34.0,
@@ -340,11 +537,30 @@
     "med": -4.5,
     "n": 80
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 56,
+     "firstMed": 26.0,
+     "nowMed": -47.4,
+     "aboveOffer": 29,
+     "name": "미래에셋증권"
+    },
+    {
+     "n": 37,
+     "firstMed": 21.2,
+     "nowMed": -44.7,
+     "aboveOffer": 19,
+     "name": "삼성증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "702억",
+   "marcapNum": 70200000000,
+   "marcapAtOffer": 166556390977,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -372,6 +588,13 @@
    "instComp": 50.41,
    "commit": 2.23,
    "uw38": "삼성증권",
+   "band": [
+    12000,
+    14500
+   ],
+   "bandPos": "밴드 하단",
+   "firstDayRet": 49.92,
+   "tradeValue20": 61137721898,
    "prob": {
     "p": 24.2,
     "p10": 15.7,
@@ -379,11 +602,28 @@
     "med": -16.0,
     "n": 74
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 26,
+    "firstMed": 28.1,
+    "nowMed": -7.5,
+    "aboveOffer": 42
+   },
+   "uwStats": [
+    {
+     "n": 36,
+     "firstMed": 21.2,
+     "nowMed": -44.7,
+     "aboveOffer": 17,
+     "name": "삼성증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1조 2,806억",
+   "marcapNum": 1280600000000,
+   "marcapAtOffer": 593328185328,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -411,6 +651,13 @@
    "instComp": 938.241,
    "commit": 0.78,
    "uw38": "IBK투자증권",
+   "band": [
+    9000,
+    11000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 39.82,
+   "tradeValue20": 2546481602,
    "prob": {
     "p": 37.0,
     "p10": 25.6,
@@ -418,11 +665,23 @@
     "med": -7.4,
     "n": 74
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 7,
+     "firstMed": -10.3,
+     "nowMed": -53.7,
+     "aboveOffer": 43,
+     "name": "IBK투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "668억",
+   "marcapNum": 66800000000,
+   "marcapAtOffer": 112872503840,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -450,6 +709,13 @@
    "instComp": 184.061,
    "commit": 0.1,
    "uw38": "한국투자증권",
+   "band": [
+    5000,
+    7000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -26.57,
+   "tradeValue20": 2108260342,
    "prob": {
     "p": 44.6,
     "p10": 35.3,
@@ -457,11 +723,23 @@
     "med": -2.3,
     "n": 69
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 54,
+     "firstMed": 25.4,
+     "nowMed": -37.4,
+     "aboveOffer": 24,
+     "name": "한국투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "623억",
+   "marcapNum": 62300000000,
+   "marcapAtOffer": 155195729537,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -489,6 +767,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 236359860,
    "prob": {
     "p": 38.5,
     "p10": 29.2,
@@ -496,8 +778,15 @@
     "med": -9.8,
     "n": 110
    },
-   "listingType": null,
+   "sectorStats": null,
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "627억",
+   "marcapNum": 62700000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": false
   },
   {
@@ -525,6 +814,13 @@
    "instComp": 714.52,
    "commit": 1.91,
    "uw38": "KB증권,IBK투자증권",
+   "band": [
+    18500,
+    21500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -31.21,
+   "tradeValue20": 871915470,
    "prob": {
     "p": 39.5,
     "p10": 26.1,
@@ -532,11 +828,35 @@
     "med": -2.7,
     "n": 57
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 7,
+    "firstMed": 12.4,
+    "nowMed": -61.7,
+    "aboveOffer": 29
+   },
+   "uwStats": [
+    {
+     "n": 34,
+     "firstMed": -3.3,
+     "nowMed": -42.6,
+     "aboveOffer": 18,
+     "name": "KB증권"
+    },
+    {
+     "n": 6,
+     "firstMed": 13.3,
+     "nowMed": 37.2,
+     "aboveOffer": 50,
+     "name": "IBK투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "627억",
+   "marcapNum": 62700000000,
+   "marcapAtOffer": 167251861042,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -564,6 +884,13 @@
    "instComp": 1146.411,
    "commit": 17.93,
    "uw38": "KB증권",
+   "band": [
+    17800,
+    20700
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 6.28,
+   "tradeValue20": 47087049678,
    "prob": {
     "p": 27.9,
     "p10": 18.1,
@@ -571,12 +898,28 @@
     "med": -14.3,
     "n": 110
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 15,
+    "firstMed": 46.8,
+    "nowMed": -37.7,
+    "aboveOffer": 33
+   },
+   "uwStats": [
+    {
+     "n": 33,
+     "firstMed": -6.0,
+     "nowMed": -54.0,
+     "aboveOffer": 18,
+     "name": "KB증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1,537억",
+   "marcapNum": 153700000000,
+   "marcapAtOffer": 157895285360,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -604,6 +947,13 @@
    "instComp": 1238.001,
    "commit": 6.92,
    "uw38": "KB증권",
+   "band": [
+    7500,
+    10000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -6.0,
+   "tradeValue20": 5770786032,
    "prob": {
     "p": 47.2,
     "p10": 26.5,
@@ -611,11 +961,28 @@
     "med": -2.2,
     "n": 47
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 41,
+    "firstMed": 21.9,
+    "nowMed": -67.1,
+    "aboveOffer": 17
+   },
+   "uwStats": [
+    {
+     "n": 32,
+     "firstMed": -3.3,
+     "nowMed": -42.6,
+     "aboveOffer": 19,
+     "name": "KB증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "558억",
+   "marcapNum": 55800000000,
+   "marcapAtOffer": 134457831325,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -643,6 +1010,13 @@
    "instComp": 1396.291,
    "commit": 27.39,
    "uw38": "미래에셋증권",
+   "band": [
+    7000,
+    8000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 26.0,
+   "tradeValue20": 30313530230,
    "prob": {
     "p": 27.6,
     "p10": 25.6,
@@ -650,11 +1024,23 @@
     "med": -17.1,
     "n": 68
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 55,
+     "firstMed": 22.7,
+     "nowMed": -48.8,
+     "aboveOffer": 27,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1,597억",
+   "marcapNum": 159700000000,
+   "marcapAtOffer": 150482921084,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -682,6 +1068,13 @@
    "instComp": 381.301,
    "commit": 2.77,
    "uw38": "KB증권",
+   "band": [
+    12000,
+    14000
+   ],
+   "bandPos": "밴드 하단",
+   "firstDayRet": -40.0,
+   "tradeValue20": 7436121816,
    "prob": {
     "p": 48.1,
     "p10": 37.8,
@@ -689,11 +1082,28 @@
     "med": 0.3,
     "n": 34
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 40,
+    "firstMed": 22.6,
+    "nowMed": -66.3,
+    "aboveOffer": 18
+   },
+   "uwStats": [
+    {
+     "n": 31,
+     "firstMed": -3.3,
+     "nowMed": -42.6,
+     "aboveOffer": 19,
+     "name": "KB증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1,601억",
+   "marcapNum": 160100000000,
+   "marcapAtOffer": 645781512605,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -721,6 +1131,13 @@
    "instComp": 1294.991,
    "commit": 47.2,
    "uw38": "삼성증권",
+   "band": [
+    10500,
+    12500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 40.24,
+   "tradeValue20": 3903976966,
    "prob": {
     "p": 46.6,
     "p10": 33.5,
@@ -728,11 +1145,28 @@
     "med": -0.5,
     "n": 55
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 7,
+    "firstMed": 19.9,
+    "nowMed": -37.4,
+    "aboveOffer": 29
+   },
+   "uwStats": [
+    {
+     "n": 35,
+     "firstMed": 15.2,
+     "nowMed": -47.6,
+     "aboveOffer": 17,
+     "name": "삼성증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1,122억",
+   "marcapNum": 112200000000,
+   "marcapAtOffer": 150644468314,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -760,6 +1194,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 550777465,
    "prob": {
     "p": 42.4,
     "p10": 26.0,
@@ -767,11 +1205,20 @@
     "med": -3.5,
     "n": 59
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
-   ],
+   "sectorStats": {
+    "n": 27,
+    "firstMed": 8.5,
+    "nowMed": -37.2,
+    "aboveOffer": 41
+   },
+   "uwStats": [],
+   "track": "일반",
+   "trackManual": false,
    "marcap": "764억",
+   "marcapNum": 76400000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -799,6 +1246,13 @@
    "instComp": 847.761,
    "commit": 5.68,
    "uw38": "NH투자증권,미래에셋증권",
+   "band": [
+    19000,
+    21500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -36.14,
+   "tradeValue20": 1964451283,
    "prob": {
     "p": 52.0,
     "p10": 37.0,
@@ -806,11 +1260,30 @@
     "med": -1.7,
     "n": 20
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 45,
+     "firstMed": 36.7,
+     "nowMed": -37.4,
+     "aboveOffer": 27,
+     "name": "NH투자증권"
+    },
+    {
+     "n": 54,
+     "firstMed": 34.6,
+     "nowMed": -47.4,
+     "aboveOffer": 28,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "755억",
+   "marcapNum": 75500000000,
+   "marcapAtOffer": 304549718574,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -838,6 +1311,13 @@
    "instComp": 1196.081,
    "commit": 78.17,
    "uw38": "미래에셋증권,현대차증권",
+   "band": [
+    12500,
+    15000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 300.0,
+   "tradeValue20": 11279812370,
    "prob": {
     "p": 31.7,
     "p10": 22.6,
@@ -845,11 +1325,35 @@
     "med": -8.9,
     "n": 42
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 39,
+    "firstMed": 21.9,
+    "nowMed": -67.1,
+    "aboveOffer": 15
+   },
+   "uwStats": [
+    {
+     "n": 53,
+     "firstMed": 22.7,
+     "nowMed": -48.8,
+     "aboveOffer": 26,
+     "name": "미래에셋증권"
+    },
+    {
+     "n": 4,
+     "firstMed": 115.1,
+     "nowMed": -53.6,
+     "aboveOffer": 25,
+     "name": "현대차증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "3,773억",
+   "marcapNum": 377300000000,
+   "marcapAtOffer": 266329411765,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -877,6 +1381,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 306057064,
    "prob": {
     "p": 44.6,
     "p10": 31.4,
@@ -884,10 +1392,20 @@
     "med": -3.8,
     "n": 27
    },
-   "listingType": [
-    "일반"
-   ],
+   "sectorStats": {
+    "n": 4,
+    "firstMed": 64.5,
+    "nowMed": -17.3,
+    "aboveOffer": 25
+   },
+   "uwStats": [],
+   "track": "일반",
+   "trackManual": false,
    "marcap": "537억",
+   "marcapNum": 53700000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -915,6 +1433,13 @@
    "instComp": 1486.661,
    "commit": 67.24,
    "uw38": "NH투자증권",
+   "band": [
+    4100,
+    5000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 300.0,
+   "tradeValue20": 421092239,
    "prob": {
     "p": 51.3,
     "p10": 35.3,
@@ -922,11 +1447,23 @@
     "med": -1.8,
     "n": 26
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 44,
+     "firstMed": 36.7,
+     "nowMed": -36.7,
+     "aboveOffer": 27,
+     "name": "NH투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "737억",
+   "marcapNum": 73700000000,
+   "marcapAtOffer": 125982905983,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -954,6 +1491,13 @@
    "instComp": 1140.111,
    "commit": 73.03,
    "uw38": "유진투자증권,NH투자증권,유안타증권",
+   "band": [
+    5300,
+    6000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 300.0,
+   "tradeValue20": 9081213602,
    "prob": {
     "p": 44.4,
     "p10": 28.7,
@@ -961,12 +1505,42 @@
     "med": -3.4,
     "n": 67
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 14,
+    "firstMed": 46.8,
+    "nowMed": -37.7,
+    "aboveOffer": 29
+   },
+   "uwStats": [
+    {
+     "n": 8,
+     "firstMed": 53.3,
+     "nowMed": -33.0,
+     "aboveOffer": 12,
+     "name": "유진투자증권"
+    },
+    {
+     "n": 43,
+     "firstMed": 24.2,
+     "nowMed": -37.4,
+     "aboveOffer": 26,
+     "name": "NH투자증권"
+    },
+    {
+     "n": 5,
+     "firstMed": 42.2,
+     "nowMed": -39.4,
+     "aboveOffer": 0,
+     "name": "유안타증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "2,440억",
+   "marcapNum": 244000000000,
+   "marcapAtOffer": 194680851064,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -994,6 +1568,13 @@
    "instComp": 55.231,
    "commit": 6.49,
    "uw38": "KB증권,삼성증권,대신증권,하나증권",
+   "band": [
+    12300,
+    15300
+   ],
+   "bandPos": "밴드 하단",
+   "firstDayRet": 83.33,
+   "tradeValue20": 1420089173,
    "prob": {
     "p": 32.4,
     "p10": 24.1,
@@ -1001,11 +1582,49 @@
     "med": -8.7,
     "n": 38
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 6,
+    "firstMed": 19.9,
+    "nowMed": -22.8,
+    "aboveOffer": 33
+   },
+   "uwStats": [
+    {
+     "n": 30,
+     "firstMed": -3.3,
+     "nowMed": -39.0,
+     "aboveOffer": 20,
+     "name": "KB증권"
+    },
+    {
+     "n": 34,
+     "firstMed": 15.2,
+     "nowMed": -44.7,
+     "aboveOffer": 18,
+     "name": "삼성증권"
+    },
+    {
+     "n": 36,
+     "firstMed": 43.2,
+     "nowMed": -50.8,
+     "aboveOffer": 25,
+     "name": "대신증권"
+    },
+    {
+     "n": 10,
+     "firstMed": -3.6,
+     "nowMed": -71.9,
+     "aboveOffer": 10,
+     "name": "하나증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "2,493억",
+   "marcapNum": 249300000000,
+   "marcapAtOffer": 577474576271,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1033,6 +1652,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 4930264130,
    "prob": {
     "p": 23.9,
     "p10": 18.4,
@@ -1040,10 +1663,20 @@
     "med": -18.2,
     "n": 84
    },
-   "listingType": [
-    "일반"
-   ],
+   "sectorStats": {
+    "n": 4,
+    "firstMed": 68.8,
+    "nowMed": -53.2,
+    "aboveOffer": 0
+   },
+   "uwStats": [],
+   "track": "일반",
+   "trackManual": false,
    "marcap": "347억",
+   "marcapNum": 34700000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": false
   },
   {
@@ -1071,6 +1704,13 @@
    "instComp": 1328.821,
    "commit": 43.06,
    "uw38": "NH투자증권,유진투자증권",
+   "band": [
+    12100,
+    16600
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 112.35,
+   "tradeValue20": 5171168538,
    "prob": {
     "p": 29.6,
     "p10": 20.1,
@@ -1078,11 +1718,35 @@
     "med": -11.5,
     "n": 47
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 25,
+    "firstMed": 25.4,
+    "nowMed": -7.5,
+    "aboveOffer": 44
+   },
+   "uwStats": [
+    {
+     "n": 42,
+     "firstMed": 24.2,
+     "nowMed": -37.4,
+     "aboveOffer": 26,
+     "name": "NH투자증권"
+    },
+    {
+     "n": 7,
+     "firstMed": 48.2,
+     "nowMed": -37.2,
+     "aboveOffer": 14,
+     "name": "유진투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "875억",
+   "marcapNum": 87500000000,
+   "marcapAtOffer": 130503144654,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1110,6 +1774,13 @@
    "instComp": 1352.631,
    "commit": 63.92,
    "uw38": "한국투자증권,KB증권",
+   "band": [
+    9000,
+    11000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 67.73,
+   "tradeValue20": 742528437,
    "prob": {
     "p": 36.0,
     "p10": 27.4,
@@ -1117,12 +1788,35 @@
     "med": -6.5,
     "n": 52
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 13,
+    "firstMed": 44.4,
+    "nowMed": -41.1,
+    "aboveOffer": 31
+   },
+   "uwStats": [
+    {
+     "n": 53,
+     "firstMed": 25.4,
+     "nowMed": -38.4,
+     "aboveOffer": 25,
+     "name": "한국투자증권"
+    },
+    {
+     "n": 29,
+     "firstMed": -9.2,
+     "nowMed": -42.6,
+     "aboveOffer": 21,
+     "name": "KB증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "962억",
+   "marcapNum": 96200000000,
+   "marcapAtOffer": 120937142857,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1150,6 +1844,13 @@
    "instComp": 1108.931,
    "commit": 75.4,
    "uw38": "신한투자증권",
+   "band": [
+    16700,
+    21600
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 80.56,
+   "tradeValue20": 1266771832,
    "prob": {
     "p": 34.0,
     "p10": 18.7,
@@ -1157,11 +1858,28 @@
     "med": -7.7,
     "n": 29
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 12,
+    "firstMed": 44.4,
+    "nowMed": -41.1,
+    "aboveOffer": 33
+   },
+   "uwStats": [
+    {
+     "n": 13,
+     "firstMed": 116.1,
+     "nowMed": -9.6,
+     "aboveOffer": 31,
+     "name": "신한투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1,329억",
+   "marcapNum": 132900000000,
+   "marcapAtOffer": 213430483271,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1189,6 +1907,13 @@
    "instComp": 1172.591,
    "commit": 27.43,
    "uw38": "한국투자증권,대신증권",
+   "band": [
+    17000,
+    19000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 43.16,
+   "tradeValue20": 308351539,
    "prob": {
     "p": 51.2,
     "p10": 31.7,
@@ -1196,11 +1921,35 @@
     "med": -0.3,
     "n": 28
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 3,
+    "firstMed": 100.0,
+    "nowMed": -42.6,
+    "aboveOffer": 0
+   },
+   "uwStats": [
+    {
+     "n": 52,
+     "firstMed": 25.4,
+     "nowMed": -37.4,
+     "aboveOffer": 25,
+     "name": "한국투자증권"
+    },
+    {
+     "n": 35,
+     "firstMed": 41.1,
+     "nowMed": -50.8,
+     "aboveOffer": 26,
+     "name": "대신증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "494억",
+   "marcapNum": 49400000000,
+   "marcapAtOffer": 200985010707,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1228,6 +1977,13 @@
    "instComp": 839.231,
    "commit": 76.01,
    "uw38": "한국투자증권,신한투자증권",
+   "band": [
+    19000,
+    26000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 300.0,
+   "tradeValue20": 2497251049,
    "prob": {
     "p": 33.1,
     "p10": 18.9,
@@ -1235,12 +1991,35 @@
     "med": -6.9,
     "n": 29
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 24,
+    "firstMed": 25.4,
+    "nowMed": -6.4,
+    "aboveOffer": 46
+   },
+   "uwStats": [
+    {
+     "n": 51,
+     "firstMed": 24.6,
+     "nowMed": -38.4,
+     "aboveOffer": 25,
+     "name": "한국투자증권"
+    },
+    {
+     "n": 12,
+     "firstMed": 116.1,
+     "nowMed": -7.1,
+     "aboveOffer": 33,
+     "name": "신한투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "2,453억",
+   "marcapNum": 245300000000,
+   "marcapAtOffer": 386065375303,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1268,6 +2047,13 @@
    "instComp": 962.101,
    "commit": 76.1,
    "uw38": "한국투자증권",
+   "band": [
+    16000,
+    20000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 153.0,
+   "tradeValue20": 907557974,
    "prob": {
     "p": 53.6,
     "p10": 38.7,
@@ -1275,11 +2061,28 @@
     "med": 3.3,
     "n": 61
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 23,
+    "firstMed": 24.6,
+    "nowMed": -6.4,
+    "aboveOffer": 48
+   },
+   "uwStats": [
+    {
+     "n": 50,
+     "firstMed": 24.6,
+     "nowMed": -37.4,
+     "aboveOffer": 26,
+     "name": "한국투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1,597억",
+   "marcapNum": 159700000000,
+   "marcapAtOffer": 265945045795,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1307,6 +2110,13 @@
    "instComp": 1124.211,
    "commit": 75.7,
    "uw38": "미래에셋증권",
+   "band": [
+    10100,
+    11500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 300.0,
+   "tradeValue20": 16498892734,
    "prob": {
     "p": 24.7,
     "p10": 17.7,
@@ -1314,11 +2124,23 @@
     "med": -15.6,
     "n": 50
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 52,
+     "firstMed": 22.7,
+     "nowMed": -48.8,
+     "aboveOffer": 27,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1,054억",
+   "marcapNum": 105400000000,
+   "marcapAtOffer": 107360496014,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1346,6 +2168,13 @@
    "instComp": 1334.911,
    "commit": 42.45,
    "uw38": "한국투자증권",
+   "band": [
+    7000,
+    8500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 300.0,
+   "tradeValue20": 79386244,
    "prob": {
     "p": 51.2,
     "p10": 35.3,
@@ -1353,11 +2182,23 @@
     "med": -0.4,
     "n": 29
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 49,
+     "firstMed": 23.3,
+     "nowMed": -37.4,
+     "aboveOffer": 27,
+     "name": "한국투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "250억",
+   "marcapNum": 25000000000,
+   "marcapAtOffer": 73784722222,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1385,6 +2226,13 @@
    "instComp": 650.141,
    "commit": 14.38,
    "uw38": "NH투자증권,미래에셋증권",
+   "band": [
+    8500,
+    10000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 248.5,
+   "tradeValue20": 1266072095,
    "prob": {
     "p": 35.9,
     "p10": 22.6,
@@ -1392,11 +2240,30 @@
     "med": -7.6,
     "n": 34
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 40,
+     "firstMed": 19.9,
+     "nowMed": -38.2,
+     "aboveOffer": 28,
+     "name": "NH투자증권"
+    },
+    {
+     "n": 50,
+     "firstMed": 22.6,
+     "nowMed": -48.9,
+     "aboveOffer": 28,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "2,122억",
+   "marcapNum": 212200000000,
+   "marcapAtOffer": 254741896759,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1424,6 +2291,13 @@
    "instComp": 650.141,
    "commit": 14.38,
    "uw38": "NH투자증권,미래에셋증권",
+   "band": [
+    8500,
+    10000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 248.5,
+   "tradeValue20": 1266072095,
    "prob": {
     "p": 35.9,
     "p10": 22.6,
@@ -1431,11 +2305,30 @@
     "med": -7.6,
     "n": 34
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 40,
+     "firstMed": 19.9,
+     "nowMed": -38.2,
+     "aboveOffer": 28,
+     "name": "NH투자증권"
+    },
+    {
+     "n": 50,
+     "firstMed": 22.6,
+     "nowMed": -48.9,
+     "aboveOffer": 28,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "2,122억",
+   "marcapNum": 212200000000,
+   "marcapAtOffer": 254741896759,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1463,6 +2356,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 1368311937,
    "prob": {
     "p": 31.1,
     "p10": 16.0,
@@ -1470,10 +2367,20 @@
     "med": -10.5,
     "n": 63
    },
-   "listingType": [
-    "일반"
-   ],
+   "sectorStats": {
+    "n": 9,
+    "firstMed": 53.3,
+    "nowMed": -53.2,
+    "aboveOffer": 22
+   },
+   "uwStats": [],
+   "track": "일반",
+   "trackManual": false,
    "marcap": "975억",
+   "marcapNum": 97500000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1501,6 +2408,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 1304648495,
    "prob": {
     "p": 38.4,
     "p10": 30.5,
@@ -1508,10 +2419,20 @@
     "med": -12.2,
     "n": 55
    },
-   "listingType": [
-    "기술특례"
-   ],
+   "sectorStats": {
+    "n": 4,
+    "firstMed": 5.7,
+    "nowMed": -54.0,
+    "aboveOffer": 25
+   },
+   "uwStats": [],
+   "track": "일반",
+   "trackManual": false,
    "marcap": "654억",
+   "marcapNum": 65400000000,
+   "marcapAtOffer": null,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -1539,6 +2460,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 66088082214,
    "prob": {
     "p": 25.1,
     "p10": 17.7,
@@ -1546,10 +2471,20 @@
     "med": -16.2,
     "n": 111
    },
-   "listingType": [
-    "일반"
-   ],
+   "sectorStats": {
+    "n": 4,
+    "firstMed": 5.7,
+    "nowMed": -54.0,
+    "aboveOffer": 25
+   },
+   "uwStats": [],
+   "track": "일반",
+   "trackManual": false,
    "marcap": "2,828억",
+   "marcapNum": 282800000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -1577,6 +2512,13 @@
    "instComp": 436.891,
    "commit": 43.93,
    "uw38": "삼성증권",
+   "band": [
+    21000,
+    24000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 15.21,
+   "tradeValue20": 19721086881,
    "prob": {
     "p": 33.5,
     "p10": 23.5,
@@ -1584,12 +2526,23 @@
     "med": -12.1,
     "n": 77
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 33,
+     "firstMed": 9.3,
+     "nowMed": -47.6,
+     "aboveOffer": 18,
+     "name": "삼성증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "6,288억",
+   "marcapNum": 628800000000,
+   "marcapAtOffer": 816623376623,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1617,6 +2570,13 @@
    "instComp": 231.871,
    "commit": 17.12,
    "uw38": "삼성증권,미래에셋증권",
+   "band": [
+    44000,
+    55000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -9.82,
+   "tradeValue20": 5607729928,
    "prob": {
     "p": 38.7,
     "p10": 28.3,
@@ -1624,12 +2584,35 @@
     "med": -8.6,
     "n": 59
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 11,
+    "firstMed": 44.4,
+    "nowMed": -41.1,
+    "aboveOffer": 36
+   },
+   "uwStats": [
+    {
+     "n": 32,
+     "firstMed": 21.2,
+     "nowMed": -47.6,
+     "aboveOffer": 19,
+     "name": "삼성증권"
+    },
+    {
+     "n": 49,
+     "firstMed": 22.6,
+     "nowMed": -50.0,
+     "aboveOffer": 29,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "7,678억",
+   "marcapNum": 767800000000,
+   "marcapAtOffer": 1389111842105,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1657,6 +2640,13 @@
    "instComp": 1303.871,
    "commit": 41.05,
    "uw38": "대신증권",
+   "band": [
+    6700,
+    7600
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 152.76,
+   "tradeValue20": 367112184,
    "prob": {
     "p": 35.7,
     "p10": 27.6,
@@ -1664,10 +2654,23 @@
     "med": -8.4,
     "n": 34
    },
-   "listingType": [
-    "기술특례"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 34,
+     "firstMed": 41.1,
+     "nowMed": -50.8,
+     "aboveOffer": 26,
+     "name": "대신증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "499억",
+   "marcapNum": 49900000000,
+   "marcapAtOffer": 75395626243,
+   "opLoss": false,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -1695,6 +2698,13 @@
    "instComp": 1871.43,
    "commit": 74.29,
    "uw38": "삼성증권,NH투자증권",
+   "band": [
+    17000,
+    22500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 100.0,
+   "tradeValue20": 5864262540,
    "prob": {
     "p": 38.5,
     "p10": 28.4,
@@ -1702,11 +2712,35 @@
     "med": -7.0,
     "n": 44
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 22,
+    "firstMed": 24.6,
+    "nowMed": -6.4,
+    "aboveOffer": 45
+   },
+   "uwStats": [
+    {
+     "n": 31,
+     "firstMed": 9.3,
+     "nowMed": -58.4,
+     "aboveOffer": 16,
+     "name": "삼성증권"
+    },
+    {
+     "n": 39,
+     "firstMed": 17.5,
+     "nowMed": -39.5,
+     "aboveOffer": 26,
+     "name": "NH투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "6,691억",
+   "marcapNum": 669100000000,
+   "marcapAtOffer": 631226415094,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1734,6 +2768,13 @@
    "instComp": 879.081,
    "commit": 5.53,
    "uw38": "삼성증권",
+   "band": [
+    13100,
+    16500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 64.55,
+   "tradeValue20": 15779269737,
    "prob": {
     "p": 25.5,
     "p10": 16.8,
@@ -1741,11 +2782,28 @@
     "med": -15.7,
     "n": 59
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 3,
+    "firstMed": 24.2,
+    "nowMed": -42.2,
+    "aboveOffer": 33
+   },
+   "uwStats": [
+    {
+     "n": 30,
+     "firstMed": 9.3,
+     "nowMed": -58.4,
+     "aboveOffer": 17,
+     "name": "삼성증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1,584억",
+   "marcapNum": 158400000000,
+   "marcapAtOffer": 191612903226,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1773,6 +2831,13 @@
    "instComp": 790.491,
    "commit": 52.75,
    "uw38": "신한투자증권",
+   "band": [
+    17500,
+    19500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 243.59,
+   "tradeValue20": 6821098805,
    "prob": {
     "p": 27.5,
     "p10": 16.9,
@@ -1780,11 +2845,28 @@
     "med": -15.4,
     "n": 54
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 38,
+    "firstMed": 21.9,
+    "nowMed": -67.1,
+    "aboveOffer": 16
+   },
+   "uwStats": [
+    {
+     "n": 11,
+     "firstMed": 53.3,
+     "nowMed": -9.6,
+     "aboveOffer": 36,
+     "name": "신한투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1,470억",
+   "marcapNum": 147000000000,
+   "marcapAtOffer": 156639344262,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1812,6 +2894,13 @@
    "instComp": 1139.611,
    "commit": 17.82,
    "uw38": "NH투자증권",
+   "band": [
+    12000,
+    15000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 17.53,
+   "tradeValue20": 186018564,
    "prob": {
     "p": 42.0,
     "p10": 29.9,
@@ -1819,11 +2908,28 @@
     "med": -4.8,
     "n": 32
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 6,
+    "firstMed": 12.4,
+    "nowMed": -50.2,
+    "aboveOffer": 33
+   },
+   "uwStats": [
+    {
+     "n": 38,
+     "firstMed": 19.9,
+     "nowMed": -38.2,
+     "aboveOffer": 26,
+     "name": "NH투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "554억",
+   "marcapNum": 55400000000,
+   "marcapAtOffer": 172585669782,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1851,6 +2957,13 @@
    "instComp": 1109.861,
    "commit": 6.31,
    "uw38": "NH투자증권",
+   "band": [
+    13000,
+    15000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 36.67,
+   "tradeValue20": 777366261,
    "prob": {
     "p": 36.3,
     "p10": 23.0,
@@ -1858,11 +2971,28 @@
     "med": -6.6,
     "n": 38
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 37,
+    "firstMed": 0.5,
+    "nowMed": -68.1,
+    "aboveOffer": 16
+   },
+   "uwStats": [
+    {
+     "n": 37,
+     "firstMed": 16.5,
+     "nowMed": -38.2,
+     "aboveOffer": 27,
+     "name": "NH투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "567억",
+   "marcapNum": 56700000000,
+   "marcapAtOffer": 154076086957,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1890,6 +3020,13 @@
    "instComp": 1173.211,
    "commit": 10.43,
    "uw38": "NH투자증권,한화투자증권",
+   "band": [
+    12500,
+    15500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 74.84,
+   "tradeValue20": 2085610565,
    "prob": {
     "p": 42.1,
     "p10": 27.0,
@@ -1897,11 +3034,28 @@
     "med": -3.1,
     "n": 31
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 4,
+    "firstMed": 23.8,
+    "nowMed": -67.2,
+    "aboveOffer": 25
+   },
+   "uwStats": [
+    {
+     "n": 36,
+     "firstMed": 16.5,
+     "nowMed": -37.4,
+     "aboveOffer": 28,
+     "name": "NH투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "768억",
+   "marcapNum": 76800000000,
+   "marcapAtOffer": 153007712082,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1929,6 +3083,13 @@
    "instComp": 6461.0,
    "commit": 10.19,
    "uw38": "삼성증권",
+   "band": [
+    7000,
+    8000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 100.0,
+   "tradeValue20": 7614485002,
    "prob": {
     "p": 24.1,
     "p10": 17.9,
@@ -1936,11 +3097,23 @@
     "med": -15.4,
     "n": 71
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 29,
+     "firstMed": 8.5,
+     "nowMed": -62.4,
+     "aboveOffer": 17,
+     "name": "삼성증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1,496억",
+   "marcapNum": 149600000000,
+   "marcapAtOffer": 285632458234,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -1968,6 +3141,13 @@
    "instComp": 671.981,
    "commit": 74.22,
    "uw38": "미래에셋증권",
+   "band": [
+    9000,
+    11000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 300.0,
+   "tradeValue20": 2137931958,
    "prob": {
     "p": 26.5,
     "p10": 18.8,
@@ -1975,11 +3155,28 @@
     "med": -10.9,
     "n": 36
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 21,
+    "firstMed": 22.7,
+    "nowMed": -7.5,
+    "aboveOffer": 43
+   },
+   "uwStats": [
+    {
+     "n": 48,
+     "firstMed": 22.6,
+     "nowMed": -50.0,
+     "aboveOffer": 27,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1조 4,526억",
+   "marcapNum": 1452600000000,
+   "marcapAtOffer": 716529147982,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2007,6 +3204,13 @@
    "instComp": 1152.981,
    "commit": 58.01,
    "uw38": "신한투자증권",
+   "band": [
+    6000,
+    8000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 149.0,
+   "tradeValue20": 13123461451,
    "prob": {
     "p": 37.6,
     "p10": 30.0,
@@ -2014,11 +3218,28 @@
     "med": -7.3,
     "n": 46
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 12,
+    "firstMed": 107.1,
+    "nowMed": -63.1,
+    "aboveOffer": 17
+   },
+   "uwStats": [
+    {
+     "n": 10,
+     "firstMed": 53.3,
+     "nowMed": -9.6,
+     "aboveOffer": 30,
+     "name": "신한투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1,344억",
+   "marcapNum": 134400000000,
+   "marcapAtOffer": 100579981291,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2046,6 +3267,13 @@
    "instComp": 1015.931,
    "commit": 29.76,
    "uw38": "NH투자증권,교보증권",
+   "band": [
+    5900,
+    6900
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 85.65,
+   "tradeValue20": 1273808390,
    "prob": {
     "p": 26.2,
     "p10": 19.4,
@@ -2053,11 +3281,23 @@
     "med": -12.5,
     "n": 44
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 35,
+     "firstMed": 15.9,
+     "nowMed": -38.2,
+     "aboveOffer": 26,
+     "name": "NH투자증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "3,028억",
+   "marcapNum": 302800000000,
+   "marcapAtOffer": 199934928230,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2085,6 +3325,13 @@
    "instComp": 756.191,
    "commit": 71.77,
    "uw38": "미래에셋증권",
+   "band": [
+    51000,
+    60500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 117.52,
+   "tradeValue20": 3905034060,
    "prob": {
     "p": 29.1,
     "p10": 22.1,
@@ -2092,11 +3339,28 @@
     "med": -11.9,
     "n": 64
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 15,
+    "firstMed": 36.1,
+    "nowMed": -37.0,
+    "aboveOffer": 27
+   },
+   "uwStats": [
+    {
+     "n": 47,
+     "firstMed": 9.3,
+     "nowMed": -50.3,
+     "aboveOffer": 26,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "8,573억",
+   "marcapNum": 857300000000,
+   "marcapAtOffer": 584083896396,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2124,6 +3388,13 @@
    "instComp": 615.891,
    "commit": 30.42,
    "uw38": "미래에셋증권,삼성증권",
+   "band": [
+    32000,
+    38000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 9.34,
+   "tradeValue20": 1695560124,
    "prob": {
     "p": 37.0,
     "p10": 30.0,
@@ -2131,11 +3402,35 @@
     "med": -6.9,
     "n": 37
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 4,
+    "firstMed": 15.0,
+    "nowMed": -77.3,
+    "aboveOffer": 0
+   },
+   "uwStats": [
+    {
+     "n": 46,
+     "firstMed": 22.6,
+     "nowMed": -50.0,
+     "aboveOffer": 26,
+     "name": "미래에셋증권"
+    },
+    {
+     "n": 28,
+     "firstMed": 8.5,
+     "nowMed": -58.4,
+     "aboveOffer": 18,
+     "name": "삼성증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1,769억",
+   "marcapNum": 176900000000,
+   "marcapAtOffer": 545190592052,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2163,6 +3458,13 @@
    "instComp": 962.341,
    "commit": 65.43,
    "uw38": "신영증권",
+   "band": [
+    14000,
+    16000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 42.81,
+   "tradeValue20": 640825820,
    "prob": {
     "p": 26.4,
     "p10": 17.9,
@@ -2170,11 +3472,28 @@
     "med": -11.2,
     "n": 34
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 3,
+    "firstMed": 33.6,
+    "nowMed": -55.4,
+    "aboveOffer": 33
+   },
+   "uwStats": [
+    {
+     "n": 16,
+     "firstMed": 14.1,
+     "nowMed": -57.3,
+     "aboveOffer": 19,
+     "name": "신영증권"
+    }
    ],
+   "track": "기술특례(기술평가)",
+   "trackManual": false,
    "marcap": "1,698억",
+   "marcapNum": 169800000000,
+   "marcapAtOffer": 187236388697,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2202,6 +3521,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 12861396551,
    "prob": {
     "p": 42.8,
     "p10": 26.9,
@@ -2209,10 +3532,15 @@
     "med": -5.8,
     "n": 71
    },
-   "listingType": [
-    "일반"
-   ],
+   "sectorStats": null,
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "531억",
+   "marcapNum": 53100000000,
+   "marcapAtOffer": null,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2240,6 +3568,13 @@
    "instComp": 976.921,
    "commit": 17.04,
    "uw38": "KB증권,신한투자증권",
+   "band": [
+    47500,
+    56800
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 41.2,
+   "tradeValue20": 484261372,
    "prob": {
     "p": 32.0,
     "p10": 24.5,
@@ -2247,11 +3582,30 @@
     "med": -11.4,
     "n": 38
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 28,
+     "firstMed": -9.2,
+     "nowMed": -42.6,
+     "aboveOffer": 21,
+     "name": "KB증권"
+    },
+    {
+     "n": 9,
+     "firstMed": 53.3,
+     "nowMed": -9.6,
+     "aboveOffer": 33,
+     "name": "신한투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,231억",
+   "marcapNum": 223100000000,
+   "marcapAtOffer": 310590196078,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2279,6 +3633,13 @@
    "instComp": 1031.391,
    "commit": 55.67,
    "uw38": "키움증권",
+   "band": [
+    18000,
+    22000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 100.08,
+   "tradeValue20": 825816478,
    "prob": {
     "p": 36.0,
     "p10": 27.9,
@@ -2286,12 +3647,23 @@
     "med": -6.5,
     "n": 41
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 11,
+     "firstMed": 33.1,
+     "nowMed": -38.1,
+     "aboveOffer": 27,
+     "name": "키움증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,499억",
+   "marcapNum": 149900000000,
+   "marcapAtOffer": 335824847251,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2319,6 +3691,13 @@
    "instComp": 1072.411,
    "commit": 56.03,
    "uw38": "KB증권",
+   "band": [
+    12900,
+    14700
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 300.0,
+   "tradeValue20": 1384266972,
    "prob": {
     "p": 35.9,
     "p10": 29.3,
@@ -2326,11 +3705,28 @@
     "med": -4.5,
     "n": 35
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 26,
+    "firstMed": 8.5,
+    "nowMed": -37.2,
+    "aboveOffer": 38
+   },
+   "uwStats": [
+    {
+     "n": 27,
+     "firstMed": -11.0,
+     "nowMed": -54.0,
+     "aboveOffer": 19,
+     "name": "KB증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,371억",
+   "marcapNum": 137100000000,
+   "marcapAtOffer": 131465753425,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2358,6 +3754,13 @@
    "instComp": 1058.201,
    "commit": 59.75,
    "uw38": "미래에셋증권",
+   "band": [
+    7600,
+    9100
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 240.66,
+   "tradeValue20": 7504402698,
    "prob": {
     "p": 21.6,
     "p10": 15.1,
@@ -2365,11 +3768,28 @@
     "med": -13.2,
     "n": 33
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 36,
+    "firstMed": 0.5,
+    "nowMed": -68.1,
+    "aboveOffer": 14
+   },
+   "uwStats": [
+    {
+     "n": 45,
+     "firstMed": 8.5,
+     "nowMed": -50.3,
+     "aboveOffer": 24,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "4,195억",
+   "marcapNum": 419500000000,
+   "marcapAtOffer": 194668536461,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2397,6 +3817,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 50189608907,
    "prob": {
     "p": 26.0,
     "p10": 14.6,
@@ -2404,10 +3828,20 @@
     "med": -15.9,
     "n": 94
    },
-   "listingType": [
-    "기술특례"
-   ],
+   "sectorStats": {
+    "n": 9,
+    "firstMed": 4.6,
+    "nowMed": -49.8,
+    "aboveOffer": 11
+   },
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "871억",
+   "marcapNum": 87100000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2435,6 +3869,13 @@
    "instComp": 1145.401,
    "commit": 22.86,
    "uw38": "대신증권",
+   "band": [
+    11400,
+    13200
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 81.44,
+   "tradeValue20": 9914743797,
    "prob": {
     "p": 27.1,
     "p10": 17.0,
@@ -2442,10 +3883,28 @@
     "med": -15.7,
     "n": 83
    },
-   "listingType": [
-    "기술특례"
+   "sectorStats": {
+    "n": 35,
+    "firstMed": 0.0,
+    "nowMed": -69.2,
+    "aboveOffer": 11
+   },
+   "uwStats": [
+    {
+     "n": 33,
+     "firstMed": 40.2,
+     "nowMed": -52.5,
+     "aboveOffer": 24,
+     "name": "대신증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,587억",
+   "marcapNum": 158700000000,
+   "marcapAtOffer": 142894952251,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2473,6 +3932,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 15739109,
    "prob": {
     "p": 41.0,
     "p10": 29.8,
@@ -2480,10 +3943,15 @@
     "med": -7.2,
     "n": 44
    },
-   "listingType": [
-    "일반"
-   ],
+   "sectorStats": null,
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "190억",
+   "marcapNum": 19000000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2511,6 +3979,13 @@
    "instComp": 182.151,
    "commit": null,
    "uw38": "KB증권,신한투자증권",
+   "band": [
+    17000,
+    20000
+   ],
+   "bandPos": "밴드 하단 미달(-12%)",
+   "firstDayRet": -24.93,
+   "tradeValue20": 777081409,
    "prob": {
     "p": 35.2,
     "p10": 28.9,
@@ -2518,12 +3993,30 @@
     "med": -7.2,
     "n": 46
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 26,
+     "firstMed": -9.2,
+     "nowMed": -54.0,
+     "aboveOffer": 15,
+     "name": "KB증권"
+    },
+    {
+     "n": 8,
+     "firstMed": 116.1,
+     "nowMed": -9.6,
+     "aboveOffer": 25,
+     "name": "신한투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,735억",
+   "marcapNum": 173500000000,
+   "marcapAtOffer": 167794970986,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -2551,6 +4044,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 65457640,
    "prob": {
     "p": 52.5,
     "p10": 34.2,
@@ -2558,10 +4055,15 @@
     "med": 1.5,
     "n": 75
    },
-   "listingType": [
-    "일반"
-   ],
+   "sectorStats": null,
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "339억",
+   "marcapNum": 33900000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2589,6 +4091,13 @@
    "instComp": 942.711,
    "commit": 3.03,
    "uw38": "키움증권",
+   "band": [
+    16500,
+    20000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 8.5,
+   "tradeValue20": 31272530,
    "prob": {
     "p": 37.2,
     "p10": 29.1,
@@ -2596,11 +4105,28 @@
     "med": -9.5,
     "n": 49
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 10,
+    "firstMed": 46.8,
+    "nowMed": -36.5,
+    "aboveOffer": 40
+   },
+   "uwStats": [
+    {
+     "n": 10,
+     "firstMed": 38.6,
+     "nowMed": -30.3,
+     "aboveOffer": 30,
+     "name": "키움증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "453억",
+   "marcapNum": 45300000000,
+   "marcapAtOffer": 102027027027,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2628,6 +4154,13 @@
    "instComp": 832.891,
    "commit": 5.82,
    "uw38": "대신증권",
+   "band": [
+    5100,
+    5800
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 2.07,
+   "tradeValue20": 20922545516,
    "prob": {
     "p": 27.5,
     "p10": 17.9,
@@ -2635,11 +4168,28 @@
     "med": -14.8,
     "n": 43
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 4,
+    "firstMed": 50.2,
+    "nowMed": 67.0,
+    "aboveOffer": 50
+   },
+   "uwStats": [
+    {
+     "n": 32,
+     "firstMed": 41.1,
+     "nowMed": -52.5,
+     "aboveOffer": 22,
+     "name": "대신증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "4,249억",
+   "marcapNum": 424900000000,
+   "marcapAtOffer": 211719931271,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2667,6 +4217,13 @@
    "instComp": 739.171,
    "commit": 27.37,
    "uw38": "신한투자증권",
+   "band": [
+    27000,
+    30000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 50.0,
+   "tradeValue20": 401231515,
    "prob": {
     "p": 41.0,
     "p10": 26.4,
@@ -2674,11 +4231,28 @@
     "med": -3.6,
     "n": 51
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 5,
+    "firstMed": 15.9,
+    "nowMed": -37.4,
+    "aboveOffer": 40
+   },
+   "uwStats": [
+    {
+     "n": 7,
+     "firstMed": 116.1,
+     "nowMed": -9.6,
+     "aboveOffer": 29,
+     "name": "신한투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,185억",
+   "marcapNum": 218500000000,
+   "marcapAtOffer": 283153347732,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2706,6 +4280,13 @@
    "instComp": 565.551,
    "commit": 48.37,
    "uw38": "신한투자증권,NH투자증권",
+   "band": [
+    6600,
+    7700
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 116.1,
+   "tradeValue20": 1268673650,
    "prob": {
     "p": 32.3,
     "p10": 23.5,
@@ -2713,11 +4294,30 @@
     "med": -4.4,
     "n": 56
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 6,
+     "firstMed": 129.5,
+     "nowMed": -9.6,
+     "aboveOffer": 33,
+     "name": "신한투자증권"
+    },
+    {
+     "n": 34,
+     "firstMed": 15.9,
+     "nowMed": -38.2,
+     "aboveOffer": 26,
+     "name": "NH투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,947억",
+   "marcapNum": 294700000000,
+   "marcapAtOffer": 317369230769,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2745,6 +4345,13 @@
    "instComp": 810.61,
    "commit": 15.64,
    "uw38": "미래에셋증권",
+   "band": [
+    48000,
+    58000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -46.06,
+   "tradeValue20": 5540457552,
    "prob": {
     "p": 45.7,
     "p10": 37.6,
@@ -2752,11 +4359,28 @@
     "med": -1.8,
     "n": 45
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 8,
+    "firstMed": 13.5,
+    "nowMed": -49.8,
+    "aboveOffer": 12
+   },
+   "uwStats": [
+    {
+     "n": 44,
+     "firstMed": 22.6,
+     "nowMed": -50.3,
+     "aboveOffer": 25,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "5,895억",
+   "marcapNum": 589500000000,
+   "marcapAtOffer": 964485190409,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2784,6 +4408,13 @@
    "instComp": 1157.981,
    "commit": 23.83,
    "uw38": "KB증권",
+   "band": [
+    14500,
+    16100
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 92.86,
+   "tradeValue20": 0,
    "prob": {
     "p": 39.6,
     "p10": 27.8,
@@ -2791,11 +4422,28 @@
     "med": -7.7,
     "n": 49
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 5,
+    "firstMed": 9.0,
+    "nowMed": -61.7,
+    "aboveOffer": 20
+   },
+   "uwStats": [
+    {
+     "n": 25,
+     "firstMed": -11.0,
+     "nowMed": -58.9,
+     "aboveOffer": 12,
+     "name": "KB증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,684억",
+   "marcapNum": 268400000000,
+   "marcapAtOffer": 205773333333,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -2823,6 +4471,13 @@
    "instComp": 1199.201,
    "commit": 8.11,
    "uw38": "한국투자증권",
+   "band": [
+    11000,
+    14000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 25.36,
+   "tradeValue20": 5189601370,
    "prob": {
     "p": 32.0,
     "p10": 21.1,
@@ -2830,11 +4485,28 @@
     "med": -12.1,
     "n": 54
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례"
+   "sectorStats": {
+    "n": 20,
+    "firstMed": 22.7,
+    "nowMed": -7.5,
+    "aboveOffer": 40
+   },
+   "uwStats": [
+    {
+     "n": 48,
+     "firstMed": 23.3,
+     "nowMed": -37.4,
+     "aboveOffer": 25,
+     "name": "한국투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "5,719억",
+   "marcapNum": 571900000000,
+   "marcapAtOffer": 155467961165,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2862,6 +4534,13 @@
    "instComp": 800.831,
    "commit": 0.77,
    "uw38": "NH투자증권,KB증권",
+   "band": [
+    18000,
+    21000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -20.67,
+   "tradeValue20": 909513800,
    "prob": {
     "p": 45.5,
     "p10": 33.4,
@@ -2869,11 +4548,35 @@
     "med": -0.6,
     "n": 58
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 3,
+    "firstMed": 5.7,
+    "nowMed": -80.0,
+    "aboveOffer": 33
+   },
+   "uwStats": [
+    {
+     "n": 33,
+     "firstMed": 15.9,
+     "nowMed": -38.2,
+     "aboveOffer": 27,
+     "name": "NH투자증권"
+    },
+    {
+     "n": 24,
+     "firstMed": -9.2,
+     "nowMed": -58.9,
+     "aboveOffer": 12,
+     "name": "KB증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,052억",
+   "marcapNum": 105200000000,
+   "marcapAtOffer": 228932642487,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2901,6 +4604,13 @@
    "instComp": 1087.61,
    "commit": 12.08,
    "uw38": "미래에셋증권",
+   "band": [
+    11400,
+    14000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 45.0,
+   "tradeValue20": 1324688232,
    "prob": {
     "p": 32.5,
     "p10": 23.8,
@@ -2908,12 +4618,28 @@
     "med": -7.7,
     "n": 43
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 34,
+    "firstMed": 0.0,
+    "nowMed": -69.2,
+    "aboveOffer": 12
+   },
+   "uwStats": [
+    {
+     "n": 43,
+     "firstMed": 8.5,
+     "nowMed": -53.6,
+     "aboveOffer": 26,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "916억",
+   "marcapNum": 91600000000,
+   "marcapAtOffer": 170758988016,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -2941,6 +4667,13 @@
    "instComp": 785.411,
    "commit": 3.58,
    "uw38": "키움증권",
+   "band": [
+    29000,
+    32000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 38.59,
+   "tradeValue20": 1650159980,
    "prob": {
     "p": 30.7,
     "p10": 19.6,
@@ -2948,10 +4681,28 @@
     "med": -12.3,
     "n": 86
    },
-   "listingType": [
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 14,
+    "firstMed": 36.1,
+    "nowMed": -37.0,
+    "aboveOffer": 29
+   },
+   "uwStats": [
+    {
+     "n": 9,
+     "firstMed": 33.1,
+     "nowMed": -38.1,
+     "aboveOffer": 33,
+     "name": "키움증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,630억",
+   "marcapNum": 263000000000,
+   "marcapAtOffer": 350666666667,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -2979,6 +4730,13 @@
    "instComp": 995.341,
    "commit": 5.28,
    "uw38": "대신증권",
+   "band": [
+    18700,
+    22000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 40.23,
+   "tradeValue20": 354843356,
    "prob": {
     "p": 42.6,
     "p10": 23.8,
@@ -2986,12 +4744,28 @@
     "med": -2.5,
     "n": 37
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 33,
+    "firstMed": -1.6,
+    "nowMed": -69.2,
+    "aboveOffer": 12
+   },
+   "uwStats": [
+    {
+     "n": 31,
+     "firstMed": 41.1,
+     "nowMed": -52.5,
+     "aboveOffer": 23,
+     "name": "대신증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "622억",
+   "marcapNum": 62200000000,
+   "marcapAtOffer": 214482758621,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3019,6 +4793,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 37498006,
    "prob": {
     "p": 40.9,
     "p10": 31.7,
@@ -3026,11 +4804,15 @@
     "med": -6.5,
     "n": 67
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
-   ],
+   "sectorStats": null,
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "300억",
+   "marcapNum": 30000000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3058,6 +4840,13 @@
    "instComp": 1289.621,
    "commit": 7.91,
    "uw38": "대신증권",
+   "band": [
+    4000,
+    4700
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 69.36,
+   "tradeValue20": 1409588441,
    "prob": {
     "p": 30.8,
     "p10": 22.1,
@@ -3065,11 +4854,28 @@
     "med": -13.4,
     "n": 55
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 17,
+    "firstMed": 25.7,
+    "nowMed": -38.4,
+    "aboveOffer": 18
+   },
+   "uwStats": [
+    {
+     "n": 30,
+     "firstMed": 41.1,
+     "nowMed": -52.5,
+     "aboveOffer": 23,
+     "name": "대신증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "880억",
+   "marcapNum": 88000000000,
+   "marcapAtOffer": 110884718499,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3097,6 +4903,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 816773484,
    "prob": {
     "p": 53.9,
     "p10": 31.2,
@@ -3104,12 +4914,20 @@
     "med": 2.7,
     "n": 58
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
-   ],
+   "sectorStats": {
+    "n": 33,
+    "firstMed": -1.6,
+    "nowMed": -69.2,
+    "aboveOffer": 12
+   },
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "603억",
+   "marcapNum": 60300000000,
+   "marcapAtOffer": null,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3137,6 +4955,13 @@
    "instComp": 1443.691,
    "commit": 13.88,
    "uw38": "대신증권",
+   "band": [
+    12300,
+    15300
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 112.75,
+   "tradeValue20": 117138963,
    "prob": {
     "p": 39.9,
     "p10": 22.7,
@@ -3144,12 +4969,28 @@
     "med": -4.6,
     "n": 30
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 11,
+    "firstMed": 102.0,
+    "nowMed": -63.1,
+    "aboveOffer": 18
+   },
+   "uwStats": [
+    {
+     "n": 29,
+     "firstMed": 40.0,
+     "nowMed": -52.5,
+     "aboveOffer": 24,
+     "name": "대신증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "295억",
+   "marcapNum": 29500000000,
+   "marcapAtOffer": 81471119134,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3177,6 +5018,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 45519152,
    "prob": {
     "p": 43.4,
     "p10": 34.8,
@@ -3184,10 +5029,20 @@
     "med": -3.6,
     "n": 44
    },
-   "listingType": [
-    "일반"
-   ],
+   "sectorStats": {
+    "n": 26,
+    "firstMed": 8.5,
+    "nowMed": -37.2,
+    "aboveOffer": 38
+   },
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "185억",
+   "marcapNum": 18500000000,
+   "marcapAtOffer": null,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3215,6 +5070,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 2523879736,
    "prob": {
     "p": 29.8,
     "p10": 19.3,
@@ -3222,12 +5081,20 @@
     "med": -13.3,
     "n": 100
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
-   ],
+   "sectorStats": {
+    "n": 4,
+    "firstMed": 23.8,
+    "nowMed": -67.2,
+    "aboveOffer": 25
+   },
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,058억",
+   "marcapNum": 205800000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3255,6 +5122,13 @@
    "instComp": 1159.431,
    "commit": 1.83,
    "uw38": "신영증권",
+   "band": [
+    20000,
+    23000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 14.13,
+   "tradeValue20": 966464085,
    "prob": {
     "p": 29.1,
     "p10": 22.2,
@@ -3262,11 +5136,28 @@
     "med": -11.1,
     "n": 47
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 25,
+    "firstMed": -3.1,
+    "nowMed": -39.4,
+    "aboveOffer": 36
+   },
+   "uwStats": [
+    {
+     "n": 15,
+     "firstMed": 5.7,
+     "nowMed": -68.6,
+     "aboveOffer": 13,
+     "name": "신영증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,545억",
+   "marcapNum": 154500000000,
+   "marcapAtOffer": 132346368715,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -3294,6 +5185,13 @@
    "instComp": 1140.951,
    "commit": 14.95,
    "uw38": "신한투자증권",
+   "band": [
+    3100,
+    3600
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 168.33,
+   "tradeValue20": 507203056,
    "prob": {
     "p": 32.2,
     "p10": 23.2,
@@ -3301,11 +5199,23 @@
     "med": -7.5,
     "n": 58
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 5,
+     "firstMed": 53.3,
+     "nowMed": -37.0,
+     "aboveOffer": 20,
+     "name": "신한투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "784억",
+   "marcapNum": 78400000000,
+   "marcapAtOffer": 64291571754,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3333,6 +5243,13 @@
    "instComp": 1151.51,
    "commit": 11.96,
    "uw38": "미래에셋증권",
+   "band": [
+    12500,
+    17000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 95.29,
+   "tradeValue20": 571638031,
    "prob": {
     "p": 36.7,
     "p10": 24.9,
@@ -3340,12 +5257,28 @@
     "med": -10.0,
     "n": 45
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 19,
+    "firstMed": 8.5,
+    "nowMed": -10.2,
+    "aboveOffer": 37
+   },
+   "uwStats": [
+    {
+     "n": 42,
+     "firstMed": 8.5,
+     "nowMed": -53.6,
+     "aboveOffer": 24,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,627억",
+   "marcapNum": 262700000000,
+   "marcapAtOffer": 255340194397,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3373,6 +5306,13 @@
    "instComp": 1094.251,
    "commit": 12.48,
    "uw38": "대신증권",
+   "band": [
+    8000,
+    9100
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 101.98,
+   "tradeValue20": 908847420,
    "prob": {
     "p": 37.4,
     "p10": 25.3,
@@ -3380,10 +5320,28 @@
     "med": -6.6,
     "n": 51
    },
-   "listingType": [
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 10,
+    "firstMed": 107.1,
+    "nowMed": -63.1,
+    "aboveOffer": 10
+   },
+   "uwStats": [
+    {
+     "n": 28,
+     "firstMed": 40.0,
+     "nowMed": -52.5,
+     "aboveOffer": 21,
+     "name": "대신증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,672억",
+   "marcapNum": 167200000000,
+   "marcapAtOffer": 134291262136,
+   "opLoss": false,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -3411,6 +5369,13 @@
    "instComp": 897.451,
    "commit": 8.22,
    "uw38": "한국투자증권",
+   "band": [
+    3000,
+    3600
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 100.42,
+   "tradeValue20": 4489977994,
    "prob": {
     "p": 40.6,
     "p10": 31.6,
@@ -3418,11 +5383,28 @@
     "med": -2.4,
     "n": 45
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례"
+   "sectorStats": {
+    "n": 18,
+    "firstMed": 8.5,
+    "nowMed": -10.2,
+    "aboveOffer": 39
+   },
+   "uwStats": [
+    {
+     "n": 47,
+     "firstMed": 19.9,
+     "nowMed": -38.4,
+     "aboveOffer": 26,
+     "name": "한국투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "3,044억",
+   "marcapNum": 304400000000,
+   "marcapAtOffer": 329081081081,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3450,6 +5432,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 31348792,
    "prob": {
     "p": 42.0,
     "p10": 30.9,
@@ -3457,10 +5443,15 @@
     "med": -7.3,
     "n": 68
    },
-   "listingType": [
-    "기술특례"
-   ],
+   "sectorStats": null,
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "233억",
+   "marcapNum": 23300000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3488,6 +5479,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 5474937069,
    "prob": {
     "p": 35.8,
     "p10": 25.1,
@@ -3495,10 +5490,15 @@
     "med": -10.7,
     "n": 82
    },
-   "listingType": [
-    "일반"
-   ],
+   "sectorStats": null,
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,109억",
+   "marcapNum": 210900000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": false
   },
   {
@@ -3526,6 +5526,13 @@
    "instComp": 368.451,
    "commit": 8.51,
    "uw38": "SK증권,KB증권",
+   "band": [
+    11000,
+    13000
+   ],
+   "bandPos": "밴드 하단",
+   "firstDayRet": 34.09,
+   "tradeValue20": 4314083120,
    "prob": {
     "p": 27.5,
     "p10": 19.5,
@@ -3533,12 +5540,23 @@
     "med": -10.5,
     "n": 32
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 23,
+     "firstMed": -11.0,
+     "nowMed": -62.8,
+     "aboveOffer": 9,
+     "name": "KB증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "4,675억",
+   "marcapNum": 467500000000,
+   "marcapAtOffer": 191884328358,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -3566,6 +5584,13 @@
    "instComp": 1066.901,
    "commit": 6.33,
    "uw38": "한국투자증권",
+   "band": [
+    17000,
+    21000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 52.38,
+   "tradeValue20": 154941021,
    "prob": {
     "p": 44.5,
     "p10": 29.8,
@@ -3573,12 +5598,28 @@
     "med": -1.1,
     "n": 38
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 17,
+    "firstMed": -8.9,
+    "nowMed": -10.2,
+    "aboveOffer": 41
+   },
+   "uwStats": [
+    {
+     "n": 46,
+     "firstMed": 19.9,
+     "nowMed": -37.4,
+     "aboveOffer": 26,
+     "name": "한국투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "451억",
+   "marcapNum": 45100000000,
+   "marcapAtOffer": 138262773723,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -3606,6 +5647,13 @@
    "instComp": 1308.071,
    "commit": 23.34,
    "uw38": "NH투자증권",
+   "band": [
+    11500,
+    13500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 165.93,
+   "tradeValue20": 111181510,
    "prob": {
     "p": 32.0,
     "p10": 24.5,
@@ -3613,11 +5661,28 @@
     "med": -12.0,
     "n": 51
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 8,
+    "firstMed": 53.3,
+    "nowMed": -53.2,
+    "aboveOffer": 25
+   },
+   "uwStats": [
+    {
+     "n": 32,
+     "firstMed": 15.9,
+     "nowMed": -38.2,
+     "aboveOffer": 28,
+     "name": "NH투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "717억",
+   "marcapNum": 71700000000,
+   "marcapAtOffer": 113210526316,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3645,6 +5710,13 @@
    "instComp": 1394.961,
    "commit": 13.59,
    "uw38": "대신증권,아이엠증권",
+   "band": [
+    5900,
+    6800
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 126.47,
+   "tradeValue20": 1832469127,
    "prob": {
     "p": 26.6,
     "p10": 18.6,
@@ -3652,11 +5724,28 @@
     "med": -9.2,
     "n": 50
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 24,
+    "firstMed": -3.1,
+    "nowMed": -39.4,
+    "aboveOffer": 33
+   },
+   "uwStats": [
+    {
+     "n": 27,
+     "firstMed": 37.7,
+     "nowMed": -54.1,
+     "aboveOffer": 19,
+     "name": "대신증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,016억",
+   "marcapNum": 201600000000,
+   "marcapAtOffer": 88273019961,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -3684,6 +5773,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 40464722,
    "prob": {
     "p": 40.2,
     "p10": 28.5,
@@ -3691,10 +5784,20 @@
     "med": -6.7,
     "n": 63
    },
-   "listingType": [
-    "기술특례"
-   ],
+   "sectorStats": {
+    "n": 24,
+    "firstMed": -3.1,
+    "nowMed": -39.4,
+    "aboveOffer": 33
+   },
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "283억",
+   "marcapNum": 28300000000,
+   "marcapAtOffer": null,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3722,6 +5825,13 @@
    "instComp": 1232.541,
    "commit": 3.76,
    "uw38": "신영증권",
+   "band": [
+    13000,
+    15000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -8.8,
+   "tradeValue20": 657572372,
    "prob": {
     "p": 32.0,
     "p10": 20.2,
@@ -3729,11 +5839,28 @@
     "med": -11.5,
     "n": 62
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 7,
+    "firstMed": 53.3,
+    "nowMed": -53.2,
+    "aboveOffer": 29
+   },
+   "uwStats": [
+    {
+     "n": 14,
+     "firstMed": 26.7,
+     "nowMed": -68.6,
+     "aboveOffer": 14,
+     "name": "신영증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "565억",
+   "marcapNum": 56500000000,
+   "marcapAtOffer": 132421875000,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3761,6 +5888,13 @@
    "instComp": 1214.551,
    "commit": 5.55,
    "uw38": "IBK투자증권",
+   "band": [
+    9300,
+    11200
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 43.75,
+   "tradeValue20": 3470224565,
    "prob": {
     "p": 31.4,
     "p10": 22.8,
@@ -3768,11 +5902,28 @@
     "med": -7.7,
     "n": 29
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 3,
+    "firstMed": 50.2,
+    "nowMed": -5.2,
+    "aboveOffer": 33
+   },
+   "uwStats": [
+    {
+     "n": 5,
+     "firstMed": -10.3,
+     "nowMed": -53.7,
+     "aboveOffer": 40,
+     "name": "IBK투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "3,171억",
+   "marcapNum": 317100000000,
+   "marcapAtOffer": 68036781609,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -3800,6 +5951,13 @@
    "instComp": 816.221,
    "commit": 3.21,
    "uw38": "한국투자증권",
+   "band": [
+    14000,
+    16000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 12.81,
+   "tradeValue20": 250969160,
    "prob": {
     "p": 44.6,
     "p10": 30.7,
@@ -3807,10 +5965,23 @@
     "med": -2.4,
     "n": 82
    },
-   "listingType": [
-    "기술특례"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 45,
+     "firstMed": 19.9,
+     "nowMed": -38.4,
+     "aboveOffer": 27,
+     "name": "한국투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,101억",
+   "marcapNum": 210100000000,
+   "marcapAtOffer": 229304229195,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3838,6 +6009,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 71409894,
    "prob": {
     "p": 52.0,
     "p10": 33.9,
@@ -3845,11 +6020,15 @@
     "med": 1.7,
     "n": 92
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
-   ],
+   "sectorStats": null,
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,378억",
+   "marcapNum": 137800000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3877,6 +6056,13 @@
    "instComp": 461.951,
    "commit": 0.72,
    "uw38": "한국투자증권",
+   "band": [
+    10500,
+    12500
+   ],
+   "bandPos": "밴드 하단 미달(-14%)",
+   "firstDayRet": -70.04,
+   "tradeValue20": 14051207692,
    "prob": {
     "p": 49.7,
     "p10": 35.5,
@@ -3884,10 +6070,23 @@
     "med": 0.5,
     "n": 45
    },
-   "listingType": [
-    "기술특례"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 44,
+     "firstMed": 23.3,
+     "nowMed": -37.4,
+     "aboveOffer": 27,
+     "name": "한국투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,042억",
+   "marcapNum": 204200000000,
+   "marcapAtOffer": 645975395431,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3915,6 +6114,13 @@
    "instComp": 1213.841,
    "commit": 0.31,
    "uw38": "KB증권",
+   "band": [
+    13000,
+    15000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -3.33,
+   "tradeValue20": 21518652,
    "prob": {
     "p": 36.7,
     "p10": 24.8,
@@ -3922,11 +6128,28 @@
     "med": -6.9,
     "n": 45
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 32,
+    "firstMed": 0.0,
+    "nowMed": -69.2,
+    "aboveOffer": 12
+   },
+   "uwStats": [
+    {
+     "n": 22,
+     "firstMed": -11.0,
+     "nowMed": -58.9,
+     "aboveOffer": 9,
+     "name": "KB증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "308억",
+   "marcapNum": 30800000000,
+   "marcapAtOffer": 96551724138,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3954,6 +6177,13 @@
    "instComp": 862.621,
    "commit": 6.1,
    "uw38": "NH투자증권,신한투자증권,유진투자증권",
+   "band": [
+    11500,
+    13500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 53.33,
+   "tradeValue20": 4226044100,
    "prob": {
     "p": 42.2,
     "p10": 27.1,
@@ -3961,11 +6191,42 @@
     "med": -4.3,
     "n": 66
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 6,
+    "firstMed": 129.2,
+    "nowMed": -53.2,
+    "aboveOffer": 33
+   },
+   "uwStats": [
+    {
+     "n": 31,
+     "firstMed": 13.5,
+     "nowMed": -39.5,
+     "aboveOffer": 29,
+     "name": "NH투자증권"
+    },
+    {
+     "n": 4,
+     "firstMed": 129.5,
+     "nowMed": -37.0,
+     "aboveOffer": 25,
+     "name": "신한투자증권"
+    },
+    {
+     "n": 6,
+     "firstMed": 48.2,
+     "nowMed": -37.2,
+     "aboveOffer": 17,
+     "name": "유진투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,885억",
+   "marcapNum": 188500000000,
+   "marcapAtOffer": 208586065574,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -3993,6 +6254,13 @@
    "instComp": 951.521,
    "commit": 19.74,
    "uw38": "대신증권",
+   "band": [
+    9200,
+    10800
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 144.44,
+   "tradeValue20": 2530014885,
    "prob": {
     "p": 27.0,
     "p10": 20.6,
@@ -4000,11 +6268,23 @@
     "med": -11.6,
     "n": 50
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 26,
+     "firstMed": 37.7,
+     "nowMed": -54.1,
+     "aboveOffer": 15,
+     "name": "대신증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,730억",
+   "marcapNum": 273000000000,
+   "marcapAtOffer": 120097759674,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4032,6 +6312,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 149121808,
    "prob": {
     "p": 46.5,
     "p10": 34.7,
@@ -4039,10 +6323,15 @@
     "med": -0.4,
     "n": 57
    },
-   "listingType": [
-    "일반"
-   ],
+   "sectorStats": null,
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "579억",
+   "marcapNum": 57900000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4070,6 +6359,13 @@
    "instComp": 1366.651,
    "commit": 4.9,
    "uw38": "삼성증권",
+   "band": [
+    7200,
+    8350
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 32.93,
+   "tradeValue20": 961346160,
    "prob": {
     "p": 27.7,
     "p10": 20.7,
@@ -4077,11 +6373,28 @@
     "med": -12.4,
     "n": 56
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 13,
+    "firstMed": 36.1,
+    "nowMed": -50.0,
+    "aboveOffer": 23
+   },
+   "uwStats": [
+    {
+     "n": 27,
+     "firstMed": 7.2,
+     "nowMed": -62.4,
+     "aboveOffer": 15,
+     "name": "삼성증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,542억",
+   "marcapNum": 154200000000,
+   "marcapAtOffer": 89476719944,
+   "opLoss": false,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -4109,6 +6422,13 @@
    "instComp": 576.651,
    "commit": 2.28,
    "uw38": "미래에셋증권,신영증권",
+   "band": [
+    10900,
+    13000
+   ],
+   "bandPos": "밴드 하단 미달(-17%)",
+   "firstDayRet": 34.56,
+   "tradeValue20": 0,
    "prob": {
     "p": 42.0,
     "p10": 23.7,
@@ -4116,11 +6436,35 @@
     "med": -2.5,
     "n": 32
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 3,
+    "firstMed": 68.8,
+    "nowMed": -53.2,
+    "aboveOffer": 0
+   },
+   "uwStats": [
+    {
+     "n": 41,
+     "firstMed": 8.5,
+     "nowMed": -53.6,
+     "aboveOffer": 24,
+     "name": "미래에셋증권"
+    },
+    {
+     "n": 13,
+     "firstMed": 5.7,
+     "nowMed": -80.0,
+     "aboveOffer": 15,
+     "name": "신영증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "504억",
+   "marcapNum": 50400000000,
+   "marcapAtOffer": 160566371681,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -4148,6 +6492,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 20833822,
    "prob": {
     "p": 49.9,
     "p10": 34.4,
@@ -4155,10 +6503,15 @@
     "med": -1.0,
     "n": 53
    },
-   "listingType": [
-    "일반"
-   ],
+   "sectorStats": null,
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "544억",
+   "marcapNum": 54400000000,
+   "marcapAtOffer": null,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -4186,6 +6539,13 @@
    "instComp": 1052.621,
    "commit": 8.19,
    "uw38": "신영증권",
+   "band": [
+    18000,
+    21000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 180.0,
+   "tradeValue20": 291866301,
    "prob": {
     "p": 26.3,
     "p10": 18.6,
@@ -4193,11 +6553,28 @@
     "med": -12.2,
     "n": 51
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 9,
+    "firstMed": -29.1,
+    "nowMed": -67.3,
+    "aboveOffer": 0
+   },
+   "uwStats": [
+    {
+     "n": 12,
+     "firstMed": 5.7,
+     "nowMed": -80.0,
+     "aboveOffer": 8,
+     "name": "신영증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,486억",
+   "marcapNum": 148600000000,
+   "marcapAtOffer": 134219354839,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4225,6 +6602,13 @@
    "instComp": 1155.041,
    "commit": 4.46,
    "uw38": "미래에셋증권",
+   "band": [
+    7500,
+    8500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 300.0,
+   "tradeValue20": 27771194,
    "prob": {
     "p": 35.6,
     "p10": 25.7,
@@ -4232,11 +6616,23 @@
     "med": -7.0,
     "n": 36
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 40,
+     "firstMed": 8.5,
+     "nowMed": -53.6,
+     "aboveOffer": 25,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "433억",
+   "marcapNum": 43300000000,
+   "marcapAtOffer": 60634266886,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4264,6 +6660,13 @@
    "instComp": 1075.521,
    "commit": 3.36,
    "uw38": "미래에셋증권",
+   "band": [
+    5100,
+    6000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 193.5,
+   "tradeValue20": 478050757,
    "prob": {
     "p": 34.7,
     "p10": 24.9,
@@ -4271,11 +6674,28 @@
     "med": -6.9,
     "n": 40
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 12,
+    "firstMed": 36.1,
+    "nowMed": -50.0,
+    "aboveOffer": 25
+   },
+   "uwStats": [
+    {
+     "n": 39,
+     "firstMed": 4.6,
+     "nowMed": -58.7,
+     "aboveOffer": 26,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "483억",
+   "marcapNum": 48300000000,
+   "marcapAtOffer": 74307692308,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4303,6 +6723,13 @@
    "instComp": 117.831,
    "commit": 1.92,
    "uw38": "NH투자증권,KB증권",
+   "band": [
+    12600,
+    14300
+   ],
+   "bandPos": "밴드 하단 미달(-29%)",
+   "firstDayRet": -30.39,
+   "tradeValue20": 10974965282,
    "prob": {
     "p": 35.7,
     "p10": 24.0,
@@ -4310,10 +6737,35 @@
     "med": -10.1,
     "n": 62
    },
-   "listingType": [
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 7,
+    "firstMed": 13.5,
+    "nowMed": -49.8,
+    "aboveOffer": 14
+   },
+   "uwStats": [
+    {
+     "n": 30,
+     "firstMed": 15.9,
+     "nowMed": -38.2,
+     "aboveOffer": 30,
+     "name": "NH투자증권"
+    },
+    {
+     "n": 21,
+     "firstMed": -11.0,
+     "nowMed": -58.9,
+     "aboveOffer": 10,
+     "name": "KB증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "913억",
+   "marcapNum": 91300000000,
+   "marcapAtOffer": 287810858144,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4341,6 +6793,13 @@
    "instComp": 16.931,
    "commit": 10.93,
    "uw38": "한국투자증권",
+   "band": [
+    24000,
+    30000
+   ],
+   "bandPos": "밴드 하단 미달(-17%)",
+   "firstDayRet": 9.0,
+   "tradeValue20": 13951161450,
    "prob": {
     "p": 39.6,
     "p10": 28.5,
@@ -4348,11 +6807,28 @@
     "med": -3.9,
     "n": 104
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례"
+   "sectorStats": {
+    "n": 4,
+    "firstMed": 12.4,
+    "nowMed": -61.7,
+    "aboveOffer": 0
+   },
+   "uwStats": [
+    {
+     "n": 43,
+     "firstMed": 23.3,
+     "nowMed": -38.4,
+     "aboveOffer": 26,
+     "name": "한국투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "4,818억",
+   "marcapNum": 481800000000,
+   "marcapAtOffer": 435033860045,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4380,6 +6856,13 @@
    "instComp": 910.141,
    "commit": 5.77,
    "uw38": "NH투자증권",
+   "band": [
+    9000,
+    10500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -7.81,
+   "tradeValue20": 3123117650,
    "prob": {
     "p": 38.7,
     "p10": 26.1,
@@ -4387,11 +6870,28 @@
     "med": -7.1,
     "n": 61
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 9,
+    "firstMed": 46.8,
+    "nowMed": -36.5,
+    "aboveOffer": 44
+   },
+   "uwStats": [
+    {
+     "n": 29,
+     "firstMed": 15.9,
+     "nowMed": -38.2,
+     "aboveOffer": 31,
+     "name": "NH투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,294억",
+   "marcapNum": 129400000000,
+   "marcapAtOffer": 219854368932,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4419,6 +6919,13 @@
    "instComp": 1148.161,
    "commit": 1.69,
    "uw38": "KB증권",
+   "band": [
+    9700,
+    11400
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 97.37,
+   "tradeValue20": 367907604,
    "prob": {
     "p": 45.2,
     "p10": 30.2,
@@ -4426,12 +6933,28 @@
     "med": -0.0,
     "n": 62
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 16,
+    "firstMed": 25.7,
+    "nowMed": -38.4,
+    "aboveOffer": 19
+   },
+   "uwStats": [
+    {
+     "n": 20,
+     "firstMed": -11.0,
+     "nowMed": -58.9,
+     "aboveOffer": 10,
+     "name": "KB증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "696억",
+   "marcapNum": 69600000000,
+   "marcapAtOffer": 110815642458,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4459,6 +6982,13 @@
    "instComp": 1138.591,
    "commit": 0.4,
    "uw38": "한국투자증권",
+   "band": [
+    6000,
+    7000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -37.79,
+   "tradeValue20": 50600074,
    "prob": {
     "p": 43.5,
     "p10": 33.9,
@@ -4466,11 +6996,23 @@
     "med": -5.7,
     "n": 46
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 42,
+     "firstMed": 24.6,
+     "nowMed": -37.4,
+     "aboveOffer": 26,
+     "name": "한국투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "302억",
+   "marcapNum": 30200000000,
+   "marcapAtOffer": 127657004831,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4498,6 +7040,13 @@
    "instComp": 1117.741,
    "commit": 0.63,
    "uw38": "삼성증권",
+   "band": [
+    4000,
+    5000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -12.7,
+   "tradeValue20": 3633105574,
    "prob": {
     "p": 32.1,
     "p10": 20.9,
@@ -4505,11 +7054,28 @@
     "med": -11.1,
     "n": 91
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 23,
+    "firstMed": -3.1,
+    "nowMed": -50.3,
+    "aboveOffer": 30
+   },
+   "uwStats": [
+    {
+     "n": 26,
+     "firstMed": 8.5,
+     "nowMed": -62.4,
+     "aboveOffer": 12,
+     "name": "삼성증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,888억",
+   "marcapNum": 188800000000,
+   "marcapAtOffer": 180152671756,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4537,6 +7103,13 @@
    "instComp": 1242.261,
    "commit": 1.44,
    "uw38": "KB증권",
+   "band": [
+    16000,
+    18000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -50.11,
+   "tradeValue20": 1550685970,
    "prob": {
     "p": 32.2,
     "p10": 22.9,
@@ -4544,10 +7117,28 @@
     "med": -9.5,
     "n": 59
    },
-   "listingType": [
-    "일반"
+   "sectorStats": {
+    "n": 8,
+    "firstMed": 107.1,
+    "nowMed": -67.3,
+    "aboveOffer": 0
+   },
+   "uwStats": [
+    {
+     "n": 19,
+     "firstMed": -11.0,
+     "nowMed": -62.8,
+     "aboveOffer": 11,
+     "name": "KB증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "3,049억",
+   "marcapNum": 304900000000,
+   "marcapAtOffer": 393984206748,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4575,6 +7166,13 @@
    "instComp": 114.981,
    "commit": null,
    "uw38": "미래에셋증권,삼성증권",
+   "band": [
+    22000,
+    26700
+   ],
+   "bandPos": "밴드 하단 미달(-41%)",
+   "firstDayRet": -40.0,
+   "tradeValue20": 16569803,
    "prob": {
     "p": 42.6,
     "p10": 31.8,
@@ -4582,11 +7180,30 @@
     "med": -8.5,
     "n": 46
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 38,
+     "firstMed": 8.5,
+     "nowMed": -53.6,
+     "aboveOffer": 26,
+     "name": "미래에셋증권"
+    },
+    {
+     "n": 24,
+     "firstMed": 21.2,
+     "nowMed": -58.4,
+     "aboveOffer": 12,
+     "name": "삼성증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "452억",
+   "marcapNum": 45200000000,
+   "marcapAtOffer": 176721804511,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4614,6 +7231,13 @@
    "instComp": 1242.41,
    "commit": 9.98,
    "uw38": "DB금융투자",
+   "band": [
+    4000,
+    4600
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 44.35,
+   "tradeValue20": 210031828,
    "prob": {
     "p": 32.6,
     "p10": 24.7,
@@ -4621,12 +7245,28 @@
     "med": -9.8,
     "n": 56
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 8,
+    "firstMed": 53.4,
+    "nowMed": -36.5,
+    "aboveOffer": 38
+   },
+   "uwStats": [
+    {
+     "n": 6,
+     "firstMed": 19.9,
+     "nowMed": -63.9,
+     "aboveOffer": 17,
+     "name": "DB금융투자"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,261억",
+   "marcapNum": 226100000000,
+   "marcapAtOffer": 173054908486,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4654,6 +7294,13 @@
    "instComp": 64.851,
    "commit": 0.32,
    "uw38": "삼성증권",
+   "band": [
+    24000,
+    26000
+   ],
+   "bandPos": "밴드 하단 미달(-29%)",
+   "firstDayRet": -36.47,
+   "tradeValue20": 110053236,
    "prob": {
     "p": 45.4,
     "p10": 31.4,
@@ -4661,11 +7308,28 @@
     "med": -5.3,
     "n": 54
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 31,
+    "firstMed": 0.0,
+    "nowMed": -71.9,
+    "aboveOffer": 13
+   },
+   "uwStats": [
+    {
+     "n": 24,
+     "firstMed": 21.2,
+     "nowMed": -58.4,
+     "aboveOffer": 12,
+     "name": "삼성증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "676억",
+   "marcapNum": 67600000000,
+   "marcapAtOffer": 200909090909,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4693,6 +7357,13 @@
    "instComp": 849.951,
    "commit": null,
    "uw38": "미래에셋증권",
+   "band": [
+    19000,
+    23000
+   ],
+   "bandPos": "밴드 하단",
+   "firstDayRet": -75.07,
+   "tradeValue20": 598408764,
    "prob": {
     "p": 50.9,
     "p10": 38.3,
@@ -4700,11 +7371,23 @@
     "med": -5.3,
     "n": 37
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 37,
+     "firstMed": 8.5,
+     "nowMed": -53.6,
+     "aboveOffer": 27,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "148억",
+   "marcapNum": 14800000000,
+   "marcapAtOffer": 107123809524,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4732,6 +7415,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 146986722,
    "prob": {
     "p": 35.8,
     "p10": 18.0,
@@ -4739,10 +7426,15 @@
     "med": -5.9,
     "n": 78
    },
-   "listingType": [
-    "일반"
-   ],
+   "sectorStats": null,
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "846억",
+   "marcapNum": 84600000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -4770,6 +7462,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 109763216,
    "prob": {
     "p": 43.7,
     "p10": 29.3,
@@ -4777,10 +7473,20 @@
     "med": -2.0,
     "n": 78
    },
-   "listingType": [
-    "기술특례"
-   ],
+   "sectorStats": {
+    "n": 4,
+    "firstMed": 12.4,
+    "nowMed": -61.7,
+    "aboveOffer": 0
+   },
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "216억",
+   "marcapNum": 21600000000,
+   "marcapAtOffer": null,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4808,6 +7514,13 @@
    "instComp": 1260.251,
    "commit": 2.77,
    "uw38": "한국투자증권",
+   "band": [
+    9000,
+    10000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 60.0,
+   "tradeValue20": 36504515,
    "prob": {
     "p": 32.5,
     "p10": 23.8,
@@ -4815,11 +7528,28 @@
     "med": -10.0,
     "n": 45
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례"
+   "sectorStats": {
+    "n": 7,
+    "firstMed": 46.8,
+    "nowMed": -47.4,
+    "aboveOffer": 43
+   },
+   "uwStats": [
+    {
+     "n": 41,
+     "firstMed": 23.3,
+     "nowMed": -38.4,
+     "aboveOffer": 27,
+     "name": "한국투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "357억",
+   "marcapNum": 35700000000,
+   "marcapAtOffer": 56220472441,
+   "opLoss": false,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -4847,6 +7577,13 @@
    "instComp": 129.11,
    "commit": null,
    "uw38": "미래에셋증권,신한투자증권",
+   "band": [
+    15700,
+    18200
+   ],
+   "bandPos": "밴드 하단 미달(-30%)",
+   "firstDayRet": -17.0,
+   "tradeValue20": 61948645,
    "prob": {
     "p": 42.2,
     "p10": 30.5,
@@ -4854,11 +7591,35 @@
     "med": -6.4,
     "n": 51
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 15,
+    "firstMed": 25.7,
+    "nowMed": -38.4,
+    "aboveOffer": 20
+   },
+   "uwStats": [
+    {
+     "n": 36,
+     "firstMed": 8.5,
+     "nowMed": -50.3,
+     "aboveOffer": 28,
+     "name": "미래에셋증권"
+    },
+    {
+     "n": 3,
+     "firstMed": 129.5,
+     "nowMed": -37.0,
+     "aboveOffer": 33,
+     "name": "신한투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "344억",
+   "marcapNum": 34400000000,
+   "marcapAtOffer": 105846153846,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4886,6 +7647,13 @@
    "instComp": 47.731,
    "commit": 0.02,
    "uw38": "NH투자증권",
+   "band": [
+    12300,
+    14100
+   ],
+   "bandPos": "밴드 하단 미달(-35%)",
+   "firstDayRet": 13.5,
+   "tradeValue20": 459738492,
    "prob": {
     "p": 28.8,
     "p10": 20.1,
@@ -4893,11 +7661,28 @@
     "med": -9.0,
     "n": 67
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 6,
+    "firstMed": 37.7,
+    "nowMed": -49.8,
+    "aboveOffer": 17
+   },
+   "uwStats": [
+    {
+     "n": 28,
+     "firstMed": 16.5,
+     "nowMed": -38.2,
+     "aboveOffer": 32,
+     "name": "NH투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,963억",
+   "marcapNum": 196300000000,
+   "marcapAtOffer": 227924528302,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4925,6 +7710,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 142652282,
    "prob": {
     "p": 28.9,
     "p10": 19.1,
@@ -4932,10 +7721,20 @@
     "med": -11.6,
     "n": 90
    },
-   "listingType": [
-    "기술특례"
-   ],
+   "sectorStats": {
+    "n": 7,
+    "firstMed": 46.8,
+    "nowMed": -47.4,
+    "aboveOffer": 43
+   },
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "265억",
+   "marcapNum": 26500000000,
+   "marcapAtOffer": null,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -4963,6 +7762,13 @@
    "instComp": 198.961,
    "commit": 3.72,
    "uw38": "NH투자증권",
+   "band": [
+    16000,
+    18000
+   ],
+   "bandPos": "밴드 하단 미달(-19%)",
+   "firstDayRet": -66.73,
+   "tradeValue20": 7495191373,
    "prob": {
     "p": 33.6,
     "p10": 25.2,
@@ -4970,11 +7776,28 @@
     "med": -9.2,
     "n": 37
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 16,
+    "firstMed": 8.5,
+    "nowMed": -10.2,
+    "aboveOffer": 38
+   },
+   "uwStats": [
+    {
+     "n": 27,
+     "firstMed": 16.5,
+     "nowMed": -39.5,
+     "aboveOffer": 30,
+     "name": "NH투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "6,975억",
+   "marcapNum": 697500000000,
+   "marcapAtOffer": 590332031250,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5002,6 +7825,13 @@
    "instComp": 635.051,
    "commit": null,
    "uw38": "미래에셋증권",
+   "band": [
+    10100,
+    12300
+   ],
+   "bandPos": "밴드 하단 미달(-28%)",
+   "firstDayRet": 22.74,
+   "tradeValue20": 579835252,
    "prob": {
     "p": 33.1,
     "p10": 21.9,
@@ -5009,12 +7839,28 @@
     "med": -9.8,
     "n": 50
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 15,
+    "firstMed": -8.9,
+    "nowMed": -10.2,
+    "aboveOffer": 40
+   },
+   "uwStats": [
+    {
+     "n": 35,
+     "firstMed": 8.5,
+     "nowMed": -53.6,
+     "aboveOffer": 29,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "487억",
+   "marcapNum": 48700000000,
+   "marcapAtOffer": 95183400268,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -5042,6 +7888,13 @@
    "instComp": 963.771,
    "commit": 3.12,
    "uw38": "신한투자",
+   "band": [
+    3500,
+    3900
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 98.21,
+   "tradeValue20": 544895168,
    "prob": {
     "p": 43.0,
     "p10": 32.8,
@@ -5049,11 +7902,15 @@
     "med": -1.4,
     "n": 83
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
-   ],
+   "sectorStats": null,
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "519억",
+   "marcapNum": 51900000000,
+   "marcapAtOffer": 53476882431,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5081,6 +7938,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 12825759,
    "prob": {
     "p": 33.4,
     "p10": 19.4,
@@ -5088,10 +7949,15 @@
     "med": -6.2,
     "n": 91
    },
-   "listingType": [
-    "기술특례"
-   ],
+   "sectorStats": null,
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "469억",
+   "marcapNum": 46900000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": false
   },
   {
@@ -5119,6 +7985,13 @@
    "instComp": 997.371,
    "commit": 0.23,
    "uw38": "신한투자증권",
+   "band": [
+    5300,
+    6400
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": 129.53,
+   "tradeValue20": 33948500,
    "prob": {
     "p": 43.9,
     "p10": 29.0,
@@ -5126,10 +7999,20 @@
     "med": -4.7,
     "n": 33
    },
-   "listingType": [
-    "이익미실현(테슬라)"
-   ],
+   "sectorStats": {
+    "n": 11,
+    "firstMed": 23.7,
+    "nowMed": -54.1,
+    "aboveOffer": 27
+   },
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "543억",
+   "marcapNum": 54300000000,
+   "marcapAtOffer": 86233250620,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5157,6 +8040,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 395853224,
    "prob": {
     "p": 27.5,
     "p10": 19.5,
@@ -5164,11 +8051,20 @@
     "med": -13.5,
     "n": 105
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례"
-   ],
+   "sectorStats": {
+    "n": 31,
+    "firstMed": 0.0,
+    "nowMed": -71.9,
+    "aboveOffer": 13
+   },
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "255억",
+   "marcapNum": 25500000000,
+   "marcapAtOffer": null,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": false
   },
   {
@@ -5196,6 +8092,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 597665232,
    "prob": {
     "p": 35.5,
     "p10": 21.8,
@@ -5203,10 +8103,20 @@
     "med": -7.9,
     "n": 76
    },
-   "listingType": [
-    "기술특례"
-   ],
+   "sectorStats": {
+    "n": 3,
+    "firstMed": 5.7,
+    "nowMed": -80.0,
+    "aboveOffer": 33
+   },
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,142억",
+   "marcapNum": 114200000000,
+   "marcapAtOffer": null,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5234,6 +8144,13 @@
    "instComp": 1163.21,
    "commit": 0.35,
    "uw38": "NH투자증권",
+   "band": [
+    21000,
+    24500
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -24.53,
+   "tradeValue20": 34143540,
    "prob": {
     "p": 48.3,
     "p10": 31.7,
@@ -5241,11 +8158,28 @@
     "med": -0.3,
     "n": 51
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 30,
+    "firstMed": 0.5,
+    "nowMed": -71.9,
+    "aboveOffer": 13
+   },
+   "uwStats": [
+    {
+     "n": 26,
+     "firstMed": 19.9,
+     "nowMed": -38.2,
+     "aboveOffer": 31,
+     "name": "NH투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "431억",
+   "marcapNum": 43100000000,
+   "marcapAtOffer": 123502923977,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5273,6 +8207,13 @@
    "instComp": 283.91,
    "commit": 0.82,
    "uw38": "NH투자증권",
+   "band": [
+    13000,
+    14600
+   ],
+   "bandPos": "밴드 하단 미달(-23%)",
+   "firstDayRet": -29.1,
+   "tradeValue20": 34992158,
    "prob": {
     "p": 49.5,
     "p10": 36.6,
@@ -5280,12 +8221,28 @@
     "med": -0.4,
     "n": 54
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 7,
+    "firstMed": 107.1,
+    "nowMed": -67.3,
+    "aboveOffer": 0
+   },
+   "uwStats": [
+    {
+     "n": 25,
+     "firstMed": 19.9,
+     "nowMed": -38.2,
+     "aboveOffer": 32,
+     "name": "NH투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "232억",
+   "marcapNum": 23200000000,
+   "marcapAtOffer": 79316239316,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5313,6 +8270,13 @@
    "instComp": 343.661,
    "commit": 0.01,
    "uw38": "한국투자증권",
+   "band": [
+    12000,
+    14000
+   ],
+   "bandPos": "밴드 하단 미달(-17%)",
+   "firstDayRet": -22.0,
+   "tradeValue20": 134321571,
    "prob": {
     "p": 46.6,
     "p10": 35.2,
@@ -5320,10 +8284,28 @@
     "med": -2.8,
     "n": 63
    },
-   "listingType": [
-    "기술특례"
+   "sectorStats": {
+    "n": 22,
+    "firstMed": 8.5,
+    "nowMed": -50.3,
+    "aboveOffer": 32
+   },
+   "uwStats": [
+    {
+     "n": 40,
+     "firstMed": 24.6,
+     "nowMed": -38.4,
+     "aboveOffer": 28,
+     "name": "한국투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "710억",
+   "marcapNum": 71000000000,
+   "marcapAtOffer": 112877583466,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5351,6 +8333,13 @@
    "instComp": 254.591,
    "commit": 0.93,
    "uw38": "한국투자증권",
+   "band": [
+    4500,
+    6500
+   ],
+   "bandPos": "밴드 하단",
+   "firstDayRet": -8.89,
+   "tradeValue20": 4737560323,
    "prob": {
     "p": 33.1,
     "p10": 24.3,
@@ -5358,12 +8347,28 @@
     "med": -7.9,
     "n": 57
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 14,
+    "firstMed": 8.5,
+    "nowMed": -10.2,
+    "aboveOffer": 36
+   },
+   "uwStats": [
+    {
+     "n": 39,
+     "firstMed": 24.6,
+     "nowMed": -39.0,
+     "aboveOffer": 26,
+     "name": "한국투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,043억",
+   "marcapNum": 204300000000,
+   "marcapAtOffer": 143200934579,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -5391,6 +8396,13 @@
    "instComp": 1082.351,
    "commit": 0.22,
    "uw38": "미래에셋증권",
+   "band": [
+    11000,
+    13000
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -66.88,
+   "tradeValue20": 30569727,
    "prob": {
     "p": 52.1,
     "p10": 38.9,
@@ -5398,11 +8410,28 @@
     "med": -1.8,
     "n": 35
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 3,
+    "firstMed": 15.0,
+    "nowMed": -77.3,
+    "aboveOffer": 0
+   },
+   "uwStats": [
+    {
+     "n": 34,
+     "firstMed": 8.5,
+     "nowMed": -50.3,
+     "aboveOffer": 29,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "297억",
+   "marcapNum": 29700000000,
+   "marcapAtOffer": 239664804469,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5430,6 +8459,13 @@
    "instComp": 288.001,
    "commit": 0.79,
    "uw38": "대신증권",
+   "band": [
+    27200,
+    30200
+   ],
+   "bandPos": "밴드 상단",
+   "firstDayRet": -35.76,
+   "tradeValue20": 327073916,
    "prob": {
     "p": 47.0,
     "p10": 32.2,
@@ -5437,12 +8473,23 @@
     "med": -1.0,
     "n": 63
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 25,
+     "firstMed": 37.7,
+     "nowMed": -54.1,
+     "aboveOffer": 16,
+     "name": "대신증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,113억",
+   "marcapNum": 111300000000,
+   "marcapAtOffer": 328568914956,
+   "opLoss": false,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -5470,6 +8517,13 @@
    "instComp": 1000.101,
    "commit": 0.46,
    "uw38": "신영증권",
+   "band": [
+    16000,
+    18500
+   ],
+   "bandPos": "밴드 상단 초과(+24%)",
+   "firstDayRet": -61.76,
+   "tradeValue20": 514271227,
    "prob": {
     "p": 45.7,
     "p10": 32.7,
@@ -5477,11 +8531,28 @@
     "med": -5.5,
     "n": 38
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 5,
+    "firstMed": 129.2,
+    "nowMed": -53.2,
+    "aboveOffer": 40
+   },
+   "uwStats": [
+    {
+     "n": 11,
+     "firstMed": 5.7,
+     "nowMed": -80.0,
+     "aboveOffer": 9,
+     "name": "신영증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "518억",
+   "marcapNum": 51800000000,
+   "marcapAtOffer": 312703412073,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5509,6 +8580,13 @@
    "instComp": 967.711,
    "commit": 0.14,
    "uw38": "대신증권",
+   "band": [
+    10900,
+    13400
+   ],
+   "bandPos": "밴드 상단 초과(+19%)",
+   "firstDayRet": -37.06,
+   "tradeValue20": 1053929622,
    "prob": {
     "p": 29.5,
     "p10": 21.5,
@@ -5516,11 +8594,23 @@
     "med": -8.3,
     "n": 41
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 24,
+     "firstMed": 40.0,
+     "nowMed": -54.1,
+     "aboveOffer": 12,
+     "name": "대신증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "4,683억",
+   "marcapNum": 468300000000,
+   "marcapAtOffer": 215620143885,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5548,6 +8638,10 @@
    "instComp": null,
    "commit": null,
    "uw38": null,
+   "band": null,
+   "bandPos": null,
+   "firstDayRet": null,
+   "tradeValue20": 268639772,
    "prob": {
     "p": 41.2,
     "p10": 30.6,
@@ -5555,12 +8649,20 @@
     "med": -2.5,
     "n": 50
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
-   ],
+   "sectorStats": {
+    "n": 14,
+    "firstMed": 8.5,
+    "nowMed": -10.2,
+    "aboveOffer": 36
+   },
+   "uwStats": [],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,357억",
+   "marcapNum": 235700000000,
+   "marcapAtOffer": null,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -5588,6 +8690,13 @@
    "instComp": 973.121,
    "commit": 0.36,
    "uw38": "한국투자증권",
+   "band": [
+    11500,
+    13500
+   ],
+   "bandPos": "밴드 상단 초과(+19%)",
+   "firstDayRet": -38.25,
+   "tradeValue20": 1700995516,
    "prob": {
     "p": 41.9,
     "p10": 27.5,
@@ -5595,10 +8704,23 @@
     "med": -3.8,
     "n": 53
    },
-   "listingType": [
-    "기술특례"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 38,
+     "firstMed": 25.4,
+     "nowMed": -38.4,
+     "aboveOffer": 26,
+     "name": "한국투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "993억",
+   "marcapNum": 99300000000,
+   "marcapAtOffer": 217942386831,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5626,6 +8748,13 @@
    "instComp": 841.121,
    "commit": 1.73,
    "uw38": "KB증권",
+   "band": [
+    12000,
+    14000
+   ],
+   "bandPos": "밴드 상단 초과(+29%)",
+   "firstDayRet": -61.83,
+   "tradeValue20": 59631484,
    "prob": {
     "p": 40.1,
     "p10": 32.1,
@@ -5633,10 +8762,28 @@
     "med": -7.5,
     "n": 37
    },
-   "listingType": [
-    "일반"
+   "sectorStats": {
+    "n": 10,
+    "firstMed": 36.1,
+    "nowMed": -50.0,
+    "aboveOffer": 30
+   },
+   "uwStats": [
+    {
+     "n": 18,
+     "firstMed": -9.2,
+     "nowMed": -58.9,
+     "aboveOffer": 11,
+     "name": "KB증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,157억",
+   "marcapNum": 115700000000,
+   "marcapAtOffer": 704771573604,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -5664,6 +8811,13 @@
    "instComp": 516.191,
    "commit": 3.25,
    "uw38": "한국투자증권",
+   "band": [
+    25000,
+    29000
+   ],
+   "bandPos": "밴드 상단 초과(+10%)",
+   "firstDayRet": -12.5,
+   "tradeValue20": 54215105,
    "prob": {
     "p": 43.5,
     "p10": 30.0,
@@ -5671,10 +8825,28 @@
     "med": -0.8,
     "n": 46
    },
-   "listingType": [
-    "기술특례"
+   "sectorStats": {
+    "n": 3,
+    "firstMed": 16.5,
+    "nowMed": -67.9,
+    "aboveOffer": 33
+   },
+   "uwStats": [
+    {
+     "n": 37,
+     "firstMed": 25.4,
+     "nowMed": -38.4,
+     "aboveOffer": 27,
+     "name": "한국투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,125억",
+   "marcapNum": 112500000000,
+   "marcapAtOffer": 481283422460,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5702,6 +8874,13 @@
    "instComp": 933.91,
    "commit": 1.44,
    "uw38": "미래에셋증권,신영증권",
+   "band": [
+    9400,
+    10900
+   ],
+   "bandPos": "밴드 상단 초과(+19%)",
+   "firstDayRet": -26.63,
+   "tradeValue20": 6106050290,
    "prob": {
     "p": 31.2,
     "p10": 22.2,
@@ -5709,11 +8888,35 @@
     "med": -8.0,
     "n": 37
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 29,
+    "firstMed": 0.5,
+    "nowMed": -71.9,
+    "aboveOffer": 10
+   },
+   "uwStats": [
+    {
+     "n": 33,
+     "firstMed": 8.5,
+     "nowMed": -53.6,
+     "aboveOffer": 27,
+     "name": "미래에셋증권"
+    },
+    {
+     "n": 10,
+     "firstMed": 26.7,
+     "nowMed": -80.0,
+     "aboveOffer": 0,
+     "name": "신영증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "6,934억",
+   "marcapNum": 693400000000,
+   "marcapAtOffer": 402419642857,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5741,6 +8944,13 @@
    "instComp": 251.271,
    "commit": 0.42,
    "uw38": "미래에셋증권",
+   "band": [
+    22000,
+    26000
+   ],
+   "bandPos": "밴드 하단",
+   "firstDayRet": -22.82,
+   "tradeValue20": 111591000,
    "prob": {
     "p": 37.1,
     "p10": 21.9,
@@ -5748,11 +8958,28 @@
     "med": -4.4,
     "n": 52
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 9,
+    "firstMed": 36.1,
+    "nowMed": -54.1,
+    "aboveOffer": 33
+   },
+   "uwStats": [
+    {
+     "n": 32,
+     "firstMed": 22.6,
+     "nowMed": -53.6,
+     "aboveOffer": 28,
+     "name": "미래에셋증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "845억",
+   "marcapNum": 84500000000,
+   "marcapAtOffer": 169153776160,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5780,6 +9007,13 @@
    "instComp": 1159.891,
    "commit": 0.01,
    "uw38": "대신증권",
+   "band": [
+    11000,
+    12500
+   ],
+   "bandPos": "밴드 상단 초과(+20%)",
+   "firstDayRet": -27.4,
+   "tradeValue20": 734965827,
    "prob": {
     "p": 29.6,
     "p10": 18.5,
@@ -5787,12 +9021,28 @@
     "med": -13.6,
     "n": 74
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 14,
+    "firstMed": 33.2,
+    "nowMed": -34.5,
+    "aboveOffer": 21
+   },
+   "uwStats": [
+    {
+     "n": 23,
+     "firstMed": 40.0,
+     "nowMed": -63.9,
+     "aboveOffer": 13,
+     "name": "대신증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,051억",
+   "marcapNum": 105100000000,
+   "marcapAtOffer": 197309136421,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5820,6 +9070,13 @@
    "instComp": 577.591,
    "commit": 1.0,
    "uw38": "삼성증권,유진투자증권,유안타증권",
+   "band": [
+    20000,
+    24000
+   ],
+   "bandPos": "밴드 상단 초과(+25%)",
+   "firstDayRet": -23.0,
+   "tradeValue20": 1831709250,
    "prob": {
     "p": 42.4,
     "p10": 26.2,
@@ -5827,11 +9084,42 @@
     "med": -4.1,
     "n": 59
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 21,
+    "firstMed": 8.5,
+    "nowMed": -55.3,
+    "aboveOffer": 33
+   },
+   "uwStats": [
+    {
+     "n": 23,
+     "firstMed": 21.2,
+     "nowMed": -62.4,
+     "aboveOffer": 13,
+     "name": "삼성증권"
+    },
+    {
+     "n": 5,
+     "firstMed": 48.2,
+     "nowMed": -37.2,
+     "aboveOffer": 20,
+     "name": "유진투자증권"
+    },
+    {
+     "n": 4,
+     "firstMed": 48.2,
+     "nowMed": -37.2,
+     "aboveOffer": 0,
+     "name": "유안타증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "2,145억",
+   "marcapNum": 214500000000,
+   "marcapAtOffer": 354155200881,
+   "opLoss": true,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5859,6 +9147,13 @@
    "instComp": 1019.861,
    "commit": 3.89,
    "uw38": "신영증권,유진증권",
+   "band": [
+    12500,
+    14500
+   ],
+   "bandPos": "밴드 상단 초과(+24%)",
+   "firstDayRet": 26.67,
+   "tradeValue20": 24173499412,
    "prob": {
     "p": 31.0,
     "p10": 22.1,
@@ -5866,11 +9161,28 @@
     "med": -11.4,
     "n": 70
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 4,
+    "firstMed": 76.4,
+    "nowMed": -28.5,
+    "aboveOffer": 0
+   },
+   "uwStats": [
+    {
+     "n": 9,
+     "firstMed": 5.7,
+     "nowMed": -85.3,
+     "aboveOffer": 0,
+     "name": "신영증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "866억",
+   "marcapNum": 86600000000,
+   "marcapAtOffer": 145274930103,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -5898,6 +9210,13 @@
    "instComp": 13.11,
    "commit": 0.14,
    "uw38": "NH투자증권",
+   "band": [
+    16500,
+    20500
+   ],
+   "bandPos": "밴드 하단 미달(-27%)",
+   "firstDayRet": 24.25,
+   "tradeValue20": 368312392,
    "prob": {
     "p": 33.6,
     "p10": 22.4,
@@ -5905,11 +9224,23 @@
     "med": -6.5,
     "n": 70
    },
-   "listingType": [
-    "기술특례",
-    "이익미실현(테슬라)"
+   "sectorStats": null,
+   "uwStats": [
+    {
+     "n": 24,
+     "firstMed": 19.9,
+     "nowMed": -37.4,
+     "aboveOffer": 33,
+     "name": "NH투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,237억",
+   "marcapNum": 123700000000,
+   "marcapAtOffer": 213890489914,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -5937,6 +9268,13 @@
    "instComp": 800.571,
    "commit": 0.43,
    "uw38": "KB증권",
+   "band": [
+    8600,
+    9800
+   ],
+   "bandPos": "밴드 상단 초과(+22%)",
+   "firstDayRet": -9.17,
+   "tradeValue20": 3894795466,
    "prob": {
     "p": 42.1,
     "p10": 25.3,
@@ -5944,10 +9282,28 @@
     "med": -7.5,
     "n": 56
    },
-   "listingType": [
-    "기술특례"
+   "sectorStats": {
+    "n": 20,
+    "firstMed": 14.4,
+    "nowMed": -50.3,
+    "aboveOffer": 35
+   },
+   "uwStats": [
+    {
+     "n": 17,
+     "firstMed": -11.0,
+     "nowMed": -58.9,
+     "aboveOffer": 12,
+     "name": "KB증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,001억",
+   "marcapNum": 100100000000,
+   "marcapAtOffer": 341250000000,
+   "opLoss": false,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -5975,6 +9331,13 @@
    "instComp": 1069.681,
    "commit": 2.98,
    "uw38": "한국투자증권",
+   "band": [
+    8000,
+    10000
+   ],
+   "bandPos": "밴드 상단 초과(+20%)",
+   "firstDayRet": 31.83,
+   "tradeValue20": 40994986,
    "prob": {
     "p": 35.0,
     "p10": 20.6,
@@ -5982,10 +9345,28 @@
     "med": -6.1,
     "n": 42
    },
-   "listingType": [
-    "기술특례"
+   "sectorStats": {
+    "n": 28,
+    "firstMed": 0.5,
+    "nowMed": -71.9,
+    "aboveOffer": 11
+   },
+   "uwStats": [
+    {
+     "n": 36,
+     "firstMed": 25.4,
+     "nowMed": -37.4,
+     "aboveOffer": 28,
+     "name": "한국투자증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "400억",
+   "marcapNum": 40000000000,
+   "marcapAtOffer": 121673003802,
+   "opLoss": false,
+   "mezz": false,
    "hasLockup": true
   },
   {
@@ -6013,6 +9394,13 @@
    "instComp": 1050.191,
    "commit": 8.64,
    "uw38": "대신증권",
+   "band": [
+    10000,
+    12200
+   ],
+   "bandPos": "밴드 상단 초과(+23%)",
+   "firstDayRet": 37.67,
+   "tradeValue20": 420487793,
    "prob": {
     "p": 32.3,
     "p10": 22.4,
@@ -6020,12 +9408,28 @@
     "med": -4.4,
     "n": 70
    },
-   "listingType": [
-    "기술특례",
-    "성장성특례",
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 5,
+    "firstMed": 4.6,
+    "nowMed": -54.6,
+    "aboveOffer": 20
+   },
+   "uwStats": [
+    {
+     "n": 22,
+     "firstMed": 41.1,
+     "nowMed": -63.9,
+     "aboveOffer": 14,
+     "name": "대신증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "1,804억",
+   "marcapNum": 180400000000,
+   "marcapAtOffer": 193562231760,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   },
   {
@@ -6053,6 +9457,13 @@
    "instComp": 1051.521,
    "commit": 1.71,
    "uw38": "신영증권,KB증권",
+   "band": [
+    28000,
+    34000
+   ],
+   "bandPos": "밴드 상단 초과(+18%)",
+   "firstDayRet": -61.65,
+   "tradeValue20": 262423482,
    "prob": {
     "p": 51.3,
     "p10": 37.1,
@@ -6060,10 +9471,35 @@
     "med": -1.6,
     "n": 36
    },
-   "listingType": [
-    "이익미실현(테슬라)"
+   "sectorStats": {
+    "n": 19,
+    "firstMed": 14.4,
+    "nowMed": -50.3,
+    "aboveOffer": 37
+   },
+   "uwStats": [
+    {
+     "n": 8,
+     "firstMed": 66.3,
+     "nowMed": -80.0,
+     "aboveOffer": 0,
+     "name": "신영증권"
+    },
+    {
+     "n": 16,
+     "firstMed": 14.4,
+     "nowMed": -42.6,
+     "aboveOffer": 12,
+     "name": "KB증권"
+    }
    ],
+   "track": null,
+   "trackManual": false,
    "marcap": "771억",
+   "marcapNum": 77100000000,
+   "marcapAtOffer": 524489795918,
+   "opLoss": true,
+   "mezz": true,
    "hasLockup": true
   }
  ]
