@@ -23,6 +23,10 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 import requests
+import requests.adapters
+import urllib3
+
+urllib3.disable_warnings()
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import dart as dartlib          # noqa: E402
@@ -40,6 +44,7 @@ UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3
 DART_KEY = os.environ.get("DART_API_KEY", "").strip()
 CLAUDE_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 MAX_AI_PER_RUN = 300
+DART_BUDGET_MIN = 40   # 증권신고서 읽기·AI 요약에 쓸 최대 시간(분). 남은 종목은 다음 실행 때 이어서
 
 
 def log(*a):
@@ -86,12 +91,42 @@ def fetch_kosdaq_listings(since: date) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------- 2. 38커뮤니케이션
+class LegacySSL(requests.adapters.HTTPAdapter):
+    """38커뮤니케이션은 오래된 보안(SSL) 방식을 써서 기본 설정으로는 접속이 거부됨"""
+    def init_poolmanager(self, *a, **kw):
+        import ssl
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        ctx.minimum_version = ssl.TLSVersion.TLSv1
+        ctx.set_ciphers("DEFAULT:@SECLEVEL=0")
+        ctx.options |= getattr(ssl, "OP_LEGACY_SERVER_CONNECT", 0x4)
+        kw["ssl_context"] = ctx
+        return super().init_poolmanager(*a, **kw)
+
+
+S38 = requests.Session()
+S38.mount("https://www.38.co.kr", LegacySSL())
+
+
+def get_38(path):
+    last = None
+    for base in ("https://www.38.co.kr", "http://www.38.co.kr"):
+        try:
+            r = S38.get(base + path, headers=UA, timeout=30)
+            r.raise_for_status()
+            return r
+        except Exception as e:
+            last = e
+    raise last
+
+
 def read_38(o, since, date_key, max_pages=200):
     """38 표를 페이지 넘기며 읽어 DataFrame 목록으로"""
     frames = []
     for page in range(1, max_pages + 1):
         try:
-            r = requests.get(f"https://www.38.co.kr/html/fund/index.htm?o={o}&page={page}", headers=UA, timeout=30)
+            r = get_38(f"/html/fund/index.htm?o={o}&page={page}")
             tables = pd.read_html(io.StringIO(r.content.decode("euc-kr", errors="ignore")), match=date_key)
         except Exception as e:
             log(f"[38:{o}] {page}페이지 중단: {e}")
@@ -200,14 +235,14 @@ def pct(a, b):
 
 
 # ---------------------------------------------------------------- 4. DART 상세
-def dart_detail(dt, code, name, listed, det, ai_budget):
+def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True):
     """det(기존 상세)를 갱신. 무거운 작업(문서 파싱·요약)은 한 번만."""
     corp = dt.corp_code(code)
     if not corp:
         det["dartStatus"] = "고유번호 없음"
         return ai_budget
     tried = det.get("dartTried")
-    need_doc = not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
+    need_doc = heavy and not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
     if need_doc:
         det["dartTried"] = date.today().isoformat()
         try:
@@ -230,7 +265,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget):
             log(f"  - {name} DART 실패: {e}")
     # 사업 요약: AI 키가 있으면 요약, 없으면 원문 앞부분 발췌
     biz = det.get("_bizText") or ""
-    if biz and not det.get("summaryAI") and CLAUDE_KEY and ai_budget > 0:
+    if heavy and biz and not det.get("summaryAI") and CLAUDE_KEY and ai_budget > 0:
         try:
             det["summary"] = dartlib.summarize(name, biz, CLAUDE_KEY)
             det["summaryAI"] = True
@@ -343,8 +378,13 @@ def main():
                   "base": round(mdl.base * 100, 1) if mdl.base is not None else None,
                   "horizonDays": 60, "calibration": calib}
 
+    # ---- 1차 저장 (아래 DART 단계가 오래 걸려도 목록·차트는 먼저 확보)
+    save(items, model_meta, missing, dart_on=bool(DART_KEY))
+
     # ---- 상세(DART·시장지표)
     dt = dartlib.Dart(DART_KEY, log) if DART_KEY else None
+    t0 = time.time()
+    left = 0
     if not dt:
         log("[DART] DART_API_KEY 가 없어 유통물량·사업요약·공시는 건너뜁니다.")
     ai_budget = MAX_AI_PER_RUN
@@ -354,7 +394,10 @@ def main():
         det["market"] = fetch_market(it["code"]) or det.get("market", {})
         if dt:
             try:
-                ai_budget = dart_detail(dt, it["code"], it["name"], date.fromisoformat(it["listed"]), det, ai_budget)
+                heavy = (time.time() - t0) < DART_BUDGET_MIN * 60
+                if not heavy and not det.get("dartDone"):
+                    left += 1
+                ai_budget = dart_detail(dt, it["code"], it["name"], date.fromisoformat(it["listed"]), det, ai_budget, heavy)
             except Exception as e:
                 log(f"  - {it['name']} DART 전체 실패: {e}")
         # 목록 화면용 요약 필드
@@ -364,15 +407,21 @@ def main():
         p.write_text(json.dumps(det, ensure_ascii=False, separators=(",", ":")), "utf-8")
         time.sleep(0.1)
 
+    if left:
+        log(f"[DART] 시간 제한으로 {left}개 종목은 다음 실행 때 이어서 처리합니다.")
+    save(items, model_meta, missing, dart_on=bool(dt))
+    log(f"[완료] {len(items)}개 저장, 공모가 미확인 {len(missing)}개")
+
+
+def save(items, model_meta, missing, dart_on):
     items.sort(key=lambda x: x["listed"], reverse=True)
     out = {"updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"), "count": len(items),
-           "dart": bool(dt), "ai": bool(CLAUDE_KEY), "model": model_meta, "items": items}
-    prev_path.write_text(json.dumps(out, ensure_ascii=False, indent=1), "utf-8")
+           "dart": dart_on, "ai": bool(CLAUDE_KEY), "model": model_meta, "items": items}
+    (DATA / "ipos.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), "utf-8")
     with open(DATA / "missing_offer.csv", "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
         w.writerow(["종목코드", "회사명"])
         w.writerows(missing)
-    log(f"[완료] {len(items)}개 저장, 공모가 미확인 {len(missing)}개")
 
 
 if __name__ == "__main__":

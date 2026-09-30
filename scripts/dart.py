@@ -4,6 +4,7 @@ DART(전자공시) 연동 - OpenDART API 키가 있을 때만 동작합니다.
   · 증권신고서 주요정보 API에서: 주관사, 공모주식수, 공모금액, 구주매출, 환매청구권
   · 최근 공시 목록
 """
+import html
 import io
 import re
 import time
@@ -292,19 +293,43 @@ def listing_type(text):
 
 
 def analyze_document(xml_text):
-    soup = BeautifulSoup(xml_text, "html.parser")
+    """문서 전체를 파싱하지 않고, 필요한 표와 '사업의 내용' 부분만 잘라서 읽는다(빠름)"""
     out = {"lockupTables": [], "lockup": []}
-    for tbl in find_lockup_tables(soup):
-        rows = table_rows(tbl)
-        if len(rows) > 60:
-            rows = rows[:60]
-        out["lockupTables"].append(rows)
-        if not out["lockup"]:
-            out["lockup"] = lockup_timeline(rows)
-    text = clean(soup.get_text(" "))
-    out["bizText"] = business_text(soup)
-    out["listingType"] = listing_type(text[:400000])
+    cands = []
+    for m in re.finditer(r"<TABLE\b.*?</TABLE>", xml_text, re.S | re.I):
+        chunk = m.group(0)
+        if "유통" in chunk and len(chunk) < 300000:
+            cands.append(chunk)
+    if cands:
+        soup = BeautifulSoup("".join(cands), "html.parser")
+        for tbl in find_lockup_tables(soup):
+            rows = table_rows(tbl)[:60]
+            out["lockupTables"].append(rows)
+            if not out["lockup"]:
+                out["lockup"] = lockup_timeline(rows)
+    out["bizText"] = business_text_raw(xml_text)
+    out["listingType"] = listing_type(xml_text[:3000000])
     return out
+
+
+def strip_tags(s):
+    s = re.sub(r"<[^>]+>", " ", s)
+    return clean(html.unescape(s))
+
+
+def business_text_raw(xml_text, limit=18000):
+    """'II. 사업의 내용' 제목부터 다음 장(III.) 전까지"""
+    m = re.search(r"<TITLE[^>]*>[^<]*사업의\s*내용[^<]*</TITLE>", xml_text, re.I)
+    if not m:
+        m = re.search(r"<TITLE[^>]*>[^<]*사업의\s*개요[^<]*</TITLE>", xml_text, re.I)
+    if not m:
+        return ""
+    rest = xml_text[m.end(): m.end() + 400000]
+    nxt = re.search(r"<TITLE[^>]*>\s*(III|Ⅲ|3)\s*\.", rest, re.I)
+    if nxt:
+        rest = rest[: nxt.start()]
+    txt = strip_tags(rest)
+    return txt[:limit] if len(txt) > 300 else ""
 
 
 # ------------------------------------------------------------------ AI 요약 (선택)
