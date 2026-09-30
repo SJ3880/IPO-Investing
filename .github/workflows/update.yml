@@ -1,0 +1,57 @@
+# 공모주 투자 Insight - 자동 업데이트 & 배포
+# 평일 16:40(한국시간)마다 새 상장사·주가를 받아 사이트를 다시 올립니다.
+name: 데이터 업데이트 & 배포
+
+on:
+  schedule:
+    - cron: "40 7 * * 1-5"   # UTC 07:40 = KST 16:40, 월~금
+  workflow_dispatch:          # Actions 탭에서 'Run workflow' 버튼으로 수동 실행
+  push:
+    branches: [main]          # index.html 등을 고치면 바로 다시 배포
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 패키지 설치
+        run: pip install -r scripts/requirements.txt
+
+      - name: 데이터 수집
+        env:
+          DART_API_KEY: ${{ secrets.DART_API_KEY }}            # 유통물량·사업내용·공시 (무료)
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}  # 사업 요약 AI (선택, 유료)
+        run: python scripts/update.py
+        timeout-minutes: 90
+
+      - name: 데이터 저장(커밋)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet || git commit -m "데이터 업데이트 $(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M')"
+          git push
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deploy
+        uses: actions/deploy-pages@v4
