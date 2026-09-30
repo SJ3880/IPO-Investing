@@ -44,6 +44,7 @@ UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3
 DART_KEY = os.environ.get("DART_API_KEY", "").strip()
 CLAUDE_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 MAX_AI_PER_RUN = 300
+SUMMARY_VER = 2       # 사업 요약 형식 버전. 올리면 AI 요약을 새 형식으로 다시 만듦
 PARSE_VER = 2         # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
 DART_BUDGET_MIN = 40   # 증권신고서 읽기·AI 요약에 쓸 최대 시간(분). 남은 종목은 다음 실행 때 이어서
 
@@ -344,10 +345,12 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True):
             log(f"  - {name} DART 실패: {e}")
     # 사업 요약: AI 키가 있으면 요약, 없으면 원문 앞부분 발췌
     biz = det.get("_bizText") or ""
-    if heavy and biz and not det.get("summaryAI") and CLAUDE_KEY and ai_budget > 0:
+    stale = not det.get("summaryAI") or det.get("summaryVer", 1) < SUMMARY_VER
+    if heavy and biz and stale and CLAUDE_KEY and ai_budget > 0:
         try:
             det["summary"] = dartlib.summarize(name, biz, CLAUDE_KEY)
             det["summaryAI"] = True
+            det["summaryVer"] = SUMMARY_VER
             ai_budget -= 1
         except Exception as e:
             log(f"  - {name} 요약 실패: {e}")
@@ -365,7 +368,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True):
     return ai_budget
 
 
-def excerpt(text, n=1200):
+def excerpt(text, n=500):
     t = re.sub(r"^.*?(사업의 개요|업계의 현황|회사의 현황)", r"\1", text, count=1)
     return t[:n] + ("…" if len(t) > n else "")
 

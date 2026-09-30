@@ -95,6 +95,12 @@ table.fin th{color:var(--muted);font-weight:600}
 table.raw{border-collapse:collapse;font-size:12px;margin-top:8px;min-width:100%}
 table.raw td{border:1px solid var(--line);padding:4px 6px;text-align:center;white-space:nowrap}
 .summary p{margin:0 0 10px}
+.summary .one{font-weight:700;font-size:15px;margin-bottom:10px}
+.summary .biz{display:grid;grid-template-columns:84px 1fr;gap:8px 12px;align-items:start}
+.summary .bt{font-size:12px;font-weight:700;color:var(--accent);padding-top:2px}
+.summary .bt.risk{color:var(--warn)}
+.summary ul{margin:0;padding-left:16px}.summary li{margin-bottom:3px}
+@media (max-width:720px){.summary .biz{grid-template-columns:1fr;gap:2px}.summary ul{margin-bottom:8px}}
 .dis a{color:var(--text);text-decoration:none}.dis a:hover{color:var(--accent)}
 .dis li{margin-bottom:6px}.dis ul{padding-left:18px;margin:0}
 .links a{color:var(--accent);margin-right:14px}
@@ -361,10 +367,17 @@ function renderLock(r, d){
 function renderSummary(d){
   const s = d.summary;
   $('#sumChip').textContent = d.summaryAI ? 'AI 요약 · DART 원문 기반' : 'DART 원문 발췌';
-  $('#dSummary').innerHTML = s
-    ? s.split(/\n\s*\n|\n/).filter(x => x.trim()).map(p => `<p>${esc(p.trim())}</p>`).join('') +
-      (d.summaryAI ? '<p class="note" style="margin:0">AI가 증권신고서 ‘사업의 내용’을 요약한 것이라 틀릴 수 있습니다. 중요한 수치는 원문으로 확인하세요.</p>' : '')
-    : `<span class="mu">${META.dart ? '사업의 내용을 찾지 못했습니다.' : 'DART API 키를 등록하면 표시됩니다(README 참고).'}</span>`;
+  if (!s) { $('#dSummary').innerHTML = `<span class="mu">${META.dart ? '사업의 내용을 찾지 못했습니다.' : 'DART API 키를 등록하면 표시됩니다(README 참고).'}</span>`; return; }
+  const warn = d.summaryAI ? '<p class="note" style="margin:10px 0 0">AI가 증권신고서 ‘사업의 내용’을 요약한 것이라 틀릴 수 있습니다. 중요한 수치는 원문으로 확인하세요.</p>' : '';
+  if (typeof s === 'object') {
+    const secs = (s.sections || []).filter(x => x.points && x.points.length);
+    $('#dSummary').innerHTML =
+      (s.oneLine ? `<div class="one">${esc(s.oneLine)}</div>` : '') +
+      `<div class="biz">${secs.map(x => `<div class="bt${x.title === '리스크' ? ' risk' : ''}">${esc(x.title)}</div>
+        <ul>${x.points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>`).join('')}</div>` + warn;
+  } else {
+    $('#dSummary').innerHTML = String(s).split(/\n\s*\n|\n/).filter(x => x.trim()).map(p => `<p>${esc(p.trim())}</p>`).join('') + warn;
+  }
 }
 
 const TRACK_NOTE = {

@@ -443,21 +443,45 @@ def business_text_raw(xml_text, limit=18000):
 
 # ------------------------------------------------------------------ AI 요약 (선택)
 def summarize(name, biz_text, api_key, model="claude-haiku-4-5-20251001"):
+    """사업의 내용 → 한 줄 요약 + 4개 항목 × 짧은 요점 (JSON)"""
     prompt = (
-        f"아래는 '{name}'의 증권신고서 중 '사업의 내용' 원문이다. 주식 투자자가 빠르게 이해하도록 "
-        "한국어로 3~4개 문단(각 3~5문장)으로 요약하라.\n"
-        "1문단: 무슨 사업을 하는 회사인지, 핵심 제품·서비스\n"
-        "2문단: 매출 구조와 주요 고객·시장\n"
-        "3문단: 기술력·경쟁력과 경쟁 구도\n"
-        "4문단: 투자 시 유의할 리스크나 관전 포인트\n"
-        "원문에 없는 내용·수치는 절대 지어내지 말고, 머리말·제목·목록 없이 문단만 출력하라.\n\n"
+        f"아래는 '{name}'의 증권신고서 '사업의 내용' 원문이다. 공모주 투자자가 30초 안에 읽도록 요약하라.\n\n"
+        "반드시 아래 JSON 형식 하나만 출력하라(설명·코드블록 없이).\n"
+        '{"oneLine": "회사를 한 문장으로(40자 이내)",\n'
+        ' "sections": [\n'
+        '  {"title": "무엇을 하나", "points": ["핵심 제품·서비스", "..."]},\n'
+        '  {"title": "어떻게 버나", "points": ["매출 구성·비중, 주요 고객·판매처", "..."]},\n'
+        '  {"title": "강점", "points": ["기술·경쟁력·시장 지위", "..."]},\n'
+        '  {"title": "리스크", "points": ["투자 시 유의점", "..."]}]}\n\n'
+        "규칙:\n"
+        "- 각 항목 요점은 2~3개, 요점 하나는 45자 이내의 명사형 문장('~함', '~임' 또는 명사로 끝)\n"
+        "- 원문에 있는 숫자(매출 비중 %, 고객사명, 점유율, 인증·특허 수 등)는 살려서 쓸 것\n"
+        "- 원문에 없는 내용·수치는 절대 지어내지 말 것. 해당 정보가 없으면 그 항목 points를 빈 배열로\n"
+        "- 홍보성 수식어(국내 최고, 혁신적 등)는 빼고 사실만\n\n"
         f"<원문>\n{biz_text}\n</원문>"
     )
     r = requests.post(
         "https://api.anthropic.com/v1/messages",
         headers={"x-api-key": api_key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-        json={"model": model, "max_tokens": 1500, "messages": [{"role": "user", "content": prompt}]},
+        json={"model": model, "max_tokens": 1200, "messages": [{"role": "user", "content": prompt}]},
         timeout=120,
     )
     r.raise_for_status()
-    return "".join(b.get("text", "") for b in r.json().get("content", [])).strip()
+    text = "".join(b.get("text", "") for b in r.json().get("content", [])).strip()
+    return parse_summary(text)
+
+
+def parse_summary(text):
+    import json
+    m = re.search(r"\{.*\}", text, re.S)
+    if m:
+        try:
+            j = json.loads(m.group(0))
+            secs = [{"title": str(x.get("title", "")).strip(),
+                     "points": [str(p).strip() for p in (x.get("points") or []) if str(p).strip()][:3]}
+                    for x in j.get("sections", []) if isinstance(x, dict)]
+            if j.get("oneLine") or secs:
+                return {"oneLine": str(j.get("oneLine", "")).strip(), "sections": secs}
+        except Exception:
+            pass
+    return text  # 형식이 깨지면 글 그대로
