@@ -44,6 +44,7 @@ UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3
 DART_KEY = os.environ.get("DART_API_KEY", "").strip()
 CLAUDE_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 MAX_AI_PER_RUN = 300
+PARSE_VER = 2         # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
 DART_BUDGET_MIN = 40   # 증권신고서 읽기·AI 요약에 쓸 최대 시간(분). 남은 종목은 다음 실행 때 이어서
 
 
@@ -164,7 +165,7 @@ def fetch_38(since):
     for t in read_38("r1", since - timedelta(days=60), "예측일"):
         col = lambda k: next((c for c in t.columns if k in c), None)
         c_name, c_date = col("기업명"), col("예측일")
-        c_inst, c_commit, c_uw = col("경쟁률"), col("확약"), col("주간사")
+        c_inst, c_commit, c_uw, c_band = col("경쟁률"), col("확약"), col("주간사"), col("희망")
         for _, r in t.iterrows():
             d = first_date(r[c_date])
             if not d:
@@ -174,9 +175,57 @@ def fetch_38(since):
                 "instComp": num(r[c_inst]) if c_inst else None,
                 "commit": num(r[c_commit]) if c_commit else None,
                 "uw38": str(r[c_uw]).strip() if c_uw and str(r[c_uw]) != "nan" else None,
+                "band": band(r[c_band]) if c_band else None,
             })
     log(f"[38] 공모가 {len(offers)}행, 수요예측 {len(demand)}행")
     return offers, demand
+
+
+def band(text):
+    """'13,000~15,000' → [13000, 15000]"""
+    nums = [int(x.replace(",", "")) for x in re.findall(r"\d[\d,]*", str(text)) if x.replace(",", "").isdigit()]
+    nums = [n for n in nums if n >= 100]
+    return [min(nums), max(nums)] if len(nums) >= 2 else None
+
+
+def band_pos(offer, b):
+    if not offer or not b:
+        return None
+    lo, hi = b
+    if offer > hi:
+        return f"밴드 상단 초과(+{(offer / hi - 1) * 100:.0f}%)"
+    if offer == hi:
+        return "밴드 상단"
+    if offer < lo:
+        return f"밴드 하단 미달({(offer / lo - 1) * 100:.0f}%)"
+    if offer == lo:
+        return "밴드 하단"
+    return "밴드 안"
+
+
+def load_manual_tracks():
+    """data/listing_track.csv (종목코드,회사명,상장트랙) - 자동 판별이 틀렸을 때 직접 고치는 곳"""
+    p = DATA / "listing_track.csv"
+    out = {}
+    if p.exists():
+        with open(p, encoding="utf-8-sig") as f:
+            for row in csv.DictReader(f):
+                code = (row.get("종목코드") or "").strip().zfill(6)
+                t = (row.get("상장트랙") or "").strip()
+                if code.strip("0") and t:
+                    out[code] = t
+    return out
+
+
+def parse_won(text):
+    """'1조 2,345억' → 원"""
+    if not text:
+        return None
+    t = str(text).replace(",", "")
+    jo = re.search(r"([\d.]+)\s*조", t)
+    eok = re.search(r"([\d.]+)\s*억", t)
+    v = (float(jo.group(1)) * 1e12 if jo else 0) + (float(eok.group(1)) * 1e8 if eok else 0)
+    return v or None
 
 
 def match_row(name, listed, rows, lo, hi):
@@ -266,7 +315,9 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True):
         det["dartStatus"] = "고유번호 없음"
         return ai_budget
     tried = det.get("dartTried")
-    need_doc = heavy and not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
+    retry = not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
+    reparse = det.get("dartDone") and det.get("rcpNo") and det.get("parseVer", 1) < PARSE_VER
+    need_doc = heavy and (retry or reparse)
     if need_doc:
         det["dartTried"] = date.today().isoformat()
         try:
@@ -277,13 +328,17 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True):
                 info = dartlib.analyze_document(dt.document_text(f["rcept_no"]))
                 det["lockup"] = info["lockup"]
                 det["lockupTables"] = info["lockupTables"]
-                det["listingType"] = info["listingType"]
+                det["track"] = info["track"]
+                det["trackEvidence"] = info["trackEvidence"]
+                det["parseVer"] = PARSE_VER
+                det.pop("listingType", None)
                 det["_bizText"] = info["bizText"]
                 det.update(dt.estk(corp, listed))
                 det["dartDone"] = True
                 det["dartStatus"] = "ok"
             else:
                 det["dartStatus"] = "증권신고서 없음(스팩합병·이전상장 등)"
+                det["track"] = "공모 없음(스팩합병·이전상장)"
         except Exception as e:
             det["dartStatus"] = f"오류: {e}"[:200]
             log(f"  - {name} DART 실패: {e}")
@@ -299,7 +354,14 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True):
     if biz and not det.get("summary"):
         det["summary"] = excerpt(biz)
         det["summaryAI"] = False
-    det["disclosures"] = dt.recent_disclosures(corp)
+    det["disclosures"], det["events"] = dt.recent_disclosures(corp)
+    fin_at = det.get("finAt")
+    if not fin_at or (date.today() - date.fromisoformat(fin_at)).days >= 14:
+        try:
+            det["fin"] = dt.financials(corp)
+            det["finAt"] = date.today().isoformat()
+        except Exception as e:
+            log(f"  - {name} 재무 실패: {e}")
     return ai_budget
 
 
@@ -354,20 +416,24 @@ def main():
             continue
         m38 = match_row(name, listed, offers38, -7, 7)
         offer = manual.get(code) or (m38 or {}).get("offer") or (prev.get(code) or {}).get("offer")
-        universe.append({"code": code, "listed": listed.isoformat(), "offer": offer, "bars": bars})
+        dm = match_row(name, listed, demand38, -60, 0) or {}
+        sector = None if pd.isna(row["sector"]) else str(row["sector"])
+        universe.append({"code": code, "listed": listed.isoformat(), "offer": offer, "bars": bars,
+                         "uw": dm.get("uw38"), "sector": sector,
+                         "firstRet": pct(bars[0][4], offer), "nowRet": pct(bars[-1][4], offer)})
         (PRICES / f"{code}.json").write_text(json.dumps(bars, separators=(",", ":")), "utf-8")
         if not show:
             continue
 
         if not offer:
             missing.append((code, name))
-        dm = match_row(name, listed, demand38, -60, 0) or {}
         closes = [b[4] for b in bars]
+        val20 = [b[4] * b[5] for b in bars[-20:]]
         price, peak = closes[-1], max(b[2] for b in bars)
         ma20 = round(sum(closes[-20:]) / min(20, len(closes)))
         items.append({
             "code": code, "name": name,
-            "sector": None if pd.isna(row["sector"]) else str(row["sector"]),
+            "sector": sector,
             "product": None if pd.isna(row["product"]) else str(row["product"]),
             "listed": listed.isoformat(), "days": (today - listed).days, "tradingDays": len(bars),
             "offer": offer, "open": bars[0][1], "firstClose": bars[0][4], "price": price, "asOf": bars[-1][0],
@@ -378,6 +444,9 @@ def main():
             "ret20d": pct(price, closes[-21]) if len(closes) > 20 else None,
             "ma20": ma20, "aboveMa20": price >= ma20,
             "instComp": dm.get("instComp"), "commit": dm.get("commit"), "uw38": dm.get("uw38"),
+            "band": dm.get("band"), "bandPos": band_pos(offer, dm.get("band")),
+            "firstDayRet": pct(bars[0][4], offer),
+            "tradeValue20": round(sum(val20) / len(val20)) if val20 else None,
         })
         if (i + 1) % 25 == 0:
             log(f"  … {i + 1}/{len(listings)}")
@@ -404,6 +473,9 @@ def main():
                   "base": round(mdl.base * 100, 1) if mdl.base is not None else None,
                   "horizonDays": 60, "calibration": calib}
 
+    # ---- 비교 통계: 같은 업종 / 같은 주관사의 과거 공모주 성과
+    add_peer_stats(items, universe, today)
+
     # ---- 1차 저장 (아래 DART 단계가 오래 걸려도 목록·차트는 먼저 확보)
     save(items, model_meta, missing, dart_on=bool(DART_KEY))
 
@@ -414,6 +486,7 @@ def main():
     if not dt:
         log("[DART] DART_API_KEY 가 없어 유통물량·사업요약·공시는 건너뜁니다.")
     ai_budget = MAX_AI_PER_RUN
+    manual_tracks = load_manual_tracks()
     for it in items:
         p = DETAIL / f"{it['code']}.json"
         det = json.loads(p.read_text("utf-8")) if p.exists() else {}
@@ -421,14 +494,23 @@ def main():
         if dt:
             try:
                 heavy = (time.time() - t0) < DART_BUDGET_MIN * 60
-                if not heavy and not det.get("dartDone"):
+                if not heavy and (not det.get("dartDone") or det.get("parseVer", 1) < PARSE_VER):
                     left += 1
                 ai_budget = dart_detail(dt, it["code"], it["name"], date.fromisoformat(it["listed"]), det, ai_budget, heavy)
             except Exception as e:
                 log(f"  - {it['name']} DART 전체 실패: {e}")
         # 목록 화면용 요약 필드
-        it["listingType"] = det.get("listingType")
+        it["track"] = manual_tracks.get(it["code"]) or det.get("track")
+        it["trackManual"] = it["code"] in manual_tracks
         it["marcap"] = det["market"].get("시총")
+        mc = parse_won(it["marcap"])
+        if mc and it.get("price"):
+            shares = mc / it["price"]
+            it["marcapNum"] = round(mc)
+            it["marcapAtOffer"] = round(shares * it["offer"]) if it.get("offer") else None
+        fin = det.get("fin") or {}
+        it["opLoss"] = fin.get("op") is not None and fin["op"] < 0
+        it["mezz"] = any(e.get("tag") == "메자닌(CB·BW·EB)" for e in det.get("events") or [])
         it["hasLockup"] = bool(det.get("lockup") or det.get("lockupTables"))
         p.write_text(json.dumps(det, ensure_ascii=False, separators=(",", ":")), "utf-8")
         time.sleep(0.1)
@@ -437,6 +519,35 @@ def main():
         log(f"[DART] 시간 제한으로 {left}개 종목은 다음 실행 때 이어서 처리합니다.")
     save(items, model_meta, missing, dart_on=bool(dt))
     log(f"[완료] {len(items)}개 저장, 공모가 미확인 {len(missing)}개")
+
+
+def split_uw(text):
+    return [u.strip() for u in re.split(r"[,/·]", text or "") if u.strip()]
+
+
+def summarize_group(rows):
+    first = [r["firstRet"] for r in rows if r["firstRet"] is not None]
+    now = [r["nowRet"] for r in rows if r["nowRet"] is not None]
+    if len(now) < 3:
+        return None
+    med = lambda v: sorted(v)[len(v) // 2]
+    return {"n": len(now), "firstMed": round(med(first), 1) if first else None, "nowMed": round(med(now), 1),
+            "aboveOffer": round(sum(1 for v in now if v > 0) / len(now) * 100)}
+
+
+def add_peer_stats(items, universe, today):
+    for it in items:
+        others = [u for u in universe if u["code"] != it["code"] and u["listed"] < it["listed"]]
+        sec = [u for u in others if it.get("sector") and u.get("sector") == it["sector"]]
+        it["sectorStats"] = summarize_group(sec)
+        stats = []
+        for name in split_uw(it.get("uw38")):
+            g = [u for u in others if name in split_uw(u.get("uw"))]
+            st = summarize_group(g)
+            if st:
+                st["name"] = name
+                stats.append(st)
+        it["uwStats"] = stats
 
 
 def save(items, model_meta, missing, dart_on):

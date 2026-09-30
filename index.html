@@ -87,6 +87,11 @@ td .nm{font-weight:600}td .sc{color:var(--muted);font-size:12px;max-width:220px;
 .tl .next{color:var(--warn);font-weight:700}
 .tl .past{opacity:.5}
 details summary{cursor:pointer;color:var(--accent);font-size:13px;margin-top:10px}
+table.fin{border-collapse:collapse;width:100%;font-size:13px}
+table.fin th,table.fin td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}
+table.fin th:first-child,table.fin td:first-child{text-align:left}
+table.fin th{color:var(--muted);font-weight:600}
+.evi{font-size:12px;color:var(--muted);margin-top:6px;border-left:3px solid var(--line);padding-left:8px}
 table.raw{border-collapse:collapse;font-size:12px;margin-top:8px;min-width:100%}
 table.raw td{border:1px solid var(--line);padding:4px 6px;text-align:center;white-space:nowrap}
 .summary p{margin:0 0 10px}
@@ -132,6 +137,7 @@ footer details{margin-bottom:12px}
 
   <div class="bar">
     <input type="search" id="q" placeholder="회사명·업종·주요제품 검색">
+    <select id="track"><option value="">상장트랙 전체</option></select>
     <select id="period">
       <option value="730">최근 2년</option>
       <option value="365">최근 1년</option>
@@ -174,6 +180,18 @@ footer details{margin-bottom:12px}
   <h3>공모 정보</h3>
   <div class="grid3" id="dOffer"></div>
 
+  <h3>상장트랙</h3>
+  <div class="card" id="dTrack"></div>
+
+  <h3>실적 <span class="chip" id="finChip">DART 정기보고서</span></h3>
+  <div class="card" id="dFin"></div>
+
+  <h3>공모자금 사용 목적</h3>
+  <div class="card" id="dFund"></div>
+
+  <h3>비교: 과거 공모주 성과</h3>
+  <div class="card" id="dPeer"></div>
+
   <h3>유통가능물량 · 기간별 <span class="chip warn" id="lockChip">DART</span></h3>
   <div class="card" id="dLock"></div>
 
@@ -183,7 +201,10 @@ footer details{margin-bottom:12px}
   <h3>투자 참고 지표</h3>
   <div class="grid3" id="dMarket"></div>
 
-  <h3>최근 공시 <span class="mu" style="font-weight:400;font-size:12px">(최근 120일)</span></h3>
+  <h3>주요 이벤트 공시 <span class="mu" style="font-weight:400;font-size:12px">(최근 1년 · 메자닌·증자·지분변동 등)</span></h3>
+  <div class="card dis" id="dEvents"></div>
+
+  <h3>최근 공시</h3>
   <div class="card dis" id="dDis"></div>
 
   <h3>체크리스트</h3>
@@ -218,7 +239,8 @@ let DATA = [], META = {}, tab = 'all', sortKey = 'listed', sortDir = -1;
 function cell(r, c){
   const v = r[c.k];
   if (c.k === 'name') {
-    const tags = (r.listingType || []).filter(t => t !== '일반').map(t => `<span class="chip">${esc(t)}</span>`).join('');
+    const tags = (r.track && r.track !== '일반' ? `<span class="chip">${esc(r.track)}</span>` : '') +
+      (r.opLoss ? '<span class="chip warn">영업적자</span>' : '') + (r.mezz ? '<span class="chip warn">CB·BW</span>' : '');
     return `<td class="l"><span class="nm">${esc(r.name)}</span>${tags}<span class="sc">${esc(r.sector)}</span></td>`;
   }
   if (c.k === 'listed') return `<td class="l">${r.listed}<div class="mu" style="font-size:12px">D+${r.days}</div></td>`;
@@ -230,7 +252,8 @@ function cell(r, c){
 function filtered(){
   const q = $('#q').value.trim().toLowerCase();
   const maxDays = +$('#period').value;
-  let rows = DATA.filter(r => r.days <= maxDays &&
+  const tr = $('#track').value;
+  let rows = DATA.filter(r => r.days <= maxDays && (!tr || r.track === tr) &&
     (!q || [r.name, r.sector, r.product].join(' ').toLowerCase().includes(q)));
   if (tab === 'screen'){
     const mn = +$('#sMin').value, mx = +$('#sMax').value, drop = +$('#sDrop').value,
@@ -344,6 +367,63 @@ function renderSummary(d){
     : `<span class="mu">${META.dart ? '사업의 내용을 찾지 못했습니다.' : 'DART API 키를 등록하면 표시됩니다(README 참고).'}</span>`;
 }
 
+const TRACK_NOTE = {
+  '일반': '이익·매출 등 재무 요건을 충족해 상장. 실적 기반 밸류에이션(PER 등)이 비교적 명확합니다.',
+  '기술특례(기술평가)': '전문평가기관 2곳의 기술평가(A·BBB 이상)로 재무 요건을 면제받은 상장. 상장 시점 적자인 경우가 많아, 증권신고서의 추정 실적 달성 여부가 핵심입니다.',
+  '기술특례(사업모델)': '기술 대신 사업모델을 평가받은 특례 상장. 플랫폼·서비스 기업이 많고, 수익화 시점이 관건입니다.',
+  '기술특례(소부장)': '소재·부품·장비 전문기업으로 기술평가 1곳만 받은 특례 상장.',
+  '성장성 추천': '상장주선인(주관사)이 성장성을 추천해 상장. 일반청약자에게 환매청구권(공모가 90%, 6개월)이 부여됩니다.',
+  '이익미실현(테슬라)': '이익은 없지만 시가총액·매출 요건으로 상장(테슬라 요건). 일반청약자 환매청구권(3개월)이 부여됩니다.',
+  '공모 없음(스팩합병·이전상장)': '공모 없이 스팩합병·코넥스 이전상장 등으로 들어온 종목. 공모가·수요예측 지표가 없습니다.',
+};
+function renderTrack(r, d){
+  const t = r.track;
+  if (!t) { $('#dTrack').innerHTML = `<span class="mu">${META.dart ? '아직 판별 전입니다(다음 업데이트 때 채워짐).' : 'DART API 키를 등록하면 표시됩니다.'}</span>`; return; }
+  $('#dTrack').innerHTML = `<b>${esc(t)}</b>${r.trackManual ? ' <span class="chip">직접 입력</span>' : ''}
+    <div class="note" style="margin-top:4px">${esc(TRACK_NOTE[t] || '')}</div>
+    ${d.trackEvidence && !r.trackManual ? `<div class="evi">근거(증권신고서): “${esc(d.trackEvidence)}”</div>` : ''}
+    ${!r.trackManual ? '<div class="note">자동 판별입니다. 틀리면 data/listing_track.csv에 직접 적으면 그 값이 우선합니다.</div>' : ''}`;
+}
+function renderFin(d){
+  const f = d.fin;
+  if (!f) { $('#dFin').innerHTML = `<span class="mu">${META.dart ? '상장 후 정기보고서가 아직 없거나 불러오지 못했습니다. 증권신고서의 요약재무를 참고하세요.' : 'DART API 키를 등록하면 표시됩니다.'}</span>`; return; }
+  $('#finChip').textContent = `${f.period} · ${f.fs}`;
+  const row = (l, a, b) => {
+    const chg = a != null && b ? ((a - b) / Math.abs(b) * 100) : null;
+    const cls = v => v == null ? '' : v < 0 ? 'dn' : '';
+    return `<tr><td>${l}</td><td class="${cls(a)}">${eok(a != null ? a : null)}${a != null && a < 0 ? ' (적자)' : ''}</td><td class="${cls(b)}">${eok(b)}</td><td>${chg == null ? '–' : pct(chg)}</td></tr>`;
+  };
+  const eokS = v => v == null ? '–' : (v < 0 ? '−' : '') + eok(Math.abs(v));
+  const row2 = (l, a, b) => {
+    const chg = a != null && b ? ((a - b) / Math.abs(b) * 100) : null;
+    return `<tr><td>${l}</td><td class="${a < 0 ? 'dn' : ''}">${eokS(a)}</td><td class="${b < 0 ? 'dn' : ''}">${eokS(b)}</td><td>${chg == null ? '–' : pct(chg)}</td></tr>`;
+  };
+  $('#dFin').innerHTML = `<table class="fin"><tr><th>누적 기준</th><th>이번 기</th><th>전년 동기</th><th>증감</th></tr>
+    ${row2('매출액', f.rev, f.revPrev)}${row2('영업이익', f.op, f.opPrev)}${row2('순이익', f.net, f.netPrev)}</table>
+    <p class="note">파란색 = 적자. 특례상장 종목은 증권신고서의 추정 실적과 비교해 보세요.</p>`;
+}
+function renderFund(d){
+  const u = d.fundUse || [];
+  if (!u.length) { $('#dFund').innerHTML = '<span class="mu">정보 없음</span>'; return; }
+  const tot = u.reduce((a, x) => a + x.v, 0);
+  $('#dFund').innerHTML = '<div class="tl" style="grid-template-columns:120px 1fr 90px">' + u.sort((a, b) => b.v - a.v).map(x =>
+    `<div>${esc(x.k)}</div><div class="meter" style="margin:0"><i style="width:${x.v / tot * 100}%"></i></div><div style="text-align:right">${eok(x.v)}</div>`).join('') +
+    '</div><p class="note">채무상환 비중이 크면 성장 투자보다 재무구조 개선용 공모로 볼 수 있습니다.</p>';
+}
+function renderPeer(r){
+  const line = (label, st) => st ? `<tr><td>${label}</td><td>${st.n}개</td><td>${pct(st.firstMed)}</td><td>${pct(st.nowMed)}</td><td>${st.aboveOffer}%</td></tr>` : '';
+  const rows = line(`같은 업종 (${esc(r.sector || '–')})`, r.sectorStats) + (r.uwStats || []).map(st => line(`주관사 ${esc(st.name)}`, st)).join('');
+  $('#dPeer').innerHTML = rows
+    ? `<div class="scroll"><table class="fin"><tr><th>비교 그룹 (최근 5년, 이 종목 이전 상장)</th><th>종목 수</th><th>첫날 수익률 중앙값</th><th>현재 공모가 대비 중앙값</th><th>공모가 위 비율</th></tr>${rows}</table></div>`
+    : '<span class="mu">비교할 과거 사례가 3개 미만입니다.</span>';
+}
+function renderEvents(d){
+  const ev = d.events || [];
+  $('#dEvents').innerHTML = ev.length
+    ? `<ul>${ev.map(x => `<li><span class="chip warn" style="margin:0 6px 0 0">${esc(x.tag)}</span><span class="mu">${x.date}</span> <a href="${x.url}" target="_blank" rel="noopener">${esc(x.title)}</a></li>`).join('')}</ul>`
+    : `<span class="mu">${META.dart ? '최근 1년 주요 이벤트 공시가 없습니다.' : 'DART API 키를 등록하면 표시됩니다.'}</span>`;
+}
+
 function checklist(r, d){
   const items = [];
   const tl = d.lockup || [];
@@ -356,7 +436,15 @@ function checklist(r, d){
   if (r.commit != null) items.push(`기관 의무보유확약 <b>${r.commit}%</b> — 높을수록 초기 매도 압력이 작다고 봅니다(보통 10% 미만이면 낮은 편).`);
   if (r.instComp != null) items.push(`수요예측 기관경쟁률 <b>${fmt(r.instComp)}:1</b>.`);
   if (d.oldShareRatio) items.push(`공모주식 중 구주매출 <b>${d.oldShareRatio}%</b> — 기존 주주 현금화 비중. 높으면 보수적으로 볼 이유가 됩니다.`);
-  if ((r.listingType || []).some(t => t !== '일반')) items.push(`<b>${esc(r.listingType.join('·'))}</b> 상장 — 현재 이익이 적거나 없을 수 있어, 실적 추정(증권신고서 공모가 산정 근거)과 실제 실적을 비교해 보세요.`);
+  if (r.track && r.track !== '일반') items.push(`<b>${esc(r.track)}</b> 상장 — ${esc(TRACK_NOTE[r.track] || '')}`);
+  if (r.bandPos) items.push(`공모가 결정: <b>${esc(r.bandPos)}</b> — 상단 초과는 수요가 강했다는 뜻이지만 그만큼 비싸게 시작했다는 뜻이기도 합니다.`);
+  if (d.fin && d.fin.op != null) items.push(d.fin.op < 0 ? `최근 실적(${esc(d.fin.period)}) <b>영업적자</b> ${eok(Math.abs(d.fin.op))}.` : `최근 실적(${esc(d.fin.period)}) 영업이익 <b>${eok(d.fin.op)}</b>.`);
+  const mz = (d.events || []).filter(e => e.tag === '메자닌(CB·BW·EB)');
+  if (mz.length) items.push(`최근 1년 <b>CB·BW·EB 관련 공시 ${mz.length}건</b> — 전환되면 주식 수가 늘어나는 잠재 물량(오버행)입니다.`);
+  const ins = (d.events || []).filter(e => e.tag === '대주주·임원 지분변동');
+  if (ins.length) items.push(`최근 1년 대주주·임원 지분변동 공시 <b>${ins.length}건</b> — 매도인지 매수인지 원문에서 확인하세요.`);
+  if (r.tradeValue20 != null && r.tradeValue20 < 1e9) items.push(`20일 평균 거래대금 <b>${eok(r.tradeValue20)}</b> — 거래가 적어 원하는 가격에 사고팔기 어려울 수 있습니다.`);
+  if (r.sectorStats) items.push(`같은 업종 과거 공모주 ${r.sectorStats.n}개 중 <b>${r.sectorStats.aboveOffer}%</b>가 지금 공모가 위에 있습니다.`);
   if (d.putback) items.push('일반청약자 <b>환매청구권</b>(풋백옵션) 부여 종목 — 상장 후 일정 기간 공모가의 90%에 되팔 권리(청약자만 해당).');
   if (r.fromPeak != null && r.fromPeak < -30) items.push(`상장 후 고점 대비 <b>${r.fromPeak.toFixed(1)}%</b> — 큰 폭 조정 상태.`);
   if (r.aboveMa20 != null) items.push(r.aboveMa20 ? '주가가 20일 이동평균선 <b>위</b>.' : '주가가 20일 이동평균선 <b>아래</b>.');
@@ -382,8 +470,12 @@ async function openDetail(code){
     s('주관사', esc(uw)) + s('공모주식수', d.shares ? fmt(d.shares) + '주' : '–') + s('공모금액', eok(d.amount)) +
     s('기관경쟁률', r.instComp != null ? fmt(r.instComp) + ':1' : '–') + s('의무보유확약', r.commit != null ? r.commit + '%' : '–') +
     s('구주매출 비중', d.oldShareRatio != null ? d.oldShareRatio + '%' : '–') +
-    s('상장 유형', esc((d.listingType || r.listingType || ['–']).join(', '))) + s('환매청구권', d.putback == null ? '–' : d.putback ? '있음' : '없음') +
-    s('상장 후 거래일', fmt(r.tradingDays) + '일');
+    s('희망 밴드', r.band ? fmt(r.band[0]) + '~' + fmt(r.band[1]) : '–') + s('공모가 결정', esc(r.bandPos || '–')) +
+    s('환매청구권', d.putback == null ? '–' : d.putback ? '있음' : '없음') +
+    s('상장일 수익률(첫날 종가)', pct(r.firstDayRet)) +
+    s('공모가 기준 시총', eok(r.marcapAtOffer)) + s('현재 시총', eok(r.marcapNum)) +
+    s('20일 평균 거래대금', eok(r.tradeValue20)) + s('상장 후 거래일', fmt(r.tradingDays) + '일');
+  renderTrack(r, d); renderFin(d); renderFund(d); renderPeer(r); renderEvents(d);
   renderLock(r, d);
   renderSummary(d);
   const m = d.market || {};
@@ -438,7 +530,7 @@ document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () =>
   if (tab === 'screen') { sortKey = 'probP'; sortDir = -1; } else { sortKey = 'listed'; sortDir = -1; }
   render();
 }));
-['#q', '#period', '#sMin', '#sMax', '#sDrop', '#sOffer', '#sProb', '#sRebound', '#sMa'].forEach(s => $(s).addEventListener('input', render));
+['#q', '#track', '#period', '#sMin', '#sMax', '#sDrop', '#sOffer', '#sProb', '#sRebound', '#sMa'].forEach(s => $(s).addEventListener('input', render));
 $('#dim').addEventListener('click', closeDetail); $('#close').addEventListener('click', closeDetail);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
 
@@ -446,6 +538,8 @@ fetch('data/ipos.json', { cache: 'no-cache' }).then(r => r.json()).then(d => {
   META = d; DATA = (d.items || []).map(x => ({ ...x, probP: x.prob ? x.prob.p : null }));
   const extras = [d.dart ? null : 'DART 미연결', d.ai ? null : 'AI 요약 미연결'].filter(Boolean);
   $('#meta').textContent = d.updated ? `마지막 업데이트 ${d.updated} (KST) · ${d.count}개 종목${extras.length ? ' · ' + extras.join(', ') : ''}` : '아직 데이터가 없습니다.';
+  const tracks = [...new Set(DATA.map(x => x.track).filter(Boolean))].sort();
+  $('#track').innerHTML = '<option value="">상장트랙 전체</option>' + tracks.map(t => `<option>${esc(t)}</option>`).join('');
   kpis(); render(); modelInfo();
 }).catch(() => { $('#meta').textContent = '데이터 파일을 읽지 못했습니다.'; render(); });
 </script>
