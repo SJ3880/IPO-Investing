@@ -1,0 +1,379 @@
+"""
+공모주 투자 Insight - 데이터 자동 수집 스크립트
+GitHub Actions가 평일 장 마감 후 자동으로 실행합니다. (직접 건드릴 필요 없음)
+
+ 1) KIND(한국거래소): 최근 5년 코스닥 신규상장 목록 (화면엔 2년, 5년치는 확률 계산용)
+ 2) 38커뮤니케이션: 공모가 / 수요예측 결과(기관경쟁률·의무보유확약·주관사)
+    - 못 찾은 공모가는 data/offer_prices.csv 에 적으면 그 값이 우선
+ 3) 네이버 금융: 일봉, 시가총액·PER 등 참고지표
+ 4) DART(OpenDART 키가 있을 때): 유통가능물량, 사업의 내용, 공모 구조, 최근 공시
+ 5) Claude API(키가 있을 때): 사업 내용 3~4문단 요약
+ 6) 과거 유사 사례 기반 '3개월 뒤 수익 확률'
+"""
+import csv
+import io
+import json
+import os
+import re
+import sys
+import time
+from datetime import date, datetime, timedelta
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+import pandas as pd
+import requests
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import dart as dartlib          # noqa: E402
+from model import SimilarCaseModel, features  # noqa: E402
+
+ROOT = Path(__file__).resolve().parent.parent
+DATA = ROOT / "data"
+PRICES = DATA / "prices"
+DETAIL = DATA / "detail"
+KST = ZoneInfo("Asia/Seoul")
+SHOW_YEARS = 2       # 화면에 보여줄 기간
+MODEL_YEARS = 5      # 확률 계산에 쓰는 과거 기간
+UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"}
+DART_KEY = os.environ.get("DART_API_KEY", "").strip()
+CLAUDE_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+MAX_AI_PER_RUN = 300
+
+
+def log(*a):
+    print(*a, flush=True)
+
+
+def norm(name: str) -> str:
+    s = str(name)
+    s = re.sub(r"\((유가|코스닥|코넥스|주|구\s*[^)]*)\)", "", s)
+    s = s.replace("㈜", "").replace("주식회사", "")
+    s = re.sub(r"[\s\.\-·]", "", s)
+    return s.lower()
+
+
+def is_spac(name: str) -> bool:
+    return "스팩" in name or "기업인수목적" in name
+
+
+def first_date(s):
+    m = re.search(r"(\d{4})[./-](\d{1,2})[./-](\d{1,2})", str(s))
+    return date(int(m[1]), int(m[2]), int(m[3])) if m else None
+
+
+def num(s):
+    v = pd.to_numeric(re.sub(r"[^\d.\-]", "", str(s)) or "x", errors="coerce")
+    return None if pd.isna(v) else float(v)
+
+
+# ---------------------------------------------------------------- 1. KIND
+def fetch_kosdaq_listings(since: date) -> pd.DataFrame:
+    r = requests.get("https://kind.krx.co.kr/corpgeneral/corpList.do",
+                     params={"method": "download", "searchType": "13", "marketType": "kosdaqMkt"},
+                     headers=UA, timeout=60)
+    r.raise_for_status()
+    df = pd.read_html(io.StringIO(r.content.decode("euc-kr", errors="ignore")), header=0)[0]
+    df = df.rename(columns={"회사명": "name", "종목코드": "code", "업종": "sector",
+                            "주요제품": "product", "상장일": "listed"})
+    df["code"] = df["code"].astype(str).str.zfill(6)
+    df["listed"] = pd.to_datetime(df["listed"], errors="coerce").dt.date
+    df = df[df["listed"] >= since]
+    df = df[~df["name"].astype(str).map(is_spac)]
+    log(f"[KIND] 최근 {MODEL_YEARS}년 코스닥 신규상장(스팩 제외): {len(df)}개")
+    return df[["code", "name", "sector", "product", "listed"]].sort_values("listed", ascending=False).reset_index(drop=True)
+
+
+# ---------------------------------------------------------------- 2. 38커뮤니케이션
+def read_38(o, since, date_key, max_pages=200):
+    """38 표를 페이지 넘기며 읽어 DataFrame 목록으로"""
+    frames = []
+    for page in range(1, max_pages + 1):
+        try:
+            r = requests.get(f"https://www.38.co.kr/html/fund/index.htm?o={o}&page={page}", headers=UA, timeout=30)
+            tables = pd.read_html(io.StringIO(r.content.decode("euc-kr", errors="ignore")), match=date_key)
+        except Exception as e:
+            log(f"[38:{o}] {page}페이지 중단: {e}")
+            break
+        cand = []
+        for t in tables:
+            if isinstance(t.columns, pd.MultiIndex):
+                t.columns = [" ".join(map(str, c)) for c in t.columns]
+            t.columns = [str(c) for c in t.columns]
+            if any("기업명" in c for c in t.columns) and any(date_key in c for c in t.columns):
+                cand.append(t)
+        if not cand:
+            break
+        t = min(cand, key=len)
+        frames.append(t)
+        dcol = next(c for c in t.columns if date_key in c)
+        dates = [d for d in (first_date(x) for x in t[dcol]) if d]
+        if not dates or min(dates) < since:
+            break
+        time.sleep(0.4)
+    return frames
+
+
+def fetch_38(since):
+    offers, demand = [], []
+    for t in read_38("nw", since, "신규상장일"):
+        c_name = next(c for c in t.columns if "기업명" in c)
+        c_date = next(c for c in t.columns if "신규상장일" in c)
+        c_off = next((c for c in t.columns if "공모가" in c and "대비" not in c and "/" not in c), None)
+        for _, r in t.iterrows():
+            d = first_date(r[c_date])
+            if d and c_off:
+                o = num(r[c_off])
+                offers.append({"name": str(r[c_name]), "d": d, "offer": int(o) if o else None})
+    for t in read_38("r1", since - timedelta(days=60), "예측일"):
+        col = lambda k: next((c for c in t.columns if k in c), None)
+        c_name, c_date = col("기업명"), col("예측일")
+        c_inst, c_commit, c_uw = col("경쟁률"), col("확약"), col("주간사")
+        for _, r in t.iterrows():
+            d = first_date(r[c_date])
+            if not d:
+                continue
+            demand.append({
+                "name": str(r[c_name]), "d": d,
+                "instComp": num(r[c_inst]) if c_inst else None,
+                "commit": num(r[c_commit]) if c_commit else None,
+                "uw38": str(r[c_uw]).strip() if c_uw and str(r[c_uw]) != "nan" else None,
+            })
+    log(f"[38] 공모가 {len(offers)}행, 수요예측 {len(demand)}행")
+    return offers, demand
+
+
+def match_row(name, listed, rows, lo, hi):
+    """이름이 같고 날짜가 listed+lo ~ listed+hi 일 사이인 행"""
+    n = norm(name)
+    for exact in (True, False):
+        for r in rows:
+            rn = norm(r["name"])
+            ok = rn == n if exact else (n in rn or rn in n)
+            if ok and lo <= (r["d"] - listed).days <= hi:
+                return r
+    return None
+
+
+def load_manual_offers():
+    p = DATA / "offer_prices.csv"
+    out = {}
+    if p.exists():
+        with open(p, encoding="utf-8-sig") as f:
+            for row in csv.DictReader(f):
+                code = (row.get("종목코드") or "").strip().zfill(6)
+                val = (row.get("공모가") or "").replace(",", "").strip()
+                if code.strip("0") and val.isdigit():
+                    out[code] = int(val)
+    return out
+
+
+# ---------------------------------------------------------------- 3. 네이버
+def fetch_daily(code, count=1400):
+    r = requests.get("https://fchart.stock.naver.com/sise.nhn",
+                     params={"symbol": code, "timeframe": "day", "count": count, "requestType": "0"},
+                     headers=UA, timeout=30)
+    r.raise_for_status()
+    out = []
+    for item in re.findall(r'data="([^"]+)"', r.text):
+        d, o, h, l, c, v = item.split("|")
+        if int(c) > 0:
+            out.append([f"{d[:4]}-{d[4:6]}-{d[6:]}", int(o) or int(c), int(h) or int(c), int(l) or int(c), int(c), int(v)])
+    return out
+
+
+def fetch_market(code):
+    """시가총액·PER·PBR·외국인소진율 등 (네이버 모바일, 실패해도 무시)"""
+    try:
+        j = requests.get(f"https://m.stock.naver.com/api/stock/{code}/integration", headers=UA, timeout=20).json()
+        want = ("시총", "PER", "PBR", "EPS", "BPS", "외인소진율", "52주 최고", "52주 최저", "배당수익률")
+        return {x["key"]: x["value"] for x in j.get("totalInfos", []) if x.get("key") in want}
+    except Exception:
+        return {}
+
+
+def pct(a, b):
+    if a is None or b in (None, 0):
+        return None
+    return round((a / b - 1) * 100, 2)
+
+
+# ---------------------------------------------------------------- 4. DART 상세
+def dart_detail(dt, code, name, listed, det, ai_budget):
+    """det(기존 상세)를 갱신. 무거운 작업(문서 파싱·요약)은 한 번만."""
+    corp = dt.corp_code(code)
+    if not corp:
+        det["dartStatus"] = "고유번호 없음"
+        return ai_budget
+    tried = det.get("dartTried")
+    need_doc = not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
+    if need_doc:
+        det["dartTried"] = date.today().isoformat()
+        try:
+            f = dt.prospectus(corp, listed)
+            if f:
+                det["rcpNo"] = f["rcept_no"]
+                det["rcpTitle"] = re.sub(r"\s+", " ", f["report_nm"]).strip()
+                info = dartlib.analyze_document(dt.document_text(f["rcept_no"]))
+                det["lockup"] = info["lockup"]
+                det["lockupTables"] = info["lockupTables"]
+                det["listingType"] = info["listingType"]
+                det["_bizText"] = info["bizText"]
+                det.update(dt.estk(corp, listed))
+                det["dartDone"] = True
+                det["dartStatus"] = "ok"
+            else:
+                det["dartStatus"] = "증권신고서 없음(스팩합병·이전상장 등)"
+        except Exception as e:
+            det["dartStatus"] = f"오류: {e}"[:200]
+            log(f"  - {name} DART 실패: {e}")
+    # 사업 요약: AI 키가 있으면 요약, 없으면 원문 앞부분 발췌
+    biz = det.get("_bizText") or ""
+    if biz and not det.get("summaryAI") and CLAUDE_KEY and ai_budget > 0:
+        try:
+            det["summary"] = dartlib.summarize(name, biz, CLAUDE_KEY)
+            det["summaryAI"] = True
+            ai_budget -= 1
+        except Exception as e:
+            log(f"  - {name} 요약 실패: {e}")
+    if biz and not det.get("summary"):
+        det["summary"] = excerpt(biz)
+        det["summaryAI"] = False
+    det["disclosures"] = dt.recent_disclosures(corp)
+    return ai_budget
+
+
+def excerpt(text, n=1200):
+    t = re.sub(r"^.*?(사업의 개요|업계의 현황|회사의 현황)", r"\1", text, count=1)
+    return t[:n] + ("…" if len(t) > n else "")
+
+
+# ---------------------------------------------------------------- main
+def main():
+    for p in (DATA, PRICES, DETAIL):
+        p.mkdir(exist_ok=True)
+    today = datetime.now(KST).date()
+    show_since = today - timedelta(days=365 * SHOW_YEARS)
+    model_since = today - timedelta(days=365 * MODEL_YEARS)
+
+    prev_path = DATA / "ipos.json"
+    prev = {}
+    if prev_path.exists():
+        try:
+            prev = {x["code"]: x for x in json.loads(prev_path.read_text("utf-8"))["items"]}
+        except Exception:
+            pass
+
+    try:
+        listings = fetch_kosdaq_listings(model_since)
+    except Exception as e:
+        log(f"[오류] KIND 목록을 받지 못했습니다: {e}")
+        sys.exit(0 if prev else 1)
+
+    try:
+        offers38, demand38 = fetch_38(model_since)
+    except Exception as e:
+        log(f"[38] 실패: {e}")
+        offers38, demand38 = [], []
+    manual = load_manual_offers()
+
+    universe, items, missing = [], [], []
+    for i, row in listings.iterrows():
+        code, name, listed = row["code"], str(row["name"]), row["listed"]
+        show = listed >= show_since
+        try:
+            bars = [b for b in fetch_daily(code) if b[0] >= listed.isoformat()]
+        except Exception as e:
+            log(f"  - {name}({code}) 시세 실패: {e}")
+            if code in prev and show:
+                items.append(prev[code])
+            continue
+        if not bars:
+            continue
+        m38 = match_row(name, listed, offers38, -7, 7)
+        offer = manual.get(code) or (m38 or {}).get("offer") or (prev.get(code) or {}).get("offer")
+        universe.append({"code": code, "listed": listed.isoformat(), "offer": offer, "bars": bars})
+        if not show:
+            time.sleep(0.1)
+            continue
+
+        (PRICES / f"{code}.json").write_text(json.dumps(bars, separators=(",", ":")), "utf-8")
+        if not offer:
+            missing.append((code, name))
+        dm = match_row(name, listed, demand38, -60, 0) or {}
+        closes = [b[4] for b in bars]
+        price, peak = closes[-1], max(b[2] for b in bars)
+        ma20 = round(sum(closes[-20:]) / min(20, len(closes)))
+        items.append({
+            "code": code, "name": name,
+            "sector": None if pd.isna(row["sector"]) else str(row["sector"]),
+            "product": None if pd.isna(row["product"]) else str(row["product"]),
+            "listed": listed.isoformat(), "days": (today - listed).days, "tradingDays": len(bars),
+            "offer": offer, "open": bars[0][1], "firstClose": bars[0][4], "price": price, "asOf": bars[-1][0],
+            "retVsOpen": pct(price, bars[0][1]), "retVsOffer": pct(price, offer),
+            "openVsOffer": pct(bars[0][1], offer),
+            "peak": peak, "fromPeak": pct(price, peak),
+            "ret5d": pct(price, closes[-6]) if len(closes) > 5 else None,
+            "ret20d": pct(price, closes[-21]) if len(closes) > 20 else None,
+            "ma20": ma20, "aboveMa20": price >= ma20,
+            "instComp": dm.get("instComp"), "commit": dm.get("commit"), "uw38": dm.get("uw38"),
+        })
+        if (i + 1) % 25 == 0:
+            log(f"  … {i + 1}/{len(listings)}")
+        time.sleep(0.15)
+
+    # ---- 확률 모델
+    log(f"[모델] 표본 종목 {len(universe)}개로 학습")
+    mdl = SimilarCaseModel(universe)
+    by_code = {u["code"]: u for u in universe}
+    for it in items:
+        u = by_code.get(it["code"])
+        if u and len(u["bars"]) > 10:
+            t = len(u["bars"]) - 1
+            it["prob"] = mdl.predict(features(u["bars"], t, u["offer"]), exclude_code=it["code"])
+        else:
+            it["prob"] = None
+    try:
+        calib = mdl.backtest(universe, (today - timedelta(days=365 * 2)).isoformat())
+    except Exception as e:
+        log(f"[모델] 검증 실패: {e}")
+        calib = []
+    model_meta = {"samples": int(len(mdl.y)), "stocks": len(universe),
+                  "base": round(mdl.base * 100, 1) if mdl.base is not None else None,
+                  "horizonDays": 60, "calibration": calib}
+
+    # ---- 상세(DART·시장지표)
+    dt = dartlib.Dart(DART_KEY, log) if DART_KEY else None
+    if not dt:
+        log("[DART] DART_API_KEY 가 없어 유통물량·사업요약·공시는 건너뜁니다.")
+    ai_budget = MAX_AI_PER_RUN
+    for it in items:
+        p = DETAIL / f"{it['code']}.json"
+        det = json.loads(p.read_text("utf-8")) if p.exists() else {}
+        det["market"] = fetch_market(it["code"]) or det.get("market", {})
+        if dt:
+            try:
+                ai_budget = dart_detail(dt, it["code"], it["name"], date.fromisoformat(it["listed"]), det, ai_budget)
+            except Exception as e:
+                log(f"  - {it['name']} DART 전체 실패: {e}")
+        # 목록 화면용 요약 필드
+        it["listingType"] = det.get("listingType")
+        it["marcap"] = det["market"].get("시총")
+        it["hasLockup"] = bool(det.get("lockup") or det.get("lockupTables"))
+        p.write_text(json.dumps(det, ensure_ascii=False, separators=(",", ":")), "utf-8")
+        time.sleep(0.1)
+
+    items.sort(key=lambda x: x["listed"], reverse=True)
+    out = {"updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"), "count": len(items),
+           "dart": bool(dt), "ai": bool(CLAUDE_KEY), "model": model_meta, "items": items}
+    prev_path.write_text(json.dumps(out, ensure_ascii=False, indent=1), "utf-8")
+    with open(DATA / "missing_offer.csv", "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["종목코드", "회사명"])
+        w.writerows(missing)
+    log(f"[완료] {len(items)}개 저장, 공모가 미확인 {len(missing)}개")
+
+
+if __name__ == "__main__":
+    main()
