@@ -6,6 +6,12 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="2020년 이후 코스피·코스닥 IPO를 예비심사 청구부터 승인, 수요예측·청약, 상장까지 단계별로 정리">
 <title>IPO 동향 분석</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1E3A6E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="IPO 동향">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <style>
@@ -796,6 +802,7 @@ Promise.all([
   modelInfo();
   setView(location.hash.slice(1) || 'overview');
 });
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});   // 앱 설치용
 </script>
 </body>
 </html>
