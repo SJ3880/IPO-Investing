@@ -1,5 +1,5 @@
-# 공모주 투자 Insight - 자동 업데이트 & 배포
-# 평일 16:40(한국시간)마다 새 상장사·주가를 받아 사이트를 다시 올립니다.
+# IPO 동향 분석 - 자동 업데이트 & 배포
+# 평일 16:40(한국시간)마다 새 청구·승인·공모·상장 정보를 받아 사이트를 다시 올립니다.
 name: 데이터 업데이트 & 배포
 
 on:
@@ -7,7 +7,7 @@ on:
     - cron: "40 7 * * 1-5"   # UTC 07:40 = KST 16:40, 월~금
   workflow_dispatch:          # Actions 탭에서 'Run workflow' 버튼으로 수동 실행
   push:
-    branches: [main]          # index.html 등을 고치면 바로 다시 배포
+    branches: [main]          # 파일을 고치면 바로 다시 실행·배포
 
 permissions:
   contents: write
@@ -21,13 +21,14 @@ concurrency:
 jobs:
   update-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -39,19 +40,26 @@ jobs:
           DART_API_KEY: ${{ secrets.DART_API_KEY }}            # 유통물량·사업내용·공시 (무료)
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}  # 사업 요약 AI (선택, 유료)
         run: python scripts/update.py
-        timeout-minutes: 90
+        timeout-minutes: 95       # 스크립트가 스스로 80분 안쪽에서 마무리함(이건 안전장치)
 
+      # 아래 단계들은 '데이터 수집'이 시간초과·오류로 끝나도 항상 실행 → 그때까지 모은 데이터는 저장·배포
       - name: 데이터 저장(커밋)
+        if: ${{ !cancelled() }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data
-          git diff --cached --quiet || git commit -m "데이터 업데이트 $(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M')"
+          git diff --cached --quiet && exit 0
+          git commit -m "데이터 업데이트 $(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M')"
+          git pull --rebase -X theirs origin main || true
           git push
 
       - uses: actions/configure-pages@v5
+        if: ${{ !cancelled() }}
       - uses: actions/upload-pages-artifact@v3
+        if: ${{ !cancelled() }}
         with:
           path: .
       - id: deploy
+        if: ${{ !cancelled() }}
         uses: actions/deploy-pages@v4
