@@ -47,7 +47,7 @@ DART_KEY = os.environ.get("DART_API_KEY", "").strip()
 CLAUDE_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 MAX_AI_PER_RUN = 300
 SUMMARY_VER = 2       # 사업 요약 형식 버전. 올리면 AI 요약을 새 형식으로 다시 만듦
-PARSE_VER = 6         # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
+PARSE_VER = 7         # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
 DART_BUDGET_MIN = 40   # 증권신고서 읽기·AI 요약에 쓸 최대 시간(분). 남은 종목은 다음 실행 때 이어서
 
 
@@ -204,11 +204,19 @@ def spac_info(sp, dt, cache):
     if dt:
         try:
             corp = dt.corp_code(sp["code"])
-            f = dt.prospectus(corp, date.fromisoformat(md), merger=True) if corp else None
-            if f:
+            cands = dt.prospectus(corp, date.fromisoformat(md), merger="all") if corp else []
+            for f in cands[:4]:                        # 원문이 없는 문서가 있으면 다음 문서(정정본·투자설명서)로
+                try:
+                    spac_v, target_v = dartlib.merger_prices(dt.document_text(f["rcept_no"]))
+                except Exception:
+                    continue
                 c["rcpNo"] = f["rcept_no"]
-                spac_v, target_v = dartlib.merger_prices(dt.document_text(f["rcept_no"]))
                 doc_base = spac_v if "존속" in sp["listType"] else target_v
+                if doc_base:
+                    break
+            if not doc_base:
+                log(f"  - {sp['name']}: 합병 신고서에서 합병가액을 못 찾음(문서 {len(cands)}개)"
+                    + (" → 스팩 기준가 2,000원 사용" if "존속" in sp["listType"] else ""))
         except Exception as e:
             log(f"  - {sp['name']} 합병가액 찾기 실패: {e}")
         c["baseTried"] = date.today().isoformat()
@@ -579,7 +587,8 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False):
     # 사업 요약: AI 키가 있으면 요약, 없으면 원문 앞부분 발췌
     biz = det.get("_bizText") or ""
     stale = not det.get("summaryAI") or det.get("summaryVer", 1) < SUMMARY_VER
-    if heavy and biz and stale and CLAUDE_KEY and ai_budget > 0:
+    ai_ok = (date.today() - listed).days <= HEAVY_DAYS      # AI 요약은 최근 2년 상장만(비용 절약)
+    if heavy and ai_ok and biz and stale and CLAUDE_KEY and ai_budget > 0:
         try:
             det["summary"] = dartlib.summarize(name, biz, CLAUDE_KEY)
             det["summaryAI"] = True
@@ -820,11 +829,15 @@ def main():
     ai_budget = MAX_AI_PER_RUN
     manual_tracks = load_manual_tracks()
     # 상장트랙 기준: KIND 특례상장·성장성특례 목록(거래소 공식). 목록을 받으면 '없는 회사 = 특례 아님'으로 확정
+    special_cache = DATA / "kind_special.json"       # 마지막으로 성공한 목록(실패하면 이걸 씀)
     try:
         special = kindlib.special_listings(range(SINCE.year, today.year + 1), DATA / "debug", log)
+        if len([k for k in special if not k.startswith("#")]) >= 20:
+            special_cache.write_text(json.dumps(special, ensure_ascii=False), "utf-8")
     except Exception as e:
-        log(f"[KIND 기술성장기업] 실패 → 증권신고서(본문·할인율)로 판별: {e}")
-        special = {}
+        special = json.loads(special_cache.read_text("utf-8")) if special_cache.exists() else {}
+        log(f"[KIND 기술성장기업] 실패 → " + (f"지난번 저장 목록 {len(special)}건 사용" if special
+                                       else "증권신고서(본문·할인율)로 판별") + f": {e}")
     try:
         growth = kindlib.growth_listings(log)
     except Exception as e:
@@ -870,11 +883,10 @@ def main():
                 det["market"], det["marketAt"] = fm, None      # 새로 받았으면 주식수 다시 계산
                 det["marketFetched"] = today.isoformat()
             det.setdefault("market", {})
-        recent = (today - date.fromisoformat(it["listed"])).days <= HEAVY_DAYS
-        if dt and recent:          # 2년 넘은 종목은 DART 상세 생략(목록·시세·통계만)
+        if dt:                     # 2020년 이후 전 종목 증권신고서(PER·Peer group·공모할인율). 최근 상장부터, 시간 예산 안에서
             try:
-                heavy = recent and (time.time() - t0) < DART_BUDGET_MIN * 60
-                if recent and not heavy and (not det.get("dartDone") or det.get("parseVer", 1) < PARSE_VER):
+                heavy = (time.time() - t0) < DART_BUDGET_MIN * 60
+                if not heavy and (not det.get("dartDone") or det.get("parseVer", 1) < PARSE_VER):
                     left += 1
                 ai_budget = dart_detail(dt, it["code"], it["name"], date.fromisoformat(it["listed"]), det, ai_budget, heavy,
                                        spac=bool(it.get("spac")))
@@ -885,6 +897,15 @@ def main():
         if it["track"] is None and det.get("dartStatus", "").startswith("증권신고서 없음"):
             it["track"] = "공모 없음(스팩합병·이전상장)"
         it["floatAtListing"] = det.get("floatAtListing")
+        # 공모가 산정 근거(증권신고서 'Ⅳ. 인수인의 의견') → 상장완료 표에 바로 보이도록 요약
+        v = det.get("valuation") or {}
+        fair = v.get("fairValue")
+        it["valMethod"] = v.get("method")
+        it["valMult"] = v.get("appliedMult")
+        it["fairValue"] = fair
+        it["discBand"] = v.get("discountRange")
+        it["discOffer"] = round((1 - it["offer"] / fair) * 100, 1) if fair and it.get("offer") and not it.get("spac") else None
+        it["peers"] = [{"n": x["name"], "v": x["v"]} for x in (v.get("peers") or [])]
         it["trackManual"] = it["code"] in manual_tracks
         it["marcap"] = det["market"].get("시총")
         mc = parse_won(it["marcap"])

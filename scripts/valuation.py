@@ -54,6 +54,8 @@ def _is_name(s):
     s = _clean(s)
     if not s or len(s) > 30 or NOT_NAME.match(s.replace(" ", "")):
         return False
+    if re.fullmatch(r"(유사|비교|대상)?(회사|기업|법인)\s*[A-Z\d]+", s.replace(" ", "")):
+        return False
     if _num(s) is not None and re.fullmatch(r"[-\d,.\s배%원()]+", s):
         return False
     if MULT_RE.search(s) or re.search(r"(순이익|시가총액|주식수|EBITDA|매출|자본|평균|합계|적용|단위|기준일)", s):
@@ -141,9 +143,13 @@ def peers_from_grid(g):
             if not mn or re.search(r"(적용)", head):
                 continue
             peers, avg = [], None
+            ncol = next((k for k, c in enumerate(g[h]) if k != j and re.search(r"(회사명|기업명|종목명|회사|기업)$", c.replace(" ", ""))), None)
             for r in g[h + 1:]:
                 v = _multiple(r[j]) if j < len(r) else None
-                namecol = next((c for c in r[:j] if _is_name(c)), None)
+                if ncol is not None and ncol < len(r) and _is_name(r[ncol]):
+                    namecol = r[ncol]
+                else:
+                    namecol = next((c for c in r[:j] if _is_name(c)), None)
                 if v is not None and namecol:
                     peers.append({"name": _name(namecol), "v": v})
                 elif v is not None and any(re.search(r"평균", c) for c in r[:j]):
@@ -158,22 +164,33 @@ def peers_from_grid(g):
     return best
 
 
-# ---------------- 공모가격 결정방법 구간 ----------------
+# ---------------- 공모가 산정 근거가 있는 구간 ----------------
+def _section_from(xml_text, st, limit=1500000):
+    rest = xml_text[st: st + limit]
+    # 다음 큰 장(Ⅴ. 자금의 사용목적 등)이 나오면 거기서 끊는다
+    end = re.search(r"<TITLE[^>]*>\s*(Ⅴ|V|5)\s*\.[^<]*</TITLE>|<TITLE[^>]*>[^<]*자금의\s*사용\s*목적[^<]*</TITLE>",
+                    rest[200:], re.I)
+    return rest[: end.start() + 200] if end else rest[:900000]
+
+
 def pricing_section(xml_text):
-    """'공모가격 결정방법' 제목부터 다음 큰 항목('모집 또는 매출절차' 등)까지"""
-    starts = [m for m in re.finditer(r"<TITLE[^>]*>([^<]*)</TITLE>", xml_text, re.I)
-              if re.search(r"(공모|발행|모집|매출)\s*가(격|액)?\s*(의\s*)?(결정|산정)", m.group(1))
-              or re.search(r"합병\s*(가액|비율)[^<]{0,20}(산출|산정|근거)", m.group(1))]
-    if not starts:
-        m = re.search(r"(공모|발행)\s*가격\s*(결정|산정)\s*방법", xml_text)
-        if not m:
-            return ""
-        starts = [m]
-    st = starts[0].start()
-    rest = xml_text[st: st + 1500000]
-    end = re.search(r"<TITLE[^>]*>\s*(\d+|[ⅰ-ⅻⅠ-Ⅻ]+|[가-하])\s*\.\s*(모집|매출|공모|청약|인수|증권의\s*교부|상장)[^<]*"
-                    r"(절차|방법|일정|사항|인수인)[^<]*</TITLE>", rest[200:], re.I)
-    return rest[: end.start() + 200] if end else rest[:600000]
+    """희망공모가 산정 근거(적용 PER·비교회사·할인율)는 증권신고서
+       'Ⅳ. 인수인의 의견(분석기관의 평가의견) - 1. 공모가격에 대한 의견'에 있다.
+       (‘3. 공모가격 결정방법’은 절차 설명뿐이고 이 장을 참조하라고만 적혀 있음)
+       스팩 합병 신고서는 '합병가액 산출근거' 쪽."""
+    titles = list(re.finditer(r"<TITLE[^>]*>([^<]*)</TITLE>", xml_text, re.I))
+    for pat in (r"인수인의\s*의견|분석기관의\s*평가\s*의견",
+                r"공모\s*가격에\s*대한\s*의견",
+                r"합병\s*(가액|비율)[^<]{0,20}(산출|산정|근거)|외부평가",
+                r"(공모|발행|모집|매출)\s*가(격|액)?\s*(의\s*)?(결정|산정)"):
+        hit = next((m for m in titles if re.search(pat, m.group(1))), None)
+        if hit:
+            return _section_from(xml_text, hit.start())
+    # 제목 태그가 없으면 본문에서 '공모가격에 대한 의견' 문구(참조 문장이 아닌 것)를 찾는다
+    for m in re.finditer(r"공모\s*가격에\s*대한\s*의견", xml_text):
+        if "참고" not in xml_text[m.end(): m.end() + 60] and "참조" not in xml_text[m.end(): m.end() + 60]:
+            return _section_from(xml_text, m.start())
+    return ""
 
 
 def _plain(s):
@@ -300,7 +317,7 @@ def valuation_info(xml_text):
     return out
 
 
-def debug_sample(xml_text, limit=6000):
+def debug_sample(xml_text, limit=15000):
     """실제 문서에서 잘 읽히는지 확인용(웹 저장소 data/debug 에 남김)"""
     sec = pricing_section(xml_text)
     return {"found": bool(sec), "len": len(sec), "head": _plain(sec)[:limit] if sec else ""}

@@ -23,11 +23,20 @@ CODE_RE = re.compile(r"(?:fnDetailView|companysummary_open|openCompanyInfoNew|fn
 S = requests.Session()
 
 
-def post(path, form, as_data=True, timeout=60):
+def post(path, form, as_data=True, timeout=90, tries=3):
+    """KIND는 가끔 응답이 느려서 실패하면 잠깐 쉬었다가 최대 3번 다시 시도"""
+    import time
     h = {"User-Agent": UA, "Referer": f"{BASE}/"}
     url = f"{BASE}/{path}"
-    r = S.post(url, data=form, headers=h, timeout=timeout) if as_data else S.post(url, params=form, headers=h, timeout=timeout)
-    r.raise_for_status()
+    for k in range(tries):
+        try:
+            r = S.post(url, data=form, headers=h, timeout=timeout) if as_data else S.post(url, params=form, headers=h, timeout=timeout)
+            r.raise_for_status()
+            break
+        except Exception:
+            if k == tries - 1:
+                raise
+            time.sleep(5 * (k + 1))
     r.encoding = "utf-8"
     return r.text
 

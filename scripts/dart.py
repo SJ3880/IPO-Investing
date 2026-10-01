@@ -151,12 +151,18 @@ class Dart:
         def pick(word, also=None):
             c = [r for r in rows if word in r["report_nm"] and (not also or also in r["report_nm"])]
             return max(c, key=lambda r: r["rcept_no"]) if c else None
+        if merger == "all":                           # 합병 관련 문서 후보 전부(최신순)
+            c = [r for r in rows if "합병" in r["report_nm"] and ("증권신고서" in r["report_nm"] or "투자설명서" in r["report_nm"])]
+            return sorted(c, key=lambda r: r["rcept_no"], reverse=True)
         if merger:
             return pick("증권신고서", "합병") or pick("투자설명서", "합병") or pick("투자설명서")
         return pick("투자설명서") or pick("증권신고서(지분증권)")
 
     def document_text(self, rcept_no):
         r = self._get("document.xml", rcept_no=rcept_no)
+        if not r.content.startswith(b"PK"):           # zip 대신 오류 메시지가 온 경우(원문 없음·호출 한도 등)
+            m = re.search(r"<message>(.*?)</message>|\"message\"\s*:\s*\"(.*?)\"", r.text or "")
+            raise RuntimeError("DART 원문 없음: " + ((m.group(1) or m.group(2)) if m else r.text[:80].strip()))
         z = zipfile.ZipFile(io.BytesIO(r.content))
         names = sorted(z.namelist(), key=lambda n: (not n.startswith(rcept_no), -z.getinfo(n).file_size))
         raw = z.read(names[0])
@@ -569,9 +575,12 @@ def analyze_document(xml_text):
     out["discountRate"] = discount_rate(plain)
     try:                                         # 공모가 산정 근거(PER·비교회사·할인율)
         out["valuation"] = valuation.valuation_info(xml_text) or None
-        if len(VAL_DEBUG) < 10:
-            smp = valuation.debug_sample(xml_text, 4000)
-            smp["parsed"] = out["valuation"]
+        v = out["valuation"] or {}
+        ok = bool(v.get("peers")) and v.get("appliedMult") and v.get("discountRange")
+        n_ok = sum(1 for x in VAL_DEBUG if x.get("ok"))
+        if (ok and n_ok < 3) or (not ok and len(VAL_DEBUG) - n_ok < 8):   # 실패한 문서 위주로 원문 일부 저장
+            smp = valuation.debug_sample(xml_text, 15000 if not ok else 3000)
+            smp["parsed"], smp["ok"] = out["valuation"], bool(ok)
             VAL_DEBUG.append(smp)
     except Exception as e:
         out["valuation"] = None
