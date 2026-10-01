@@ -30,6 +30,8 @@ urllib3.disable_warnings()
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import dart as dartlib          # noqa: E402
+import kind as kindlib          # noqa: E402
+import pipeline as pipelib      # noqa: E402
 from model import SimilarCaseModel, features  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -37,15 +39,15 @@ DATA = ROOT / "data"
 PRICES = DATA / "prices"
 DETAIL = DATA / "detail"
 KST = ZoneInfo("Asia/Seoul")
-SHOW_YEARS = 2       # 화면에 보여줄 기간
-MODEL_YEARS = 5      # 확률 계산에 쓰는 과거 기간
+SINCE = date(2020, 1, 1)   # 이 날짜 이후 상장(코스피·코스닥, 스팩 제외)
+HEAVY_DAYS = 730           # 증권신고서까지 읽는 기간(최근 2년 상장 + 공모 진행 중)
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"}
 DART_KEY = os.environ.get("DART_API_KEY", "").strip()
 CLAUDE_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 MAX_AI_PER_RUN = 300
 SUMMARY_VER = 2       # 사업 요약 형식 버전. 올리면 AI 요약을 새 형식으로 다시 만듦
-PARSE_VER = 2         # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
+PARSE_VER = 5         # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
 DART_BUDGET_MIN = 40   # 증권신고서 읽기·AI 요약에 쓸 최대 시간(분). 남은 종목은 다음 실행 때 이어서
 
 
@@ -70,26 +72,59 @@ def first_date(s):
     return date(int(m[1]), int(m[2]), int(m[3])) if m else None
 
 
+def ratio(s):
+    """'1,234.56:1' → 1234.56 (콜론 뒤 '1'을 붙여 읽지 않도록)"""
+    return num(str(s).split(":")[0])
+
+
 def num(s):
     v = pd.to_numeric(re.sub(r"[^\d.\-]", "", str(s)) or "x", errors="coerce")
     return None if pd.isna(v) else float(v)
 
 
 # ---------------------------------------------------------------- 1. KIND
-def fetch_kosdaq_listings(since: date) -> pd.DataFrame:
-    r = requests.get("https://kind.krx.co.kr/corpgeneral/corpList.do",
-                     params={"method": "download", "searchType": "13", "marketType": "kosdaqMkt"},
-                     headers=UA, timeout=60)
-    r.raise_for_status()
-    df = pd.read_html(io.StringIO(r.content.decode("euc-kr", errors="ignore")), header=0)[0]
+def fetch_listings(since: date) -> pd.DataFrame:
+    frames = []
+    for mt, label in (("stockMkt", "코스피"), ("kosdaqMkt", "코스닥")):
+        r = requests.get("https://kind.krx.co.kr/corpgeneral/corpList.do",
+                         params={"method": "download", "searchType": "13", "marketType": mt},
+                         headers=UA, timeout=60)
+        r.raise_for_status()
+        df = pd.read_html(io.StringIO(r.content.decode("euc-kr", errors="ignore")), header=0)[0]
+        df["market"] = label
+        frames.append(df)
+    df = pd.concat(frames, ignore_index=True)
     df = df.rename(columns={"회사명": "name", "종목코드": "code", "업종": "sector",
                             "주요제품": "product", "상장일": "listed"})
     df["code"] = df["code"].astype(str).str.zfill(6)
     df["listed"] = pd.to_datetime(df["listed"], errors="coerce").dt.date
     df = df[df["listed"] >= since]
     df = df[~df["name"].astype(str).map(is_spac)]
-    log(f"[KIND] 최근 {MODEL_YEARS}년 코스닥 신규상장(스팩 제외): {len(df)}개")
-    return df[["code", "name", "sector", "product", "listed"]].sort_values("listed", ascending=False).reset_index(drop=True)
+    log(f"[KIND] {since} 이후 코스피·코스닥 상장(스팩 제외): {len(df)}개")
+    return df[["code", "name", "sector", "product", "listed", "market"]].sort_values("listed", ascending=False).reset_index(drop=True)
+
+
+def ipo_filter(listings):
+    """KIND 신규상장기업 목록으로 공모 상장만 남기고 상장유형·주선인을 붙인다(실패하면 그대로)"""
+    try:
+        lc = pd.concat([kindlib.listing_companies(m, SINCE.isoformat()) for m in ("1", "2")], ignore_index=True)
+    except Exception as e:
+        log(f"[KIND 신규상장] 실패 → 상장법인목록 그대로 사용: {e}")
+        listings["listType"] = None
+        return listings
+    if not len(lc):
+        listings["listType"] = None
+        return listings
+    info = {}
+    for _, r in lc.iterrows():
+        info.setdefault(pipelib.norm(r["회사명"]), (str(r.get("상장유형") or ""), str(r.get("상장주선인") or "")))
+    keep = listings["name"].map(lambda n: pipelib.norm(n) in info)
+    out = listings[keep].copy()
+    out["listType"] = out["name"].map(lambda n: info[pipelib.norm(n)][0] or None)
+    lt = out["listType"].fillna("")
+    out = out[~lt.str.contains("재상장") & ~(lt.str.contains("이전") & (out["market"] == "코스피"))]
+    log(f"[KIND 신규상장] {len(lc)}건 → 공모 상장 {len(out)}개 (분할·재상장 등 {len(listings) - len(out)}개 제외)")
+    return out.reset_index(drop=True)
 
 
 # ---------------------------------------------------------------- 2. 38커뮤니케이션
@@ -158,11 +193,16 @@ def fetch_38(since):
         c_name = next(c for c in t.columns if "기업명" in c)
         c_date = next(c for c in t.columns if "신규상장일" in c)
         c_off = next((c for c in t.columns if "공모가" in c and "대비" not in c and "/" not in c), None)
+        c_open = next((c for c in t.columns if "시초가" in c and "/" not in c), None)
+        c_fc = next((c for c in t.columns if "첫날종가" in c), None)
         for _, r in t.iterrows():
             d = first_date(r[c_date])
             if d and c_off:
                 o = num(r[c_off])
-                offers.append({"name": str(r[c_name]), "d": d, "offer": int(o) if o else None})
+                op = num(r[c_open]) if c_open else None
+                fc = num(r[c_fc]) if c_fc else None
+                offers.append({"name": str(r[c_name]), "d": d, "offer": int(o) if o else None,
+                               "open": int(op) if op else None, "firstClose": int(fc) if fc else None})
     for t in read_38("r1", since - timedelta(days=60), "예측일"):
         col = lambda k: next((c for c in t.columns if k in c), None)
         c_name, c_date = col("기업명"), col("예측일")
@@ -173,7 +213,7 @@ def fetch_38(since):
                 continue
             demand.append({
                 "name": str(r[c_name]), "d": d,
-                "instComp": num(r[c_inst]) if c_inst else None,
+                "instComp": ratio(r[c_inst]) if c_inst else None,
                 "commit": num(r[c_commit]) if c_commit else None,
                 "uw38": str(r[c_uw]).strip() if c_uw and str(r[c_uw]) != "nan" else None,
                 "band": band(r[c_band]) if c_band else None,
@@ -232,13 +272,14 @@ def parse_won(text):
 def match_row(name, listed, rows, lo, hi):
     """이름이 같고 날짜가 listed+lo ~ listed+hi 일 사이인 행"""
     n = norm(name)
-    for exact in (True, False):
-        for r in rows:
-            rn = norm(r["name"])
-            ok = rn == n if exact else (n in rn or rn in n)
-            if ok and lo <= (r["d"] - listed).days <= hi:
-                return r
-    return None
+    if not n:
+        return None
+    exact = [r for r in rows if norm(r["name"]) == n and lo <= (r["d"] - listed).days <= hi]
+    if exact:
+        return min(exact, key=lambda r: abs((r["d"] - listed).days))
+    part = [r for r in rows if min(len(n), len(norm(r["name"]))) >= 4
+            and (n in norm(r["name"]) or norm(r["name"]) in n) and lo <= (r["d"] - listed).days <= hi]
+    return part[0] if len(part) == 1 else None      # 후보가 여럿이면 틀릴 수 있으니 포기
 
 
 def load_manual_offers():
@@ -255,7 +296,7 @@ def load_manual_offers():
 
 
 # ---------------------------------------------------------------- 3. 네이버
-def fetch_daily(code, count=1400):
+def fetch_daily(code, count=3000):
     r = requests.get("https://fchart.stock.naver.com/sise.nhn",
                      params={"symbol": code, "timeframe": "day", "count": count, "requestType": "0"},
                      headers=UA, timeout=30)
@@ -330,6 +371,9 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True):
                 det["lockup"] = info["lockup"]
                 det["lockupTables"] = info["lockupTables"]
                 det["track"] = info["track"]
+                det["floatAtListing"] = info["floatAtListing"]
+                det["discountRate"] = info.get("discountRate")
+                det["totalShares"] = info["totalShares"]
                 det["trackEvidence"] = info["trackEvidence"]
                 det["parseVer"] = PARSE_VER
                 det.pop("listingType", None)
@@ -368,6 +412,32 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True):
     return ai_budget
 
 
+def upcoming_detail(dt, name, filed):
+    """공모 진행 중 회사: 증권신고서에서 공모구조·유통비율·트랙. 같은 신고서는 다시 읽지 않음(캐시)"""
+    corp = dt.corp_by_name(name)
+    if not corp:
+        return {}
+    f = dt.prospectus(corp, date.today(), after=(filed - timedelta(days=5)) if filed else None)
+    if not f:
+        return {}
+    cache = DATA / "upcoming" / f"{corp}.json"
+    if cache.exists():
+        c = json.loads(cache.read_text("utf-8"))
+        if c.get("rcpNo") == f["rcept_no"] and c.get("ver") == PARSE_VER:
+            return c["data"]
+    info = dartlib.analyze_document(dt.document_text(f["rcept_no"]))
+    est = dt.estk(corp, date.today())
+    data = {"rcpNo": f["rcept_no"], "market": info["market"], "track": info["track"],
+            "trackSrc": "증권신고서(할인율)" if str(info["trackEvidence"]).startswith("할인율") else "증권신고서",
+            "trackEvidence": info["trackEvidence"], "floatAtListing": info["floatAtListing"],
+            "totalShares": info["totalShares"], "lockup": info["lockup"], "discountRate": info.get("discountRate"),
+            "shares": est.get("shares"), "underwriters": est.get("underwriters"),
+            "oldShareRatio": est.get("oldShareRatio"), "putback": est.get("putback"),
+            "fundUse": est.get("fundUse"), "summary": excerpt(info["bizText"], 300) if info["bizText"] else None}
+    cache.write_text(json.dumps({"rcpNo": f["rcept_no"], "ver": PARSE_VER, "data": data}, ensure_ascii=False), "utf-8")
+    return data
+
+
 def excerpt(text, n=500):
     t = re.sub(r"^.*?(사업의 개요|업계의 현황|회사의 현황)", r"\1", text, count=1)
     return t[:n] + ("…" if len(t) > n else "")
@@ -378,8 +448,7 @@ def main():
     for p in (DATA, PRICES, DETAIL):
         p.mkdir(exist_ok=True)
     today = datetime.now(KST).date()
-    show_since = today - timedelta(days=365 * SHOW_YEARS)
-    model_since = today - timedelta(days=365 * MODEL_YEARS)
+    (DATA / "upcoming").mkdir(exist_ok=True)
 
     prev_path = DATA / "ipos.json"
     prev = {}
@@ -390,23 +459,36 @@ def main():
             pass
 
     try:
-        listings = fetch_kosdaq_listings(model_since)
+        listings = ipo_filter(fetch_listings(SINCE))
     except Exception as e:
         log(f"[오류] KIND 목록을 받지 못했습니다: {e}")
         sys.exit(0 if prev else 1)
 
     try:
-        offers38, demand38 = fetch_38(model_since)
+        offers38, demand38 = fetch_38(SINCE)
     except Exception as e:
         log(f"[38] 실패: {e}")
         offers38, demand38 = [], []
     manual = load_manual_offers()
+    try:
+        pub_df = kindlib.pubofr(SINCE.isoformat())
+        log(f"[KIND 공모진행] {len(pub_df)}건")
+    except Exception as e:
+        log(f"[KIND 공모진행] 실패: {e}")
+        pub_df = None
+    pub_offers = []
+    if pub_df is not None:
+        for _, r in pub_df.iterrows():
+            o = num(r.get("확정공모가"))
+            ld = first_date(r.get("상장예정일"))
+            if o and ld:
+                pub_offers.append({"name": str(r["회사명"]), "d": ld, "offer": int(o)})
 
     universe, items, missing = [], [], []
     n_fetch = {"full": 0, "recent": 0}
     for i, row in listings.iterrows():
         code, name, listed = row["code"], str(row["name"]), row["listed"]
-        show = listed >= show_since
+        show = True
         try:
             bars, how = load_or_fetch(code, listed)
             n_fetch[how] += 1
@@ -418,37 +500,49 @@ def main():
         if not bars:
             continue
         m38 = match_row(name, listed, offers38, -7, 7)
-        offer = manual.get(code) or (m38 or {}).get("offer") or (prev.get(code) or {}).get("offer")
+        mp = match_row(name, listed, pub_offers, -10, 10)
+        offer = manual.get(code) or (mp or {}).get("offer") or (m38 or {}).get("offer") or (prev.get(code) or {}).get("offer")
+        # 네이버 일봉은 무상증자·액면분할이 반영된 '수정주가'. 38의 실제 시초가와 비교해 비율(adj)을 구해
+        # 공모가도 같은 기준으로 바꿔 수익률을 계산한다. (예: 무상증자 1:1 → adj 0.5)
+        raw_open = (m38 or {}).get("open")
+        adj = bars[0][1] / raw_open if raw_open else 1.0
+        if abs(adj - 1) < 0.03:
+            adj = 1.0
+        offer_adj = offer * adj if offer else None
         dm = match_row(name, listed, demand38, -60, 0) or {}
         sector = None if pd.isna(row["sector"]) else str(row["sector"])
-        universe.append({"code": code, "listed": listed.isoformat(), "offer": offer, "bars": bars,
+        universe.append({"code": code, "listed": listed.isoformat(), "offer": offer_adj, "bars": bars,
                          "uw": dm.get("uw38"), "sector": sector,
-                         "firstRet": pct(bars[0][4], offer), "nowRet": pct(bars[-1][4], offer)})
+                         "firstRet": pct(bars[0][4], offer_adj), "nowRet": pct(bars[-1][4], offer_adj)})
         (PRICES / f"{code}.json").write_text(json.dumps(bars, separators=(",", ":")), "utf-8")
         if not show:
             continue
 
-        if not offer:
+        lt = str(row.get("listType") or "")
+        if not offer and not any(k in lt for k in ("이전", "합병")):
             missing.append((code, name))
         closes = [b[4] for b in bars]
         val20 = [b[4] * b[5] for b in bars[-20:]]
         price, peak = closes[-1], max(b[2] for b in bars)
         ma20 = round(sum(closes[-20:]) / min(20, len(closes)))
         items.append({
-            "code": code, "name": name,
+            "code": code, "name": name, "market": row["market"], "listType": row.get("listType"),
             "sector": sector,
             "product": None if pd.isna(row["product"]) else str(row["product"]),
             "listed": listed.isoformat(), "days": (today - listed).days, "tradingDays": len(bars),
-            "offer": offer, "open": bars[0][1], "firstClose": bars[0][4], "price": price, "asOf": bars[-1][0],
-            "retVsOpen": pct(price, bars[0][1]), "retVsOffer": pct(price, offer),
-            "openVsOffer": pct(bars[0][1], offer),
+            "offer": offer, "offerAdj": round(offer_adj) if offer_adj and adj != 1 else None, "adj": round(adj, 4),
+            "open": (m38 or {}).get("open") or round(bars[0][1] / adj),
+            "firstClose": (m38 or {}).get("firstClose") or round(bars[0][4] / adj),
+            "openAdj": bars[0][1], "price": price, "asOf": bars[-1][0],
+            "retVsOpen": pct(price, bars[0][1]), "retVsOffer": pct(price, offer_adj),
+            "openVsOffer": pct(bars[0][1], offer_adj),
             "peak": peak, "fromPeak": pct(price, peak),
             "ret5d": pct(price, closes[-6]) if len(closes) > 5 else None,
             "ret20d": pct(price, closes[-21]) if len(closes) > 20 else None,
             "ma20": ma20, "aboveMa20": price >= ma20,
             "instComp": dm.get("instComp"), "commit": dm.get("commit"), "uw38": dm.get("uw38"),
             "band": dm.get("band"), "bandPos": band_pos(offer, dm.get("band")),
-            "firstDayRet": pct(bars[0][4], offer),
+            "firstDayRet": pct(bars[0][4], offer_adj),
             "tradeValue20": round(sum(val20) / len(val20)) if val20 else None,
         })
         if (i + 1) % 25 == 0:
@@ -490,33 +584,107 @@ def main():
         log("[DART] DART_API_KEY 가 없어 유통물량·사업요약·공시는 건너뜁니다.")
     ai_budget = MAX_AI_PER_RUN
     manual_tracks = load_manual_tracks()
+    # 상장트랙 기준: KIND 특례상장·성장성특례 목록(거래소 공식). 목록을 받으면 '없는 회사 = 특례 아님'으로 확정
+    try:
+        special = kindlib.special_listings(range(SINCE.year, today.year + 1), DATA / "debug", log)
+    except Exception as e:
+        log(f"[KIND 기술성장기업] 실패 → 증권신고서(본문·할인율)로 판별: {e}")
+        special = {}
+    try:
+        growth = kindlib.growth_listings(log)
+    except Exception as e:
+        log(f"[KIND 성장성특례] 실패: {e}")
+        growth = set()
+    if 0 < len([k for k in special if not k.startswith("#")]) < 20:                       # 너무 적으면 목록을 제대로 못 받은 것 → 쓰지 않음
+        log(f"[KIND 기술성장기업] {len(special)}개뿐이라 사용하지 않음")
+        special = {}
+    special_n = {(k if k.startswith("#") else pipelib.norm(k)): v for k, v in special.items()}
+    growth_n = {(k if k.startswith("#") else pipelib.norm(k)) for k in growth}
+
+    def resolve_track(it, doc_track):
+        if it["code"] in manual_tracks:
+            return manual_tracks[it["code"]], "직접 입력"
+        n, c5 = pipelib.norm(it["name"]), "#" + it["code"][:5]   # 이름이 바뀌어도 종목코드로 찾음
+        if n in growth_n or c5 in growth_n:
+            return "성장성 추천", "KIND 성장성특례 목록"
+        if special_n:
+            hit = special_n.get(c5) if c5 in special_n else special_n.get(n)
+            if hit is not None:
+                kt = kindlib.track_from_kind(hit)
+                if kt == "기술특례(기술평가)" and doc_track in ("기술특례(사업모델)", "기술특례(소부장)", "성장성 추천"):
+                    kt = doc_track                      # KIND에 세부유형이 없으면 신고서 문장으로 보완
+                return kt, "KIND 기술성장기업 목록"
+            if doc_track == "이익미실현(테슬라)":       # 이익미실현은 기술성장기업 목록 대상이 아님
+                return doc_track, "증권신고서"
+            lt = str(it.get("listType") or "")
+            if not it.get("offer") and any(k in lt for k in ("이전", "합병")):
+                return "공모 없음(스팩합병·이전상장)", "KIND 상장유형"
+            return "일반", "KIND 기술성장기업 목록에 없음"
+        return doc_track, "증권신고서"
     for it in items:
         p = DETAIL / f"{it['code']}.json"
-        det = json.loads(p.read_text("utf-8")) if p.exists() else {}
-        det["market"] = fetch_market(it["code"]) or det.get("market", {})
-        if dt:
+        try:
+            det = json.loads(p.read_text("utf-8")) if p.exists() else {}
+        except Exception:
+            det = {}
+        fetched = det.get("marketFetched")
+        stale = not fetched or (today - date.fromisoformat(fetched)).days >= 7
+        if (today - date.fromisoformat(it["listed"])).days <= HEAVY_DAYS or stale or not det.get("market"):
+            fm = fetch_market(it["code"])
+            if fm:
+                det["market"], det["marketAt"] = fm, None      # 새로 받았으면 주식수 다시 계산
+                det["marketFetched"] = today.isoformat()
+            det.setdefault("market", {})
+        recent = (today - date.fromisoformat(it["listed"])).days <= HEAVY_DAYS
+        if dt and recent:          # 2년 넘은 종목은 DART 상세 생략(목록·시세·통계만)
             try:
-                heavy = (time.time() - t0) < DART_BUDGET_MIN * 60
-                if not heavy and (not det.get("dartDone") or det.get("parseVer", 1) < PARSE_VER):
+                heavy = recent and (time.time() - t0) < DART_BUDGET_MIN * 60
+                if recent and not heavy and (not det.get("dartDone") or det.get("parseVer", 1) < PARSE_VER):
                     left += 1
                 ai_budget = dart_detail(dt, it["code"], it["name"], date.fromisoformat(it["listed"]), det, ai_budget, heavy)
             except Exception as e:
                 log(f"  - {it['name']} DART 전체 실패: {e}")
         # 목록 화면용 요약 필드
-        it["track"] = manual_tracks.get(it["code"]) or det.get("track")
+        it["track"], it["trackSrc"] = resolve_track(it, det.get("track"))
+        if it["track"] is None and det.get("dartStatus", "").startswith("증권신고서 없음"):
+            it["track"] = "공모 없음(스팩합병·이전상장)"
+        it["floatAtListing"] = det.get("floatAtListing")
         it["trackManual"] = it["code"] in manual_tracks
         it["marcap"] = det["market"].get("시총")
         mc = parse_won(it["marcap"])
-        if mc and it.get("price"):
-            shares = mc / it["price"]
-            it["marcapNum"] = round(mc)
-            it["marcapAtOffer"] = round(shares * it["offer"]) if it.get("offer") else None
+        if mc and it.get("price") and det.get("market"):
+            if det.get("marketAt") is None or not det.get("sharesOut") or det.get("sharesAdj") != it.get("adj"):
+                det["sharesOut"] = round(mc / it["price"])          # 받은 날 기준 상장주식수
+                det["marketAt"] = it["asOf"]
+                det["sharesAdj"] = it.get("adj")
+        so = det.get("sharesOut")
+        if so and it.get("price"):
+            it["marcapNum"] = round(so * it["price"])
+            it["marcapAtOffer"] = round(so * (it.get("offerAdj") or it["offer"])) if it.get("offer") else None
         fin = det.get("fin") or {}
         it["opLoss"] = fin.get("op") is not None and fin["op"] < 0
         it["mezz"] = any(e.get("tag") == "메자닌(CB·BW·EB)" for e in det.get("events") or [])
         it["hasLockup"] = bool(det.get("lockup") or det.get("lockupTables"))
         p.write_text(json.dumps(det, ensure_ascii=False, separators=(",", ":")), "utf-8")
         time.sleep(0.1)
+
+    # ---- 단계별 현황(심사중·승인·공모진행·철회)
+    try:
+        inv_df = kindlib.invstg(SINCE.isoformat(), debug_dir=DATA / "debug", log=log)
+        inv_ok = "ok"
+    except Exception as e:
+        log(f"[KIND 예비심사] 실패: {e}")
+        inv_df, inv_ok = None, str(e)[:200]
+    enrich = (lambda n, f: upcoming_detail(dt, n, f)) if dt else None
+    try:
+        pipe = pipelib.build(today, items, pub_df, inv_df, demand38, enrich, log)
+        pipe["updated"] = datetime.now(KST).strftime("%Y-%m-%d %H:%M")
+        pipe["sources"] = {"pubofr": pub_df is not None, "invstg": inv_ok, "dart": bool(dt)}
+        (DATA / "pipeline.json").write_text(json.dumps(pipe, ensure_ascii=False, separators=(",", ":")), "utf-8")
+        log(f"[단계] 심사중 {len(pipe['review'])} · 승인 {len(pipe['approved'])} · 공모진행 {len(pipe['offering'])} · 철회·미승인 {len(pipe['withdrawn'])}")
+    except Exception as e:
+        import traceback
+        log(f"[단계] 실패(이전 pipeline.json 유지): {e}\n{traceback.format_exc()}")
 
     if left:
         log(f"[DART] 시간 제한으로 {left}개 종목은 다음 실행 때 이어서 처리합니다.")

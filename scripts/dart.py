@@ -54,13 +54,28 @@ class Dart:
             r = self._get("corpCode.xml")
             z = zipfile.ZipFile(io.BytesIO(r.content))
             root = ET.fromstring(z.read(z.namelist()[0]))
-            self._corp = {}
+            self._corp, self._by_name, best = {}, {}, {}
             for el in root.iter("list"):
                 sc = (el.findtext("stock_code") or "").strip()
+                cc = el.findtext("corp_code")
                 if sc:
-                    self._corp[sc] = el.findtext("corp_code")
+                    self._corp[sc] = cc
+                key = re.sub(r"[\s\.\-·]|\(주\)|㈜|주식회사", "", el.findtext("corp_name") or "").lower()
+                md = el.findtext("modify_date") or ""
+                if key and md >= best.get(key, ""):
+                    best[key] = md
+                    self._by_name[key] = cc
             self.log(f"[DART] 고유번호 {len(self._corp)}개 로드")
         return self._corp.get(stock_code)
+
+    def corp_by_name(self, name):
+        """비상장 회사도 이름으로 고유번호 찾기 (같은 이름이 여럿이면 최근 수정된 것)"""
+        if self._corp is None:
+            self.corp_code("000000")
+        def nm(x):
+            return re.sub(r"[\s\.\-·]|\(주\)|㈜|주식회사", "", x or "").lower()
+        c = self._by_name.get(nm(name))
+        return c
 
     def filings(self, corp_code, bgn, end, **kw):
         out, page = [], 1
@@ -126,9 +141,9 @@ class Dart:
                 return out
         return None
 
-    def prospectus(self, corp_code, listed):
+    def prospectus(self, corp_code, listed, after=None):
         """상장일 이전 1년 내 투자설명서(최종) → 없으면 가장 최근 증권신고서(지분증권)"""
-        rows = self.filings(corp_code, listed - timedelta(days=365), listed)
+        rows = self.filings(corp_code, after or (listed - timedelta(days=365)), listed)
         def pick(word):
             c = [r for r in rows if word in r["report_nm"]]
             return max(c, key=lambda r: r["rcept_no"]) if c else None
@@ -198,7 +213,10 @@ class Dart:
                         fund.append({"k": FUND_NAMES.get(k, k), "v": n})
             out["fundUse"] = [f for f in fund if f["k"] not in ("합계", "계")]
         put = g.get("일반청약자환매청구권") or []
-        out["putback"] = bool([x for x in put if any(str(v).strip() not in ("", "-") for k, v in x.items()
+        def real(v):
+            v = str(v).strip()
+            return v not in ("", "-") and "없음" not in v and "해당" not in v
+        out["putback"] = bool([x for x in put if any(real(v) for k, v in x.items()
                                                      if k not in ("rcept_no", "corp_cls", "corp_code", "corp_name"))])
         return out
 
@@ -234,16 +252,35 @@ def clean(s):
 
 
 def period_months(text):
+    """'상장일로부터 6개월' → 6, '-'·'없음'·'상장일' → 0, 모르면 None"""
     t = clean(text)
-    if not t or t in ("-", "해당사항없음"):
+    if not t:
         return None
-    if "상장일" in t or "유통가능" in t or t == "없음":
+    t = re.sub(r"\d{4}\s*[년./-]\s*\d{1,2}\s*[월./-]?\s*\d{0,2}\s*일?(까지)?", "", t)   # '2027년 3월 15일까지' 같은 날짜 제거
+    ms = PERIOD_RE.findall(t)
+    if ms:
+        tot = 0.0
+        for v, u in ms[:2]:                                   # '1년 6개월' → 18
+            v = float(v)
+            tot += v * 12 if u == "년" else v / 30 if u == "일" else v
+        return round(tot, 2) if tot <= 120 else None
+    if t in ("-", "–", "없음", "해당없음", "해당사항없음", "상장일", "상장 당일") or "유통가능" in t \
+            or "제한없음" in t.replace(" ", ""):
         return 0
-    m = PERIOD_RE.search(t)
-    if not m:
+    return None
+
+
+PCT_RE = re.compile(r"^-?\d{1,3}(\.\d+)?\s*%?$")
+
+
+def to_pct(s):
+    t = clean(s).replace(",", "")
+    if not t or t in ("-", "–"):
+        return 0.0
+    if not PCT_RE.match(t):
         return None
-    v, u = float(m.group(1)), m.group(2)
-    return round(v * 12 if u == "년" else v / 30 if u == "일" else v, 2)
+    v = float(t.rstrip("%").strip())
+    return v if 0 <= v <= 100 else None
 
 
 def to_num(s):
@@ -280,42 +317,100 @@ def find_lockup_tables(soup):
     return [t for _, t in scored[:2]]
 
 
-def lockup_timeline(rows):
-    """표에서 '기간(개월) → 지분율(%)'을 뽑아 누적 유통가능 비율로 만든다. 실패하면 []"""
-    flat = expand(rows)
-    # 방법 A: 헤더에 '기간' 열과 '비율/지분율' 열이 있는 주주별 표 → 기간별 합산
-    for hi, head in enumerate(flat[:4]):
-        p_col = next((i for i, h in enumerate(head) if "기간" in h), None)
-        r_col = next((i for i, h in enumerate(head) if ("비율" in h or "지분율" in h)), None)
-        if p_col is None or r_col is None:
+def _is_num_row(r):
+    return sum(1 for c in r if re.fullmatch(r"[\d,]+(\.\d+)?%?", clean(c).replace(" ", ""))) >= 2
+
+
+def holders_timeline(grid):
+    """주주별 표(매각제한물량·유통가능물량 지분율, 매각제한기간) → 기간별 누적 유통가능 비율"""
+    hn = next((i for i, r in enumerate(grid) if _is_num_row(r)), None)
+    if not hn or hn > 5:
+        return []
+    width = max(len(r) for r in grid)
+    labels = []
+    for j in range(width):
+        parts = []
+        for r in grid[:hn]:
+            if j < len(r) and r[j] not in parts:
+                parts.append(r[j])
+        labels.append(" ".join(parts).replace(" ", ""))
+
+    def col(*need, avoid=()):
+        for j, l in enumerate(labels):
+            if all(any(k in l for k in alt.split("|")) for alt in need) and not any(a in l for a in avoid):
+                return j
+        return None
+    per_c = col("기간")
+    rest_c = col("매각제한|보호예수|의무보유|유통제한", "지분율|비율|%", avoid=("기간", "사유"))
+    float_c = col("유통가능", "지분율|비율|%")
+    post_c = col("공모후", "지분율|비율|%")
+    if per_c is None:
+        return []
+    agg, seen, seen_fp = {}, {}, None
+    for r in grid[hn:]:
+        if len(r) <= per_c:
             continue
-        agg = {}
-        for r in flat[hi + 1:]:
-            if len(r) != len(head) or any(k in " ".join(r) for k in ("합계", "소계", "총계")):
-                continue
-            m, v = period_months(r[p_col]), to_num(r[r_col])
-            if m is None and "유통가능" in " ".join(r[:p_col]):
-                m = 0
-            if m is None or v is None or v > 100:
+        if re.search(r"(소계|합계|총계)", " ".join(r)) or re.match(r"^\(?주\s*\d*\)", r[0]):
+            continue
+        m = period_months(r[per_c])
+        if rest_c is not None or float_c is not None:
+            rp = to_pct(r[rest_c]) if rest_c is not None and rest_c < len(r) else None
+            fp = to_pct(r[float_c]) if float_c is not None and float_c < len(r) else None
+            fkey = (r[0], r[1] if len(r) > 1 else "", r[float_c] if float_c is not None and float_c < len(r) else "")
+            if fp and fkey != seen_fp:           # 같은 주주의 유통가능분이 바로 다음 줄에 반복되면 한 번만
+                agg[0] = agg.get(0, 0) + fp
+            seen_fp = fkey
+            if rp:
+                if not m:
+                    continue
+                key = (r[0], r[1] if len(r) > 1 else "", r[rest_c])
+                if key in seen:                 # 같은 주식이 기간 두 개로 두 줄 적힌 경우 → 긴 기간만
+                    if m <= seen[key]:
+                        continue
+                    agg[seen[key]] -= rp
+                seen[key] = m
+                agg[m] = agg.get(m, 0) + rp
+        elif post_c is not None:
+            v = to_pct(r[post_c]) if post_c < len(r) else None
+            if v is None or m is None:
                 continue
             agg[m] = agg.get(m, 0) + v
-        if len(agg) >= 2 and 80 <= sum(agg.values()) <= 120:
-            return cumulative(agg)
-    # 방법 B: 행 머리가 '상장일/1개월/3개월…'인 기간별 추이 표
+    agg = {k: v for k, v in agg.items() if v > 0.001}
+    tot = sum(agg.values())
+    if len(agg) < 2 or not (80 <= tot <= 115):
+        return []
+    out, acc = [], 0.0
+    for k in sorted(agg):
+        acc += agg[k]
+        out.append({"m": k, "pct": round(min(acc / tot * 100, 100), 2)})
+    return out
+
+
+def series_timeline(grid):
+    """'상장일 / 1개월 후 / 3개월 후 …' 기간별 추이 표"""
     pts = {}
-    for r in flat:
+    for r in grid:
         if not r:
             continue
-        m = period_months(r[0]) if ("후" in r[0] or "상장일" in r[0] or PERIOD_RE.fullmatch(r[0].replace(" ", "") or "x")) else None
+        h = r[0]
+        if not ("후" in h or "상장일" in h or "상장시" in h.replace(" ", "")):
+            continue
+        m = period_months(h) if PERIOD_RE.search(h) else (0 if "상장" in h else None)
         if m is None:
             continue
-        pcts = [to_num(x) for x in r[1:] if "%" in x or re.fullmatch(r"\d{1,3}\.\d+", x.replace(" ", ""))]
-        pcts = [x for x in pcts if x is not None and 0 <= x <= 100]
-        if pcts:
-            pts[m] = pcts[-1]
-    if len(pts) >= 2:
-        return [{"m": m, "pct": round(v, 2)} for m, v in sorted(pts.items())]
+        ps = [to_pct(x) for x in r[1:] if "%" in x or re.fullmatch(r"\d{1,3}\.\d+", x.replace(" ", ""))]
+        ps = [x for x in ps if x]
+        if ps:
+            pts[m] = ps[-1]
+    vals = [pts[k] for k in sorted(pts)]
+    if len(pts) >= 2 and all(b >= a - 0.01 for a, b in zip(vals, vals[1:])):
+        return [{"m": k, "pct": round(pts[k], 2)} for k in sorted(pts)]
     return []
+
+
+def lockup_timeline(rows):
+    grid = expand(rows)
+    return holders_timeline(grid) or series_timeline(grid)
 
 
 def expand(rows):
@@ -368,13 +463,14 @@ def business_text(soup, limit=18000):
 #   증권신고서에는 규정 설명 때문에 모든 트랙 이름이 다 나오므로, '당사는 …' 처럼 회사 자신을 가리키는
 #   문장에서만 트랙을 찾는다. 겹치면 더 구체적인 트랙이 우선(사업모델 > 성장성 추천 > 소부장 > 기술평가 > 이익미실현).
 TRACKS = [
+    ("성장성 추천", re.compile(r"제?\s*39\s*호\s*나\s*목")),
     ("기술특례(사업모델)", re.compile(r"사업\s*모델\s*(기반\s*)?(특례|기술성장|평가|상장)")),
     ("성장성 추천", re.compile(r"성장성\s*추천|상장주선인\s*(의\s*)?(성장성\s*)?추천")),
     ("기술특례(소부장)", re.compile(r"소재\s*[·ㆍ,\s]?\s*부품\s*[·ㆍ,\s]?\s*장비.{0,40}(특례|전문기업|기술평가)")),
     ("기술특례(기술평가)", re.compile(r"기술\s*평가\s*(특례|결과|등급)|기술성장기업|기술특례")),
     ("이익미실현(테슬라)", re.compile(r"이익\s*미실현\s*(기업|요건|특례)?|테슬라\s*요건")),
 ]
-SELF = re.compile(r"(당사|동사|발행회사|회사)(는|가|의|와|로서|로)")
+SELF = re.compile(r"(당사|동사|발행회사)(는|가|의|와|로서|로|에)")
 NEG = re.compile(r"(해당하지\s*않|아닙니다|아니며|아닌|없습니다|제외)")
 
 
@@ -386,7 +482,8 @@ def listing_track(plain):
         if len(snt) > 600:
             continue
         for m in SELF.finditer(snt):
-            clause = snt[m.start(): m.start() + 180]      # '당사는 …' 뒤쪽만 본다
+            clause = snt[m.start(): m.start() + 220]      # '당사는 …' 뒤쪽만 본다
+            clause = re.sub(r"\([^)]*\)", "", clause)       # 괄호 안 규정 설명 제거
             if NEG.search(clause) or not any(k in clause for k in ("상장", "특례", "요건", "평가", "추천")):
                 continue
             for name, rx in TRACKS:
@@ -396,7 +493,44 @@ def listing_track(plain):
     for name, _ in TRACKS:
         if name in hits:
             return name, hits[name][:300]
+    ev = discount_evidence(plain)          # 2순위: 공모가 산정의 '현가할인율' 문단
+    if ev:
+        return "기술특례(기술평가)", "할인율 근거: " + ev
     return "일반", ""
+
+
+# 기술특례 상장사는 미래 추정이익을 현재가치로 할인(현가할인율)해 공모가를 정하고,
+# 신고서에 '코스닥 기술특례상장기업 적용실적, 연할인율' 같은 비교표를 싣는다.
+# (모든 회사에 있는 '공모가 할인율'(평가가액 대비 할인)과는 다르므로 '현가'·'기술특례' 문구를 함께 본다)
+TECH_WORDS = ("기술특례상장기업", "기술특례 상장기업", "기술평가기업", "기술성장기업", "기술특례기업", "기술특례상장")
+
+
+def discount_evidence(plain):
+    for m in re.finditer(r"할인율", plain):
+        w = plain[max(0, m.start() - 350): m.end() + 350]
+        if "현가" not in w and "적용실적" not in w:
+            continue
+        if not any(k in w for k in TECH_WORDS):
+            continue
+        if re.search(r"(기술특례|기술성장|기술평가)[^.\n]{0,40}(해당하지 않|아닙니다|아니므로)", w):
+            continue
+        a = max(0, m.start() - 120)
+        return clean(plain[a: m.end() + 120])
+    return ""
+
+
+def discount_rate(plain):
+    """미래 추정이익에 적용한 현가할인율(%)"""
+    pats = [r"(\d{1,2}(?:\.\d+)?)\s*%\s*의\s*현가\s*할인율",
+            r"현가\s*할인율\s*(?:은|을|로|:|\()?\s*(?:연\s*)?(\d{1,2}(?:\.\d+)?)\s*%",
+            r"할인율\s*(?:은|을|로)?\s*연\s*(\d{1,2}(?:\.\d+)?)\s*%"]
+    for p in pats:
+        m = re.search(p, plain)
+        if m:
+            v = float(m.group(1))
+            if 5 <= v <= 60:
+                return v
+    return None
 
 
 def analyze_document(xml_text):
@@ -409,15 +543,42 @@ def analyze_document(xml_text):
             cands.append(chunk)
     if cands:
         soup = BeautifulSoup("".join(cands), "html.parser")
-        for tbl in find_lockup_tables(soup):
-            rows = table_rows(tbl)[:60]
-            out["lockupTables"].append(rows)
-            if not out["lockup"]:
-                out["lockup"] = lockup_timeline(rows)
+        tables = soup.find_all("table")
+        for tbl in tables:                      # 1순위: 실제로 기간별 비율이 계산되는 표
+            txt = tbl.get_text(" ")
+            if not any(k in txt for k in ("매각제한", "보호예수", "의무보유", "유통가능")):
+                continue
+            rows = table_rows(tbl)
+            tl = lockup_timeline(rows)
+            if tl:
+                out["lockup"] = tl
+                out["lockupTables"] = [rows[:80]]
+                out["_allRows"] = rows
+                break
+        if not out["lockup"]:
+            out["lockupTables"] = [table_rows(t)[:80] for t in find_lockup_tables(soup)[:1]]
     out["bizText"] = business_text_raw(xml_text)
     plain = strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml_text[:4000000], flags=re.I))
     out["track"], out["trackEvidence"] = listing_track(plain)
+    out["discountRate"] = discount_rate(plain)
+    head = plain[:300000]
+    k, y, x = head.count("코스닥시장"), head.count("유가증권시장"), head.count("코넥스시장")
+    out["market"] = "코스피" if y > k else "코스닥" if k else ("코넥스" if x else "코스닥")
+    out["totalShares"] = total_shares([out.pop("_allRows", None) or []] + out["lockupTables"])
+    out["floatAtListing"] = next((p["pct"] for p in out["lockup"] if p["m"] == 0), None)
     return out
+
+
+def total_shares(tables):
+    """유통가능물량 표의 '합계' 행에서 상장예정 주식수"""
+    best = None
+    for rows in tables:
+        for r in expand(rows):
+            if r and any(k in r[0] for k in ("합계", "총계")) or (len(r) > 1 and "합계" in r[1]):
+                nums = [int(re.sub(r"[^\d]", "", c)) for c in r if re.fullmatch(r"[\d,]{7,}", c.replace(" ", ""))]
+                if nums:
+                    best = max(best or 0, max(nums))
+    return best
 
 
 def strip_tags(s):

@@ -1,7 +1,7 @@
-# 공모주 투자 Insight
+# IPO 동향 분석
 
-최근 2년 코스닥 신규상장 공모주(스팩 제외)의 공모가·시초가·현재가·수익률·차트, 기간별 유통가능물량,
-사업 요약, 공모 정보·참고지표·최근 공시, 과거 유사 사례 기반 '3개월 뒤 수익 확률'을 보여주는 사이트입니다.
+2020년 이후 코스피·코스닥 IPO(스팩 제외)를 단계별 탭으로 보여주는 사이트입니다.
+한눈에(단계별 건수·다가오는 일정·월별 추이·분기별 시장 온도) / 심사중 / 심사승인 / 수요예측·청약 / 상장완료 / 철회·미승인.
 GitHub Actions가 평일 16:40(KST)마다 자동으로 데이터를 새로 받고 사이트를 다시 올립니다.
 
 ## API 키 등록 (Settings → Secrets and variables → Actions → New repository secret)
@@ -21,6 +21,9 @@ GitHub Actions가 평일 16:40(KST)마다 자동으로 데이터를 새로 받�
 | `scripts/update.py` | 데이터 수집 (KIND·38·네이버) |
 | `scripts/dart.py` | DART 연동·AI 요약 |
 | `scripts/model.py` | 수익 확률 계산 |
+| `scripts/kind.py` | KIND 예비심사·공모진행·신규상장 수집 |
+| `scripts/pipeline.py` | 단계별 현황·월별 추이·일정 계산 → `data/pipeline.json` |
+| `data/listing_track.csv` | **상장트랙 직접 입력** (자동 판별이 틀렸을 때) |
 | `data/offer_prices.csv` | **공모가 직접 입력** (자동으로 못 찾은 경우) |
 | `data/missing_offer.csv` | 공모가를 못 찾은 종목 목록 |
 | `data/ipos.json`, `data/prices/`, `data/detail/` | 자동 생성 데이터 |
