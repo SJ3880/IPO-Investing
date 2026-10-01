@@ -70,7 +70,7 @@ def stage_of(res):
 
 def no_ipo(it):
     lt = str(it.get("listType") or "")
-    return not it.get("offer") and any(k in lt for k in ("이전", "합병"))
+    return bool(it.get("spac")) or (not it.get("offer") and any(k in lt for k in ("이전", "합병")))
 
 
 def add_months(x, m):
@@ -184,8 +184,8 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
         for _, r in inv_df.iterrows():
             name = str(r.get("name") or "").strip()
             lt = str(r.get("listType") or "")
-            if not name or "스팩" in name or "기업인수목적" in name or "스팩" in lt or "재상장" in lt:
-                continue                    # 스팩 합병·재상장은 IPO 동향에서 제외
+            if not name or "스팩" in name or "기업인수목적" in name or "재상장" in lt:
+                continue                    # 스팩 자체 상장·재상장은 제외(스팩합병 대상회사는 표시)
             ap = d(r.get("applied"))
             rd = d(r.get("resultDate"))
             res = str(r.get("result") or "").strip()
@@ -193,7 +193,8 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
             market = "코스피" if ("유가" in mk or "코스피" in mk) else "코넥스" if "코넥스" in mk else "코스닥" if mk else None
             row = {"name": name, "applied": iso(ap), "resultDate": iso(rd), "result": res or None,
                    "market": market, "listType": r.get("listType"), "sector": r.get("sector"),
-                   "uw": r.get("uw"), "kindCode": r.get("kindCode"), "stage": stage_of(res)}
+                   "uw": r.get("uw"), "kindCode": r.get("kindCode"), "stage": stage_of(res),
+                   "spac": "스팩" in lt}
             inv_rows.append(row)
             if market == "코넥스":
                 continue
@@ -224,7 +225,7 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
                 review.append(row)
     # 심사 기간 중앙값(최근 2년 승인건) → 심사중 종목 예상 결과 시점
     durs = [(d(x["resultDate"]) - d(x["applied"])).days for x in inv_rows
-            if x["result"] == "심사 승인" and x["resultDate"] and x["applied"]
+            if x["result"] == "심사 승인" and x["resultDate"] and x["applied"] and not x["spac"]
             and d(x["applied"]) >= today - timedelta(days=730)]
     med_review = int(median(durs)) if durs else None
     for x in review:
@@ -242,7 +243,7 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
             k = f"{dt.year}-{dt.month:02d}"
             months.setdefault(k, {"applied": 0, "approved": 0, "withdrawn": 0, "listed": 0})[key] += 1
     for x in inv_rows:
-        if x["market"] == "코넥스":
+        if x["market"] == "코넥스" or x["spac"]:      # 월별 추이는 직상장(공모) 기준
             continue
         bump(d(x["applied"]), "applied")
         res = x["result"] or ""

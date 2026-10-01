@@ -47,7 +47,7 @@ DART_KEY = os.environ.get("DART_API_KEY", "").strip()
 CLAUDE_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 MAX_AI_PER_RUN = 300
 SUMMARY_VER = 2       # 사업 요약 형식 버전. 올리면 AI 요약을 새 형식으로 다시 만듦
-PARSE_VER = 5         # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
+PARSE_VER = 6         # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
 DART_BUDGET_MIN = 40   # 증권신고서 읽기·AI 요약에 쓸 최대 시간(분). 남은 종목은 다음 실행 때 이어서
 
 
@@ -98,9 +98,11 @@ def fetch_listings(since: date) -> pd.DataFrame:
                             "주요제품": "product", "상장일": "listed"})
     df["code"] = df["code"].astype(str).str.zfill(6)
     df["listed"] = pd.to_datetime(df["listed"], errors="coerce").dt.date
-    df = df[df["listed"] >= since]
+    df = df[df["listed"].notna()]
     df = df[~df["name"].astype(str).map(is_spac)]
-    log(f"[KIND] {since} 이후 코스피·코스닥 상장(스팩 제외): {len(df)}개")
+    if since:
+        df = df[df["listed"] >= since]
+    log(f"[KIND] {since or '전체'} 상장(스팩 제외): {len(df)}개")
     return df[["code", "name", "sector", "product", "listed", "market"]].sort_values("listed", ascending=False).reset_index(drop=True)
 
 
@@ -125,6 +127,97 @@ def ipo_filter(listings):
     out = out[~lt.str.contains("재상장") & ~(lt.str.contains("이전") & (out["market"] == "코스피"))]
     log(f"[KIND 신규상장] {len(lc)}건 → 공모 상장 {len(out)}개 (분할·재상장 등 {len(listings) - len(out)}개 제외)")
     return out.reset_index(drop=True)
+
+
+# ---------------------------------------------------------------- 1-2. 스팩합병 상장
+SPAC_BASE = 2000      # 스팩 공모가·합병가액(2015년 이후 스팩은 모두 2,000원)
+
+
+def spac_targets(inv_df, listings_all):
+    """KIND 예비심사 목록의 '스팩 존속합병/소멸합병' 중 '상장 승인'(합병상장 완료)된 회사를
+    상장법인목록에서 이름으로 찾는다. 합병 후 회사 이름 = 예비심사 회사명."""
+    if inv_df is None or not len(inv_df):
+        return []
+    by = {}
+    for _, r in listings_all.iterrows():
+        by.setdefault(norm(str(r["name"])), r)
+    out, seen = [], set()
+    for _, r in inv_df.iterrows():
+        lt = str(r.get("listType") or "")
+        res = str(r.get("result") or "").replace(" ", "")
+        if "스팩" not in lt or res != "상장승인":
+            continue
+        row = by.get(norm(str(r.get("name") or "")))
+        if row is None or row["code"] in seen:
+            continue
+        seen.add(row["code"])
+        out.append({"code": row["code"], "name": str(row["name"]), "sector": row["sector"], "product": row["product"],
+                    "kindListed": row["listed"], "market": row["market"], "listType": lt.strip(),
+                    "applied": first_date(r.get("applied")), "resultDate": first_date(r.get("resultDate")),
+                    "uw": str(r.get("uw") or "") or None})
+    return out
+
+
+def _snap(ratio):
+    for v in (1, 2, 3, 4, 5, 10, 20, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 10, 1 / 20, 2.5, 0.4):
+        if abs(ratio / v - 1) < 0.12:
+            return v
+    return 1.0
+
+
+def merge_point(bars, sp):
+    """합병 신주 상장일 찾기
+       · 소멸합병(회사가 새로 상장): 상장법인목록의 상장일
+       · 존속합병(스팩이 이름을 바꿔 계속 상장): 합병 전후 매매정지로 생긴 긴 공백(14일+) 뒤 첫 거래일"""
+    if not bars:
+        return None, 1.0
+    ap = sp.get("applied") or sp.get("resultDate")
+    if "소멸" in sp["listType"] or (ap and sp["kindListed"] >= ap - timedelta(days=30)):
+        d0 = sp["kindListed"].isoformat()
+        b = next((x for x in bars if x[0] >= d0), None)
+        return (b[0] if b else None), 1.0
+    after = (sp.get("resultDate") or ap or date(2000, 1, 1)) - timedelta(days=30)
+    idx = [i for i in range(1, len(bars)) if date.fromisoformat(bars[i][0]) >= after]
+    gap = lambda i: (date.fromisoformat(bars[i][0]) - date.fromisoformat(bars[i - 1][0])).days
+    k = next((i for i in idx if gap(i) >= 14), None) or next((i for i in idx if gap(i) >= 8), None)
+    if k is None:
+        return None, 1.0
+    early = sorted(b[4] for b in bars[:10])            # 스팩 상장 초기 가격 ≈ 2,000원(수정주가 비율 추정)
+    adj = _snap(early[len(early) // 2] / SPAC_BASE) if early else 1.0
+    return bars[k][0], adj
+
+
+def spac_info(sp, dt, cache):
+    """합병상장일·기준가(합병가액). 한 번 찾으면 data/spac_merge.json 에 저장"""
+    c = cache.get(sp["code"]) or {}
+    tried = c.get("baseTried")
+    if c.get("mergeDate") and (c.get("base") or "존속" in sp["listType"]
+                               or (tried and (date.today() - date.fromisoformat(tried)).days < 7)):
+        return c
+    bars = fetch_daily(sp["code"])
+    md, adj = merge_point(bars, sp)
+    if not md:
+        return {}
+    c = {"mergeDate": md, "adj": adj}
+    first_open = next(b[1] for b in bars if b[0] >= md)
+    doc_base = None
+    if dt:
+        try:
+            corp = dt.corp_code(sp["code"])
+            f = dt.prospectus(corp, date.fromisoformat(md), merger=True) if corp else None
+            if f:
+                c["rcpNo"] = f["rcept_no"]
+                spac_v, target_v = dartlib.merger_prices(dt.document_text(f["rcept_no"]))
+                doc_base = spac_v if "존속" in sp["listType"] else target_v
+        except Exception as e:
+            log(f"  - {sp['name']} 합병가액 찾기 실패: {e}")
+        c["baseTried"] = date.today().isoformat()
+    if "존속" in sp["listType"]:
+        c["base"], c["baseSrc"] = doc_base or SPAC_BASE, "증권신고서(합병) 합병가액" if doc_base else "스팩 합병가액 2,000원"
+    elif doc_base and 0.1 < first_open / doc_base < 20:
+        c["base"], c["baseSrc"] = doc_base, "증권신고서(합병) 합병가액"
+    cache[sp["code"]] = c
+    return c
 
 
 # ---------------------------------------------------------------- 2. 38커뮤니케이션
@@ -420,6 +513,23 @@ def fetch_market(code):
         return {}
 
 
+def add_months(x, m):
+    import calendar
+    y, mo = divmod(x.month - 1 + m, 12)
+    yy, mm = x.year + y, mo + 1
+    return date(yy, mm, min(x.day, calendar.monthrange(yy, mm)[1]))
+
+
+def horizon_returns(bars, listed, base):
+    """상장일로부터 1·3·6·12개월 뒤(그날 또는 다음 거래일) 종가의 공모가 대비 수익률. 아직 안 지났으면 None"""
+    out = {}
+    for key, m in (("ret1m", 1), ("ret3m", 3), ("ret6m", 6), ("ret1y", 12)):
+        t = add_months(listed, m).isoformat()
+        b = next((x for x in bars if x[0] >= t), None)
+        out[key] = pct(b[4], base) if b and base else None
+    return out
+
+
 def pct(a, b):
     if a is None or b in (None, 0):
         return None
@@ -427,7 +537,7 @@ def pct(a, b):
 
 
 # ---------------------------------------------------------------- 4. DART 상세
-def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True):
+def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False):
     """det(기존 상세)를 갱신. 무거운 작업(문서 파싱·요약)은 한 번만."""
     corp = dt.corp_code(code)
     if not corp:
@@ -440,7 +550,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True):
     if need_doc:
         det["dartTried"] = date.today().isoformat()
         try:
-            f = dt.prospectus(corp, listed)
+            f = dt.prospectus(corp, listed, merger=spac)
             if f:
                 det["rcpNo"] = f["rcept_no"]
                 det["rcpTitle"] = re.sub(r"\s+", " ", f["report_nm"]).strip()
@@ -450,12 +560,14 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True):
                 det["track"] = info["track"]
                 det["floatAtListing"] = info["floatAtListing"]
                 det["discountRate"] = info.get("discountRate")
+                det["valuation"] = info.get("valuation")
                 det["totalShares"] = info["totalShares"]
                 det["trackEvidence"] = info["trackEvidence"]
                 det["parseVer"] = PARSE_VER
                 det.pop("listingType", None)
                 det["_bizText"] = info["bizText"]
-                det.update(dt.estk(corp, listed))
+                if not spac:
+                    det.update(dt.estk(corp, listed))
                 det["dartDone"] = True
                 det["dartStatus"] = "ok"
             else:
@@ -508,6 +620,7 @@ def upcoming_detail(dt, name, filed):
             "trackSrc": "증권신고서(할인율)" if str(info["trackEvidence"]).startswith("할인율") else "증권신고서",
             "trackEvidence": info["trackEvidence"], "floatAtListing": info["floatAtListing"],
             "totalShares": info["totalShares"], "lockup": info["lockup"], "discountRate": info.get("discountRate"),
+            "valuation": info.get("valuation"),
             "shares": est.get("shares"), "underwriters": est.get("underwriters"),
             "oldShareRatio": est.get("oldShareRatio"), "putback": est.get("putback"),
             "fundUse": est.get("fundUse"), "summary": excerpt(info["bizText"], 300) if info["bizText"] else None}
@@ -536,10 +649,45 @@ def main():
             pass
 
     try:
-        listings = ipo_filter(fetch_listings(SINCE))
+        listings_all = fetch_listings(None)
+        listings = ipo_filter(listings_all[listings_all["listed"] >= SINCE].reset_index(drop=True))
     except Exception as e:
         log(f"[오류] KIND 목록을 받지 못했습니다: {e}")
         sys.exit(0 if prev else 1)
+
+    # ---- 스팩합병 상장: KIND 예비심사 목록(상장유형 '스팩 존속/소멸합병', 결과 '상장 승인')에서 찾는다
+    try:
+        inv_df = kindlib.invstg(SINCE.isoformat(), debug_dir=DATA / "debug", log=log)
+        inv_ok = "ok"
+    except Exception as e:
+        log(f"[KIND 예비심사] 실패: {e}")
+        inv_df, inv_ok = None, str(e)[:200]
+    dt = dartlib.Dart(DART_KEY, log) if DART_KEY else None
+    spac_cache_p = DATA / "spac_merge.json"
+    try:
+        spac_cache = json.loads(spac_cache_p.read_text("utf-8")) if spac_cache_p.exists() else {}
+    except Exception:
+        spac_cache = {}
+    spacs = []
+    for sp in spac_targets(inv_df, listings_all):
+        try:
+            info = spac_info(sp, dt, spac_cache)
+        except Exception as e:
+            log(f"  - {sp['name']} 스팩합병 정보 실패: {e}")
+            info = spac_cache.get(sp["code"]) or {}
+        if not info.get("mergeDate") or info["mergeDate"] < SINCE.isoformat():
+            continue
+        spacs.append({**sp, **info})
+    spac_cache_p.write_text(json.dumps(spac_cache, ensure_ascii=False, indent=1), "utf-8")
+    spac_codes = {x["code"] for x in spacs}
+    listings = listings[~listings["code"].isin(spac_codes)]
+    if spacs:
+        sp_df = pd.DataFrame([{"code": x["code"], "name": x["name"], "sector": x["sector"], "product": x["product"],
+                               "listed": date.fromisoformat(x["mergeDate"]), "market": x["market"],
+                               "listType": x["listType"]} for x in spacs])
+        listings = pd.concat([listings, sp_df], ignore_index=True).sort_values("listed", ascending=False).reset_index(drop=True)
+    spac_by = {x["code"]: x for x in spacs}
+    log(f"[스팩합병] KIND 상장 승인 {len(spacs)}개 추가 (기준가 확인 {sum(1 for x in spacs if x.get('base'))}개)")
 
     try:
         offers38, demand38 = fetch_38(SINCE)
@@ -576,27 +724,34 @@ def main():
             continue
         if not bars:
             continue
-        m38 = match_row(name, listed, offers38, -7, 7)
-        mp = match_row(name, listed, pub_offers, -10, 10)
-        offer = manual.get(code) or (mp or {}).get("offer") or (m38 or {}).get("offer") or (prev.get(code) or {}).get("offer")
-        # 네이버 일봉은 무상증자·액면분할이 반영된 '수정주가'. 38의 실제 시초가와 비교해 비율(adj)을 구해
-        # 공모가도 같은 기준으로 바꿔 수익률을 계산한다. (예: 무상증자 1:1 → adj 0.5)
-        raw_open = (m38 or {}).get("open")
-        adj = bars[0][1] / raw_open if raw_open else 1.0
-        if abs(adj - 1) < 0.03:
-            adj = 1.0
+        sp = spac_by.get(code)
+        if sp:                       # 스팩합병: 공모가 대신 합병가액(기준가)
+            m38 = mp = None
+            offer = manual.get(code) or sp.get("base")
+            adj = 1.0 if manual.get(code) else (sp.get("adj") or 1.0)
+        else:
+            m38 = match_row(name, listed, offers38, -7, 7)
+            mp = match_row(name, listed, pub_offers, -10, 10)
+            offer = manual.get(code) or (mp or {}).get("offer") or (m38 or {}).get("offer") or (prev.get(code) or {}).get("offer")
+            # 네이버 일봉은 무상증자·액면분할이 반영된 '수정주가'. 38의 실제 시초가와 비교해 비율(adj)을 구해
+            # 공모가도 같은 기준으로 바꿔 수익률을 계산한다. (예: 무상증자 1:1 → adj 0.5)
+            raw_open = (m38 or {}).get("open")
+            adj = bars[0][1] / raw_open if raw_open else 1.0
+            if abs(adj - 1) < 0.03:
+                adj = 1.0
         offer_adj = offer * adj if offer else None
-        dm = match_row(name, listed, demand38, -60, 0) or {}
+        dm = {} if sp else (match_row(name, listed, demand38, -60, 0) or {})
         sector = None if pd.isna(row["sector"]) else str(row["sector"])
-        universe.append({"code": code, "listed": listed.isoformat(), "offer": offer_adj, "bars": bars,
-                         "uw": dm.get("uw38"), "sector": sector,
-                         "firstRet": pct(bars[0][4], offer_adj), "nowRet": pct(bars[-1][4], offer_adj)})
         (PRICES / f"{code}.json").write_text(json.dumps(bars, separators=(",", ":")), "utf-8")
+        if not sp:                   # 확률 모델·비교 통계는 공모 상장만
+            universe.append({"code": code, "listed": listed.isoformat(), "offer": offer_adj, "bars": bars,
+                             "uw": dm.get("uw38"), "sector": sector,
+                             "firstRet": pct(bars[0][4], offer_adj), "nowRet": pct(bars[-1][4], offer_adj)})
         if not show:
             continue
 
         lt = str(row.get("listType") or "")
-        if not offer and not any(k in lt for k in ("이전", "합병")):
+        if not offer and not any(k in lt for k in ("이전", "합병")) and not sp:
             missing.append((code, name))
         closes = [b[4] for b in bars]
         val20 = [b[4] * b[5] for b in bars[-20:]]
@@ -620,7 +775,11 @@ def main():
             "instComp": dm.get("instComp"), "commit": dm.get("commit"), "uw38": dm.get("uw38"),
             "band": dm.get("band"), "bandPos": band_pos(offer, dm.get("band")),
             "firstDayRet": pct(bars[0][4], offer_adj),
+            **horizon_returns(bars, listed, offer_adj),
             "tradeValue20": round(sum(val20) / len(val20)) if val20 else None,
+            **({"spac": True, "baseSrc": "직접 입력" if manual.get(code) else sp.get("baseSrc"),
+                "uw38": sp.get("uw"), "spacApplied": sp["applied"].isoformat() if sp.get("applied") else None,
+                "spacRcpNo": sp.get("rcpNo")} if sp else {}),
         })
         if (i + 1) % 25 == 0:
             log(f"  … {i + 1}/{len(listings)}")
@@ -654,7 +813,6 @@ def main():
     save(items, model_meta, missing, dart_on=bool(DART_KEY))
 
     # ---- 상세(DART·시장지표)
-    dt = dartlib.Dart(DART_KEY, log) if DART_KEY else None
     t0 = time.time()
     left = 0
     if not dt:
@@ -718,7 +876,8 @@ def main():
                 heavy = recent and (time.time() - t0) < DART_BUDGET_MIN * 60
                 if recent and not heavy and (not det.get("dartDone") or det.get("parseVer", 1) < PARSE_VER):
                     left += 1
-                ai_budget = dart_detail(dt, it["code"], it["name"], date.fromisoformat(it["listed"]), det, ai_budget, heavy)
+                ai_budget = dart_detail(dt, it["code"], it["name"], date.fromisoformat(it["listed"]), det, ai_budget, heavy,
+                                       spac=bool(it.get("spac")))
             except Exception as e:
                 log(f"  - {it['name']} DART 전체 실패: {e}")
         # 목록 화면용 요약 필드
@@ -746,12 +905,6 @@ def main():
         time.sleep(0.1)
 
     # ---- 단계별 현황(심사중·승인·공모진행·철회)
-    try:
-        inv_df = kindlib.invstg(SINCE.isoformat(), debug_dir=DATA / "debug", log=log)
-        inv_ok = "ok"
-    except Exception as e:
-        log(f"[KIND 예비심사] 실패: {e}")
-        inv_df, inv_ok = None, str(e)[:200]
     enrich = (lambda n, f: upcoming_detail(dt, n, f)) if dt else None
     try:
         sched = fetch_38_schedule(today, offers38)
@@ -813,6 +966,10 @@ def save(items, model_meta, missing, dart_on):
         w = csv.writer(f)
         w.writerow(["종목코드", "회사명"])
         w.writerows(missing)
+    if dartlib.VAL_DEBUG:                       # 공모가 산정 근거가 잘 읽혔는지 확인용
+        (DATA / "debug").mkdir(exist_ok=True)
+        (DATA / "debug" / "valuation_sample.json").write_text(
+            json.dumps(dartlib.VAL_DEBUG, ensure_ascii=False, indent=1), "utf-8")
 
 
 if __name__ == "__main__":

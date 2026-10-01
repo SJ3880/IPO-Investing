@@ -1,6 +1,6 @@
 # IPO 동향 분석
 
-2020년 이후 코스피·코스닥 IPO(스팩 제외)를 단계별 탭으로 보여주는 사이트입니다.
+2020년 이후 코스피·코스닥 IPO(직상장 + 스팩합병상장)를 단계별 탭으로 보여주는 사이트입니다.
 한눈에(단계별 건수·다가오는 일정·월별 추이·분기별 시장 온도) / 심사중 / 심사승인 / 수요예측·청약 / 상장완료 / 철회·미승인.
 GitHub Actions가 평일 16:40(KST)마다 자동으로 데이터를 새로 받고 사이트를 다시 올립니다.
 
@@ -20,6 +20,7 @@ GitHub Actions가 평일 16:40(KST)마다 자동으로 데이터를 새로 받�
 | `index.html` | 화면 |
 | `scripts/update.py` | 데이터 수집 (KIND·38·네이버) |
 | `scripts/dart.py` | DART 연동·AI 요약 |
+| `scripts/valuation.py` | 증권신고서 공모가 산정 근거(PER·비교회사·할인율) 읽기 |
 | `scripts/model.py` | 수익 확률 계산 |
 | `scripts/kind.py` | KIND 예비심사·공모진행·신규상장 수집 |
 | `scripts/pipeline.py` | 단계별 현황·월별 추이·일정 계산 → `data/pipeline.json` |

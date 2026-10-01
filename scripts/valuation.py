@@ -1,0 +1,306 @@
+"""
+증권신고서 '공모가격 결정방법'에서 공모가 산정 근거를 뽑는다.
+  · 적용 배수(PER 등)와 평가방법
+  · 비교회사(Peer group) 이름과 각 회사의 배수
+  · 주당 평가가액, 희망공모가액 밴드, 공모가 할인율(평가가액 대비)
+문서마다 표 모양이 달라서, 여러 방법으로 찾고 서로 맞는지(평균 = 적용 배수) 확인한다.
+"""
+import re
+
+from bs4 import BeautifulSoup
+
+MULT = r"(PER|P/E|PSR|P/S|PBR|P/B|EV\s*/\s*EBITDA|EV\s*/\s*EBIT|EV\s*/\s*Sales|주가수익비율)"
+MULT_RE = re.compile(MULT, re.I)
+NUM_RE = re.compile(r"-?\d{1,4}(?:,\d{3})*(?:\.\d+)?")
+NOT_NAME = re.compile(r"^(구분|회사명|기업명|유사회사|비교회사|유사기업|비교기업|종목명|평균|산술평균|단순평균|합계|"
+                      r"적용|최대|최소|최고|최저|중간값|중앙값|비고|단위|항목|기준|내용|순번|번호|시장|업종|주\)|\d+)$")
+
+
+def _clean(s):
+    return re.sub(r"\s+", " ", s or "").strip()
+
+
+def mult_name(s):
+    m = MULT_RE.search(s or "")
+    if not m:
+        return None
+    t = re.sub(r"\s+", "", m.group(1)).upper()
+    return {"P/E": "PER", "주가수익비율": "PER", "P/S": "PSR", "P/B": "PBR"}.get(t, t)
+
+
+def _num(s):
+    s = _clean(s).replace(" ", "")
+    m = NUM_RE.search(s)
+    if not m or len(s) > 24:
+        return None
+    try:
+        return float(m.group(0).replace(",", ""))
+    except ValueError:
+        return None
+
+
+def _multiple(s):
+    """'25.31배', '25.31', '25.31x' → 25.31 (배수로 보기 어려운 값은 None)"""
+    s = _clean(s)
+    if not s or re.search(r"(원|%|주|천|백만|억)", s):
+        return None
+    if not re.fullmatch(r"-?[\d,]+(\.\d+)?\s*(배|x|X|times)?", s.replace(" ", "")):
+        return None
+    v = _num(s)
+    return v if v is not None and 0 < v < 1000 else None
+
+
+def _is_name(s):
+    s = _clean(s)
+    if not s or len(s) > 30 or NOT_NAME.match(s.replace(" ", "")):
+        return False
+    if _num(s) is not None and re.fullmatch(r"[-\d,.\s배%원()]+", s):
+        return False
+    if MULT_RE.search(s) or re.search(r"(순이익|시가총액|주식수|EBITDA|매출|자본|평균|합계|적용|단위|기준일)", s):
+        return False
+    return bool(re.search(r"[가-힣A-Za-z]", s))
+
+
+def _name(s):
+    s = re.sub(r"\(\s*주\s*\)|㈜|주식회사", "", _clean(s))
+    s = re.sub(r"\s*\((?:\d{6}|코스닥|코스피|KOSDAQ|KOSPI|유가증권|[A-Z]{2,5}:?[A-Z0-9.]*)\)\s*$", "", s)
+    return _clean(s)
+
+
+# ---------------- 표 → 격자 ----------------
+CELL = ["td", "th", "te", "tu"]
+
+
+def _rows(tbl):
+    rows = []
+    for tr in tbl.find_all("tr"):
+        cells = tr.find_all(CELL, recursive=False) or tr.find_all(CELL)
+        rows.append([{"t": _clean(c.get_text(" ")),
+                      "cs": int(c.get("colspan")) if str(c.get("colspan") or "").isdigit() else 1,
+                      "rs": int(c.get("rowspan")) if str(c.get("rowspan") or "").isdigit() else 1} for c in cells])
+    return [r for r in rows if r]
+
+
+def _grid(rows):
+    grid, carry = [], {}
+    for r in rows:
+        line, col, it = [], 0, iter(r)
+        cell = next(it, None)
+        while cell is not None or col in carry:
+            if col in carry:
+                t, left = carry[col]
+                line.append(t)
+                if left <= 1:
+                    del carry[col]
+                else:
+                    carry[col] = (t, left - 1)
+                col += 1
+                continue
+            for _ in range(max(1, cell["cs"])):
+                line.append(cell["t"])
+                if cell["rs"] > 1:
+                    carry[col] = (cell["t"], cell["rs"] - 1)
+                col += 1
+            cell = next(it, None)
+        grid.append(line)
+    w = max((len(r) for r in grid), default=0)
+    return [r + [""] * (w - len(r)) for r in grid]
+
+
+# ---------------- 비교회사 표 ----------------
+def peers_from_grid(g):
+    """두 가지 모양을 모두 시도
+       가로형: 첫 행(들)에 회사명, 'PER' 행에 배수
+       세로형: 첫 열에 회사명, 'PER' 열에 배수"""
+    best = None
+    if not g or len(g) < 2:
+        return None
+    # 가로형: 배수 행을 찾고, 그 위쪽 행 중 회사명이 가장 많은 행을 이름 행으로
+    for i, row in enumerate(g):
+        label = " ".join(dict.fromkeys(row[:2]))
+        mn = mult_name(label)
+        if not mn or re.search(r"(적용|평균)", label) and not re.search(r"(유사|비교)", label):
+            continue
+        vals = {j: _multiple(c) for j, c in enumerate(row)}
+        vals = {j: v for j, v in vals.items() if v is not None and j >= 1}
+        if len(vals) < 2:
+            continue
+        for h in range(i):
+            names = {j: _name(g[h][j]) for j in vals if j < len(g[h]) and _is_name(g[h][j])}
+            if len(names) >= max(2, len(vals) - 1):
+                avg = next((vals[j] for j in vals if re.search(r"평균", g[h][j] if j < len(g[h]) else "")), None)
+                peers = [{"name": names[j], "v": vals[j]} for j in sorted(names)]
+                cand = {"mult": mn, "peers": peers, "avg": avg}
+                if not best or len(peers) > len(best["peers"]):
+                    best = cand
+                break
+    # 세로형: 머리행에서 배수 열을 찾고, 같은 행들의 이름 열을 찾는다
+    for h in range(min(4, len(g))):
+        for j, head in enumerate(g[h]):
+            mn = mult_name(head)
+            if not mn or re.search(r"(적용)", head):
+                continue
+            peers, avg = [], None
+            for r in g[h + 1:]:
+                v = _multiple(r[j]) if j < len(r) else None
+                namecol = next((c for c in r[:j] if _is_name(c)), None)
+                if v is not None and namecol:
+                    peers.append({"name": _name(namecol), "v": v})
+                elif v is not None and any(re.search(r"평균", c) for c in r[:j]):
+                    avg = v
+            seen, uniq = set(), []
+            for p in peers:
+                if p["name"] not in seen:
+                    seen.add(p["name"])
+                    uniq.append(p)
+            if len(uniq) >= 2 and (not best or len(uniq) > len(best["peers"])):
+                best = {"mult": mn, "peers": uniq, "avg": avg}
+    return best
+
+
+# ---------------- 공모가격 결정방법 구간 ----------------
+def pricing_section(xml_text):
+    """'공모가격 결정방법' 제목부터 다음 큰 항목('모집 또는 매출절차' 등)까지"""
+    starts = [m for m in re.finditer(r"<TITLE[^>]*>([^<]*)</TITLE>", xml_text, re.I)
+              if re.search(r"(공모|발행|모집|매출)\s*가(격|액)?\s*(의\s*)?(결정|산정)", m.group(1))
+              or re.search(r"합병\s*(가액|비율)[^<]{0,20}(산출|산정|근거)", m.group(1))]
+    if not starts:
+        m = re.search(r"(공모|발행)\s*가격\s*(결정|산정)\s*방법", xml_text)
+        if not m:
+            return ""
+        starts = [m]
+    st = starts[0].start()
+    rest = xml_text[st: st + 1500000]
+    end = re.search(r"<TITLE[^>]*>\s*(\d+|[ⅰ-ⅻⅠ-Ⅻ]+|[가-하])\s*\.\s*(모집|매출|공모|청약|인수|증권의\s*교부|상장)[^<]*"
+                    r"(절차|방법|일정|사항|인수인)[^<]*</TITLE>", rest[200:], re.I)
+    return rest[: end.start() + 200] if end else rest[:600000]
+
+
+def _plain(s):
+    import html as _h
+    s = re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", s, flags=re.I)
+    s = _h.unescape(re.sub(r"<[^>]+>", " ", s))
+    return "\n".join(_clean(x) for x in s.split("\n") if x.strip())
+
+
+WON = r"([\d]{1,3}(?:,\d{3})+|\d{3,7})\s*원"
+PCTV = r"(-?\d{1,2}(?:\.\d+)?)\s*%"
+
+
+def _summary_from_grids(grids):
+    out = {}
+    for g in grids:
+        for row in g:
+            label = _clean(" ".join(dict.fromkeys(row[:2])))
+            rest = " ".join(row[1:]) if len(row) > 1 else ""
+            vals = " ".join(dict.fromkeys(row[1:]))
+            if "fair" not in out and re.search(r"주당\s*평가\s*가(액|치|격)", label):
+                m = re.search(WON, vals) or re.search(r"([\d,]{4,})", vals)
+                if m:
+                    out["fair"] = int(m.group(1).replace(",", ""))
+            if "disc" not in out and re.search(r"할인율", label) and not re.search(r"현가", label):
+                ps = re.findall(PCTV, vals)
+                if ps:
+                    out["disc"] = [float(p) for p in ps[:2]]
+            if "band" not in out and re.search(r"(희망\s*공모\s*가|공모\s*희망\s*가|확정\s*공모\s*가|밴드)", label):
+                ws = re.findall(WON, vals) or re.findall(r"([\d]{1,3}(?:,\d{3})+)", vals)
+                if ws:
+                    out["band"] = [int(w.replace(",", "")) for w in ws[:2]]
+            if "applied" not in out and re.search(r"(적용|평균)", label) and mult_name(label):
+                v = next((x for x in (_multiple(c) for c in row[1:]) if x is not None), None)
+                if v is None:
+                    m = re.search(r"(\d{1,3}(?:\.\d+)?)\s*배", rest)
+                    v = float(m.group(1)) if m else None
+                if v is not None:
+                    out["applied"], out["appliedMult"] = v, mult_name(label)
+    return out
+
+
+def valuation_info(xml_text):
+    sec = pricing_section(xml_text)
+    if not sec:
+        return {}
+    plain = _plain(sec)
+    tables = re.findall(r"<TABLE\b.*?</TABLE>", sec, re.S | re.I)
+    grids, pos = [], []
+    for t in tables[:80]:
+        if len(t) > 400000:
+            continue
+        soup = BeautifulSoup(t, "html.parser")
+        tb = soup.find("table")
+        if tb is not None:
+            grids.append(_grid(_rows(tb)))
+            pos.append(sec.find(t[:200]))
+    s = _summary_from_grids(grids)
+
+    # 본문 문장에서 보완
+    if "applied" not in s:
+        m = re.search(r"(?:적용|평균)\s*" + MULT + r"[^\d\n]{0,25}(\d{1,3}(?:\.\d+)?)\s*배", plain, re.I)
+        if m:
+            s["applied"], s["appliedMult"] = float(m.group(2)), mult_name(m.group(1))
+    if "fair" not in s:
+        m = re.search(r"주당\s*평가\s*가(?:액|치|격)[^\d\n]{0,25}" + WON, plain)
+        if m:
+            s["fair"] = int(m.group(1).replace(",", ""))
+    if "disc" not in s:
+        for m in re.finditer(r"할인율[^\d\n%]{0,20}" + PCTV + r"\s*~\s*" + PCTV, plain):
+            if "현가" not in plain[max(0, m.start() - 6): m.start()]:
+                s["disc"] = [float(m.group(1)), float(m.group(2))]
+                break
+    if "band" not in s:
+        m = re.search(r"희망\s*공모\s*가(?:액|격)?[^\d\n]{0,30}" + WON + r"\s*~\s*" + WON, plain)
+        if m:
+            s["band"] = [int(m.group(1).replace(",", "")), int(m.group(2).replace(",", ""))]
+
+    # 비교회사 표: 배수 값이 있는 표 중, 평균이 적용 배수와 맞는 표를 우선
+    found = []
+    for k, g in enumerate(grids):
+        p = peers_from_grid(g)
+        if p:
+            before = sec[max(0, pos[k] - 3000): pos[k]] if pos[k] >= 0 else ""
+            p["final"] = bool(re.search(r"최종", before[-1500:]))
+            vs = [x["v"] for x in p["peers"]]
+            p["mean"] = sum(vs) / len(vs)
+            found.append(p)
+    applied = s.get("applied")
+
+    def score(p):
+        sc = 0
+        ref = applied or p.get("avg")
+        if ref and abs(p["mean"] - ref) / ref < 0.03:
+            sc += 4
+        if p.get("avg") and abs(p["mean"] - p["avg"]) / p["avg"] < 0.03:
+            sc += 2
+        if p["final"]:
+            sc += 2
+        if applied and s.get("appliedMult") == p["mult"]:
+            sc += 1
+        return sc
+    peer = max(found, key=score) if found else None
+
+    out = {"method": s.get("appliedMult") or (peer["mult"] if peer else None),
+           "appliedMult": applied if applied is not None else (round(peer["mean"], 2) if peer and score(peer) >= 4 else
+                                                              (peer.get("avg") if peer else None)),
+           "fairValue": s.get("fair"),
+           "bandDoc": s.get("band") if s.get("band") and len(s["band"]) == 2 else None,
+           "peers": [{"name": x["name"], "v": round(x["v"], 2)} for x in peer["peers"][:20]] if peer else [],
+           "peerChecked": bool(peer and score(peer) >= 4)}
+    disc = s.get("disc")
+    fair, band = out["fairValue"], out["bandDoc"]
+    if disc:
+        disc = sorted(d for d in disc if 0 <= d < 80)
+    if not disc and fair and band:                      # 표에 없으면 직접 계산
+        disc = sorted(round((1 - b / fair) * 100, 1) for b in band)
+    out["discountRange"] = disc or None
+    # 근거 문장(사람이 확인하라고)
+    m = re.search(r"[^\n]{0,80}(유사회사|비교회사|비교기업|유사기업)[^\n]{0,40}(선정|최종)[^\n]{0,120}", plain)
+    out["peerNote"] = _clean(m.group(0))[:220] if m else None
+    if not any([out["appliedMult"], out["fairValue"], out["peers"], out["discountRange"]]):
+        return {}
+    return out
+
+
+def debug_sample(xml_text, limit=6000):
+    """실제 문서에서 잘 읽히는지 확인용(웹 저장소 data/debug 에 남김)"""
+    sec = pricing_section(xml_text)
+    return {"found": bool(sec), "len": len(sec), "head": _plain(sec)[:limit] if sec else ""}

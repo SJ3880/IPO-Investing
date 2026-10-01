@@ -15,6 +15,9 @@ from xml.etree import ElementTree as ET
 
 import requests
 from bs4 import BeautifulSoup
+
+import valuation
+VAL_DEBUG = []   # 이번 실행에서 읽은 공모가 산정 구간 샘플(확인용)
 try:
     from bs4 import XMLParsedAsHTMLWarning
     warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
@@ -141,12 +144,15 @@ class Dart:
                 return out
         return None
 
-    def prospectus(self, corp_code, listed, after=None):
-        """상장일 이전 1년 내 투자설명서(최종) → 없으면 가장 최근 증권신고서(지분증권)"""
+    def prospectus(self, corp_code, listed, after=None, merger=False):
+        """상장일 이전 1년 내 투자설명서(최종) → 없으면 가장 최근 증권신고서(지분증권)
+           merger=True(스팩합병): 증권신고서(합병) → 합병 투자설명서"""
         rows = self.filings(corp_code, after or (listed - timedelta(days=365)), listed)
-        def pick(word):
-            c = [r for r in rows if word in r["report_nm"]]
+        def pick(word, also=None):
+            c = [r for r in rows if word in r["report_nm"] and (not also or also in r["report_nm"])]
             return max(c, key=lambda r: r["rcept_no"]) if c else None
+        if merger:
+            return pick("증권신고서", "합병") or pick("투자설명서", "합병") or pick("투자설명서")
         return pick("투자설명서") or pick("증권신고서(지분증권)")
 
     def document_text(self, rcept_no):
@@ -561,12 +567,41 @@ def analyze_document(xml_text):
     plain = strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml_text[:4000000], flags=re.I))
     out["track"], out["trackEvidence"] = listing_track(plain)
     out["discountRate"] = discount_rate(plain)
+    try:                                         # 공모가 산정 근거(PER·비교회사·할인율)
+        out["valuation"] = valuation.valuation_info(xml_text) or None
+        if len(VAL_DEBUG) < 10:
+            smp = valuation.debug_sample(xml_text, 4000)
+            smp["parsed"] = out["valuation"]
+            VAL_DEBUG.append(smp)
+    except Exception as e:
+        out["valuation"] = None
+        VAL_DEBUG.append({"error": str(e)[:300]}) if len(VAL_DEBUG) < 10 else None
     head = plain[:300000]
     k, y, x = head.count("코스닥시장"), head.count("유가증권시장"), head.count("코넥스시장")
     out["market"] = "코스피" if y > k else "코스닥" if k else ("코넥스" if x else "코스닥")
     out["totalShares"] = total_shares([out.pop("_allRows", None) or []] + out["lockupTables"])
     out["floatAtListing"] = next((p["pct"] for p in out["lockup"] if p["m"] == 0), None)
     return out
+
+
+def merger_prices(xml_text):
+    """합병 증권신고서의 '합병가액' → (스팩 쪽 가액, 상대 회사 가액). 스팩 가액은 보통 2,000원 안팎."""
+    plain = strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml_text[:3000000], flags=re.I))
+    vals = []
+    for m in re.finditer(r"합병\s*가액", plain):
+        w = plain[m.start(): m.start() + 260]
+        for n in re.findall(r"(\d{1,3}(?:,\d{3})+|\d{3,6})\s*원", w):
+            v = int(n.replace(",", ""))
+            if 100 <= v <= 5_000_000:
+                vals.append(v)
+    if not vals:
+        return None, None
+    from collections import Counter
+    spac = [v for v in vals if 1800 <= v <= 2700]
+    other = Counter(v for v in vals if not 1800 <= v <= 2700)
+    sv = Counter(spac).most_common(1)[0][0] if spac else None
+    tv = other.most_common(1)[0][0] if other else None
+    return sv, tv
 
 
 def total_shares(tables):
