@@ -173,7 +173,12 @@ def read_38(o, since, date_key, max_pages=200):
             if isinstance(t.columns, pd.MultiIndex):
                 t.columns = [" ".join(map(str, c)) for c in t.columns]
             t.columns = [str(c) for c in t.columns]
-            if any("기업명" in c for c in t.columns) and any(date_key in c for c in t.columns):
+            if not any(("기업명" in c or "종목명" in c) for c in t.columns) and len(t):
+                first = [str(x) for x in t.iloc[0].tolist()]        # 제목줄이 첫 행(td)으로 들어온 표
+                if any(("기업명" in c or "종목명" in c) for c in first):
+                    t = t.iloc[1:].reset_index(drop=True)
+                    t.columns = first
+            if any(("기업명" in c or "종목명" in c) for c in t.columns) and any(date_key in c for c in t.columns):
                 cand.append(t)
         if not cand:
             break
@@ -267,6 +272,78 @@ def parse_won(text):
     eok = re.search(r"([\d.]+)\s*억", t)
     v = (float(jo.group(1)) * 1e12 if jo else 0) + (float(eok.group(1)) * 1e8 if eok else 0)
     return v or None
+
+
+def fetch_38_schedule(today, offers38):
+    """38커뮤니케이션 공모 일정 → KIND 공모진행 표와 같은 모양의 DataFrame
+    o=k(청약일정): 종목명·공모주일정(청약)·확정공모가·희망공모가·청약경쟁률·주간사
+    o=r(수요예측일정): 종목명·수요예측일·희망공모가·확정공모가·공모금액(백만)·주간사
+    o=nw(신규상장): 상장(예정)일"""
+    since = today - timedelta(days=60)
+    col = lambda t, *ks: next((c for c in t.columns if any(k in c for k in ks)), None)
+    rows = {}
+    for o, dkey in (("k", "공모주일정"), ("r", "수요예측일")):
+        for t in read_38(o, since, dkey, max_pages=8):
+            cn, cd = col(t, "종목명", "기업명"), col(t, dkey)
+            cb, co, ca = col(t, "희망"), col(t, "확정공모가"), col(t, "공모금액")
+            cu, cc = col(t, "주간사"), col(t, "청약경쟁률")
+            for _, r in t.iterrows():
+                name = str(r[cn]).strip()
+                if not name or name == "nan" or is_spac(name):
+                    continue
+                k = norm(name)
+                x = rows.setdefault(k, {"회사명": re.sub(r"\(구\.[^)]*\)", "", name).strip()})
+                val = lambda c: (str(r[c]).strip() if c and str(r[c]) not in ("nan", "-", "") else None)
+                if o == "k":
+                    x["청약일정"] = val(cd)
+                    x["청약경쟁률"] = val(cc)
+                else:
+                    x["수요예측일정"] = val(cd)
+                    if val(ca):
+                        x["공모금액(백만원)"] = val(ca)
+                x.setdefault("희망공모가", val(cb))
+                if val(co):
+                    x["확정공모가"] = val(co)
+                x.setdefault("상장주선인", val(cu))
+    # 상장(예정)일: 38 신규상장 표에서
+    for k, x in rows.items():
+        for r in offers38:
+            if norm(r["name"]) == k and r["d"] >= today - timedelta(days=5):
+                x["상장예정일"] = r["d"].isoformat()
+                if r.get("offer") and not x.get("확정공모가"):
+                    x["확정공모가"] = str(r["offer"])
+                break
+        x["출처"] = "38"
+    log(f"[38 공모일정] {len(rows)}곳 (스팩 제외)")
+    try:
+        (DATA / "debug").mkdir(exist_ok=True)
+        (DATA / "debug" / "sched38.json").write_text(json.dumps(list(rows.values()), ensure_ascii=False, indent=1), "utf-8")
+    except Exception:
+        pass
+    return pd.DataFrame(list(rows.values()))
+
+
+def merge_schedule(sched, pub_df):
+    """38 일정(주) + KIND 공모진행(보조: 신고서제출일·납입일·상장예정일)"""
+    if sched is None or not len(sched):
+        return pub_df
+    if pub_df is None or not len(pub_df):
+        return sched
+    pub = {norm(r["회사명"]): r for _, r in pub_df.iterrows()}
+    out = []
+    for _, r in sched.iterrows():
+        x = r.to_dict()
+        p = pub.get(norm(x["회사명"]))
+        if p is not None:
+            for c in ("신고서제출일", "납입일", "상장예정일", "공모금액(백만원)", "확정공모가", "상장주선인"):
+                if not x.get(c) or str(x.get(c)) == "nan":
+                    x[c] = p.get(c)
+        out.append(x)
+    seen = {norm(x["회사명"]) for x in out}
+    for k, p in pub.items():                      # KIND에만 있는 건(38에 없는 회사)도 유지
+        if k not in seen:
+            out.append(p.to_dict())
+    return pd.DataFrame(out)
 
 
 def match_row(name, listed, rows, lo, hi):
@@ -471,7 +548,7 @@ def main():
         offers38, demand38 = [], []
     manual = load_manual_offers()
     try:
-        pub_df = kindlib.pubofr(SINCE.isoformat())
+        pub_df = kindlib.pubofr(SINCE.isoformat(), debug_dir=DATA / "debug")
         log(f"[KIND 공모진행] {len(pub_df)}건")
     except Exception as e:
         log(f"[KIND 공모진행] 실패: {e}")
@@ -677,9 +754,15 @@ def main():
         inv_df, inv_ok = None, str(e)[:200]
     enrich = (lambda n, f: upcoming_detail(dt, n, f)) if dt else None
     try:
-        pipe = pipelib.build(today, items, pub_df, inv_df, demand38, enrich, log)
+        sched = fetch_38_schedule(today, offers38)
+    except Exception as e:
+        log(f"[38 공모일정] 실패: {e}")
+        sched = None
+    try:
+        pipe = pipelib.build(today, items, merge_schedule(sched, pub_df), inv_df, demand38, enrich, log)
         pipe["updated"] = datetime.now(KST).strftime("%Y-%m-%d %H:%M")
-        pipe["sources"] = {"pubofr": pub_df is not None, "invstg": inv_ok, "dart": bool(dt)}
+        pipe["sources"] = {"pubofr": pub_df is not None or (sched is not None and len(sched) > 0),
+                           "sched38": sched is not None and len(sched) > 0, "invstg": inv_ok, "dart": bool(dt)}
         (DATA / "pipeline.json").write_text(json.dumps(pipe, ensure_ascii=False, separators=(",", ":")), "utf-8")
         log(f"[단계] 심사중 {len(pipe['review'])} · 승인 {len(pipe['approved'])} · 공모진행 {len(pipe['offering'])} · 철회·미승인 {len(pipe['withdrawn'])}")
     except Exception as e:
