@@ -612,10 +612,12 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False):
 
 def upcoming_detail(dt, name, filed):
     """공모 진행 중 회사: 증권신고서에서 공모구조·유통비율·트랙. 같은 신고서는 다시 읽지 않음(캐시)"""
-    corp = dt.corp_by_name(name)
-    if not corp:
-        return {}
-    f = dt.prospectus(corp, date.today(), after=(filed - timedelta(days=5)) if filed else None)
+    corp, f = dt.find_offer(name, after=(filed - timedelta(days=5)) if filed else None)
+    if not f:                                   # 목록에 없으면 이름→고유번호로 한 번 더
+        corp = dt.corp_by_name(name)
+        if not corp:
+            return {}
+        f = dt.prospectus(corp, date.today(), after=(filed - timedelta(days=5)) if filed else None)
     if not f:
         return {}
     cache = DATA / "upcoming" / f"{corp}.json"

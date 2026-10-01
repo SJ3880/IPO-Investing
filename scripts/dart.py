@@ -80,6 +80,44 @@ class Dart:
         c = self._by_name.get(nm(name))
         return c
 
+    def offer_filings(self, days=150):
+        """최근 발행공시(증권신고서(지분증권)·투자설명서) 전체 — 회사 이름이 겹쳐도 실제 신고한 회사를 찾기 위해"""
+        if getattr(self, "_offer", None) is None:
+            rows, end = [], date.today()
+            while (date.today() - end).days < days:          # 고유번호 없이 조회는 3개월 단위
+                bgn = max(end - timedelta(days=85), date.today() - timedelta(days=days))
+                page = 1
+                while True:
+                    try:
+                        j = self._get("list.json", bgn_de=bgn.strftime("%Y%m%d"), end_de=end.strftime("%Y%m%d"),
+                                      pblntf_ty="C", page_no=page, page_count=100).json()
+                    except Exception:
+                        break
+                    if j.get("status") != "000":
+                        break
+                    rows += j.get("list", [])
+                    if page >= int(j.get("total_page", 1)):
+                        break
+                    page += 1
+                end = bgn - timedelta(days=1)
+            self._offer = [r for r in rows if "증권신고서(지분증권)" in r["report_nm"] or
+                           ("투자설명서" in r["report_nm"] and "채무" not in r["report_nm"])]
+            self.log(f"[DART] 최근 공모 신고서 {len(self._offer)}건")
+        return self._offer
+
+    def find_offer(self, name, after=None):
+        """이름으로 최근 공모 신고서 찾기 → (고유번호, 신고서). 투자설명서(최종) 우선"""
+        def nm(x):
+            return re.sub(r"[\s\.\-·]|\(주\)|㈜|주식회사", "", x or "").lower()
+        k = nm(name)
+        a = after.strftime("%Y%m%d") if after else ""
+        c = [r for r in self.offer_filings() if nm(r.get("corp_name")) == k and r.get("rcept_dt", "") >= a]
+        if not c:
+            return None, None
+        best = (max([r for r in c if "투자설명서" in r["report_nm"]], key=lambda r: r["rcept_no"], default=None)
+                or max(c, key=lambda r: r["rcept_no"]))
+        return best["corp_code"], best
+
     def filings(self, corp_code, bgn, end, **kw):
         out, page = [], 1
         while True:
@@ -588,7 +626,7 @@ def analyze_document(xml_text):
     head = plain[:300000]
     k, y, x = head.count("코스닥시장"), head.count("유가증권시장"), head.count("코넥스시장")
     out["market"] = "코스피" if y > k else "코스닥" if k else ("코넥스" if x else "코스닥")
-    out["totalShares"] = total_shares([out.pop("_allRows", None) or []] + out["lockupTables"])
+    out["totalShares"] = total_shares([out.pop("_allRows", None) or []] + out["lockupTables"]) or shares_from_text(plain)
     out["floatAtListing"] = next((p["pct"] for p in out["lockup"] if p["m"] == 0), None)
     return out
 
@@ -611,6 +649,22 @@ def merger_prices(xml_text):
     sv = Counter(spac).most_common(1)[0][0] if spac else None
     tv = other.most_common(1)[0][0] if other else None
     return sv, tv
+
+
+def shares_from_text(plain):
+    """본문의 '상장예정주식수 N주', '공모 후 발행주식총수 N주'"""
+    vals = []
+    for p in (r"상장\s*예정\s*주식\s*(?:총\s*)?수[^\d\n]{0,40}([\d,]{7,})\s*주",
+              r"공모\s*후\s*(?:발행\s*)?주식\s*(?:총\s*)?수[^\d\n]{0,40}([\d,]{7,})\s*주",
+              r"상장\s*예정\s*주식[^\d\n]{0,40}([\d,]{7,})\s*주"):
+        for m in re.finditer(p, plain):
+            v = int(m.group(1).replace(",", ""))
+            if 1_000_000 <= v <= 5_000_000_000:
+                vals.append(v)
+    if not vals:
+        return None
+    from collections import Counter
+    return Counter(vals).most_common(1)[0][0]
 
 
 def total_shares(tables):
