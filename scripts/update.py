@@ -48,7 +48,16 @@ CLAUDE_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 MAX_AI_PER_RUN = 300
 SUMMARY_VER = 2       # 사업 요약 형식 버전. 올리면 AI 요약을 새 형식으로 다시 만듦
 PARSE_VER = 7         # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
-DART_BUDGET_MIN = 40   # 증권신고서 읽기·AI 요약에 쓸 최대 시간(분). 남은 종목은 다음 실행 때 이어서
+DART_BUDGET_MIN = 40   # (참고용) 아래 시각 기준으로 제한
+# GitHub 실행 시간 제한(90분) 안에 반드시 저장까지 끝내도록 '실행 시작부터 몇 분째'로 단계를 끊는다.
+DOC_UNTIL_MIN = 45     # 이때까지만 증권신고서 새로 읽기(남은 건 다음 실행 때 이어서)
+LIGHT_UNTIL_MIN = 62   # 이때까지만 공시목록·실적 갱신
+ENRICH_UNTIL_MIN = 72  # 이때까지만 공모 진행 회사 신고서 읽기(넘으면 지난번 값 재사용)
+RUN_START = time.time()
+
+
+def mins():
+    return (time.time() - RUN_START) / 60
 
 
 def log(*a):
@@ -545,7 +554,7 @@ def pct(a, b):
 
 
 # ---------------------------------------------------------------- 4. DART 상세
-def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False):
+def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, light=True):
     """det(기존 상세)를 갱신. 무거운 작업(문서 파싱·요약)은 한 번만."""
     corp = dt.corp_code(code)
     if not corp:
@@ -599,7 +608,10 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False):
     if biz and not det.get("summary"):
         det["summary"] = excerpt(biz)
         det["summaryAI"] = False
+    if not light:
+        return ai_budget
     det["disclosures"], det["events"] = dt.recent_disclosures(corp)
+    det["discAt"] = date.today().isoformat()
     fin_at = det.get("finAt")
     if not fin_at or (date.today() - date.fromisoformat(fin_at)).days >= 14:
         try:
@@ -825,6 +837,7 @@ def main():
 
     # ---- 상세(DART·시장지표)
     t0 = time.time()
+    log(f"[시간] 시세 단계 끝: 시작 후 {mins():.0f}분")
     left = 0
     if not dt:
         log("[DART] DART_API_KEY 가 없어 유통물량·사업요약·공시는 건너뜁니다.")
@@ -885,13 +898,16 @@ def main():
                 det["market"], det["marketAt"] = fm, None      # 새로 받았으면 주식수 다시 계산
                 det["marketFetched"] = today.isoformat()
             det.setdefault("market", {})
-        if dt:                     # 2020년 이후 전 종목 증권신고서(PER·Peer group·공모할인율). 최근 상장부터, 시간 예산 안에서
+        if dt and mins() < LIGHT_UNTIL_MIN:   # 2020년 이후 전 종목 증권신고서(PER·Peer group·공모할인율). 최근 상장부터
             try:
-                heavy = (time.time() - t0) < DART_BUDGET_MIN * 60
+                heavy = mins() < DOC_UNTIL_MIN
                 if not heavy and (not det.get("dartDone") or det.get("parseVer", 1) < PARSE_VER):
                     left += 1
+                disc_at = det.get("discAt")
+                recent2y = (today - date.fromisoformat(it["listed"])).days <= HEAVY_DAYS
+                light = recent2y or not disc_at or (today - date.fromisoformat(disc_at)).days >= 7   # 오래된 종목 공시는 주 1회
                 ai_budget = dart_detail(dt, it["code"], it["name"], date.fromisoformat(it["listed"]), det, ai_budget, heavy,
-                                       spac=bool(it.get("spac")))
+                                       spac=bool(it.get("spac")), light=light)
             except Exception as e:
                 log(f"  - {it['name']} DART 전체 실패: {e}")
         # 목록 화면용 요약 필드
@@ -928,7 +944,28 @@ def main():
         time.sleep(0.1)
 
     # ---- 단계별 현황(심사중·승인·공모진행·철회)
-    enrich = (lambda n, f: upcoming_detail(dt, n, f)) if dt else None
+    log(f"[시간] 상세 단계 끝: 시작 후 {mins():.0f}분")
+    if dt and mins() >= LIGHT_UNTIL_MIN:
+        log("[DART] 시간 제한으로 일부 종목의 공시·실적 갱신은 다음 실행 때 합니다.")
+    prev_off = {}
+    try:
+        prev_off = {x["name"]: x for x in json.loads((DATA / "pipeline.json").read_text("utf-8")).get("offering", [])}
+    except Exception:
+        pass
+    KEEP = ("rcpNo", "market", "track", "trackSrc", "trackEvidence", "floatAtListing", "totalShares", "lockup",
+            "discountRate", "valuation", "shares", "underwriters", "oldShareRatio", "putback", "fundUse", "summary")
+
+    def enrich_fn(n, f):
+        if mins() >= ENRICH_UNTIL_MIN:               # 시간이 모자라면 지난번 값 그대로
+            old = prev_off.get(n) or {}
+            return {k: old[k] for k in KEEP if old.get(k) is not None}
+        try:
+            return upcoming_detail(dt, n, f)
+        except Exception as e:
+            log(f"  - {n} 공모 신고서 실패: {e}")
+            old = prev_off.get(n) or {}
+            return {k: old[k] for k in KEEP if old.get(k) is not None}
+    enrich = enrich_fn if dt else None
     try:
         sched = fetch_38_schedule(today, offers38)
     except Exception as e:
