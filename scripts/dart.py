@@ -111,7 +111,12 @@ class Dart:
             return re.sub(r"[\s\.\-·]|\(주\)|㈜|주식회사", "", x or "").lower()
         k = nm(name)
         a = after.strftime("%Y%m%d") if after else ""
-        c = [r for r in self.offer_filings() if nm(r.get("corp_name")) == k and r.get("rcept_dt", "") >= a]
+        rows = [r for r in self.offer_filings() if r.get("rcept_dt", "") >= a]
+        c = [r for r in rows if nm(r.get("corp_name")) == k]
+        if not c and len(k) >= 3:                      # 이름 일부만 같을 때(예: 영문 병기, '코리아' 생략)는 회사가 하나뿐일 때만
+            part = [r for r in rows if k in nm(r.get("corp_name")) or nm(r.get("corp_name")) in k]
+            if len({r["corp_code"] for r in part}) == 1:
+                c = part
         if not c:
             return None, None
         best = (max([r for r in c if "투자설명서" in r["report_nm"]], key=lambda r: r["rcept_no"], default=None)
@@ -672,7 +677,7 @@ def total_shares(tables):
     best = None
     for rows in tables:
         for r in expand(rows):
-            if r and any(k in r[0] for k in ("합계", "총계")) or (len(r) > 1 and "합계" in r[1]):
+            if r and any(k in " ".join(r[:2]).replace(" ", "") for k in ("합계", "총계", "계", "Total")):
                 nums = [int(re.sub(r"[^\d]", "", c)) for c in r if re.fullmatch(r"[\d,]{7,}", c.replace(" ", ""))]
                 if nums:
                     best = max(best or 0, max(nums))

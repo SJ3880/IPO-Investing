@@ -47,7 +47,7 @@ DART_KEY = os.environ.get("DART_API_KEY", "").strip()
 CLAUDE_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 MAX_AI_PER_RUN = 300
 SUMMARY_VER = 2       # 사업 요약 형식 버전. 올리면 AI 요약을 새 형식으로 다시 만듦
-PARSE_VER = 7         # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
+PARSE_VER = 8         # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
 DART_BUDGET_MIN = 40   # (참고용) 아래 시각 기준으로 제한
 # GitHub 실행 시간 제한(90분) 안에 반드시 저장까지 끝내도록 '실행 시작부터 몇 분째'로 단계를 끊는다.
 DOC_UNTIL_MIN = 45     # 이때까지만 증권신고서 새로 읽기(남은 건 다음 실행 때 이어서)
@@ -955,16 +955,23 @@ def main():
     KEEP = ("rcpNo", "market", "track", "trackSrc", "trackEvidence", "floatAtListing", "totalShares", "lockup",
             "discountRate", "valuation", "shares", "underwriters", "oldShareRatio", "putback", "fundUse", "summary")
 
+    enrich_dbg = []
+
     def enrich_fn(n, f):
+        old = prev_off.get(n) or {}
+        keep = {k: old[k] for k in KEEP if old.get(k) is not None}
         if mins() >= ENRICH_UNTIL_MIN:               # 시간이 모자라면 지난번 값 그대로
-            old = prev_off.get(n) or {}
-            return {k: old[k] for k in KEEP if old.get(k) is not None}
+            enrich_dbg.append({"name": n, "note": "시간 초과 → 지난번 값"})
+            return keep
         try:
-            return upcoming_detail(dt, n, f)
+            data = upcoming_detail(dt, n, f)
+            enrich_dbg.append({"name": n, "rcpNo": data.get("rcpNo"), "totalShares": data.get("totalShares"),
+                               "note": "신고서 못 찾음" if not data else ""})
+            return {**keep, **{k: v for k, v in data.items() if v is not None}}
         except Exception as e:
             log(f"  - {n} 공모 신고서 실패: {e}")
-            old = prev_off.get(n) or {}
-            return {k: old[k] for k in KEEP if old.get(k) is not None}
+            enrich_dbg.append({"name": n, "note": f"오류: {e}"[:200]})
+            return keep
     enrich = enrich_fn if dt else None
     try:
         sched = fetch_38_schedule(today, offers38)
@@ -976,6 +983,8 @@ def main():
         pipe["updated"] = datetime.now(KST).strftime("%Y-%m-%d %H:%M")
         pipe["sources"] = {"pubofr": pub_df is not None or (sched is not None and len(sched) > 0),
                            "sched38": sched is not None and len(sched) > 0, "invstg": inv_ok, "dart": bool(dt)}
+        (DATA / "debug").mkdir(exist_ok=True)
+        (DATA / "debug" / "offering_enrich.json").write_text(json.dumps(enrich_dbg, ensure_ascii=False, indent=1), "utf-8")
         (DATA / "pipeline.json").write_text(json.dumps(pipe, ensure_ascii=False, separators=(",", ":")), "utf-8")
         log(f"[단계] 심사중 {len(pipe['review'])} · 승인 {len(pipe['approved'])} · 공모진행 {len(pipe['offering'])} · 철회·미승인 {len(pipe['withdrawn'])}")
     except Exception as e:

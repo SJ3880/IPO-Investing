@@ -217,11 +217,11 @@ def _summary_from_grids(grids):
                     out["fair"] = int(m.group(1).replace(",", ""))
             if "disc" not in out and re.search(r"할인율", label) and not re.search(r"현가", label):
                 ps = re.findall(PCTV, vals)
-                if ps:
+                if len(ps) >= 2 and "~" in vals:          # 범위(예: 36.55% ~ 25.30%)만. 단일 값은 현가할인율일 수 있음
                     out["disc"] = [float(p) for p in ps[:2]]
             if "band" not in out and re.search(r"(희망\s*공모\s*가|공모\s*희망\s*가|확정\s*공모\s*가|밴드)", label):
                 ws = re.findall(WON, vals) or re.findall(r"([\d]{1,3}(?:,\d{3})+)", vals)
-                if ws:
+                if len(ws) >= 2:
                     out["band"] = [int(w.replace(",", "")) for w in ws[:2]]
             if "applied" not in out and re.search(r"(적용|평균)", label) and mult_name(label):
                 v = next((x for x in (_multiple(c) for c in row[1:]) if x is not None), None)
@@ -230,6 +230,40 @@ def _summary_from_grids(grids):
                     v = float(m.group(1)) if m else None
                 if v is not None:
                     out["applied"], out["appliedMult"] = v, mult_name(label)
+    return out
+
+
+def _flat(plain):
+    return re.sub(r"\s+", " ", plain.replace("|", " "))
+
+
+def summary_table(plain):
+    """【공모가 산정 요약표】와 '가. 평가결과' 표에서 핵심 숫자만 (단위 칸이 따로 있는 표도 허용)"""
+    f = _flat(plain[:60000])
+    out = {}
+    NUM = r"(\d{1,4}(?:,\d{3})*(?:\.\d+)?)"
+    m = re.search(r"평가\s*모형\s*" + MULT, f, re.I)
+    if m:
+        out["appliedMult"] = mult_name(m.group(1))
+    # ② 비교대상회사/유사기업 PER(PSR·PBR…) [배] 11.15 [배]
+    m = re.search(r"②\s*(?:비교\s*대상\s*회사|비교\s*대상\s*기업|비교\s*회사|비교\s*기업|유사\s*기업|유사\s*회사|적용)?\s*(?:의\s*)?(?:평균\s*)?"
+                  + MULT + r"\s*(?:\(\s*배\s*\)|배|x)?\s*" + NUM, f, re.I)
+    if m:
+        v = float(m.group(2).replace(",", ""))
+        if 0 < v < 1000:
+            out["applied"] = v
+            out["appliedMult"] = out.get("appliedMult") or mult_name(m.group(1))
+    m = re.search(r"주당\s*평가\s*가(?:액|치)(?:\s*\([^가-힣]{0,24})?\s*(?:원\s*([\d,]{4,})|([\d,]{4,})\s*원)", f)
+    if m:
+        out["fair"] = int((m.group(1) or m.group(2)).replace(",", ""))
+    PC = r"(\d{1,2}(?:\.\d+)?)\s*%"
+    m = re.search(r"평가\s*가(?:액|치)\s*(?:에\s*)?대한\s*할인율\s*(?:%\s*)?" + PC + r"\s*~\s*" + PC, f) \
+        or re.search(r"공모\s*가?\s*할인율\s*(?:%\s*)?" + PC + r"\s*~\s*" + PC, f)
+    if m:
+        out["disc"] = [float(m.group(1)), float(m.group(2))]
+    m = re.search(r"(?:희망\s*공모\s*가(?:액|격)?|공모\s*희망\s*가(?:액|격)?)\s*(?:의\s*범위|밴드)?\s*(?:원\s*)?([\d,]{4,})\s*원?\s*~\s*([\d,]{4,})\s*원?", f)
+    if m:
+        out["band"] = [int(m.group(1).replace(",", "")), int(m.group(2).replace(",", ""))]
     return out
 
 
@@ -249,6 +283,10 @@ def valuation_info(xml_text):
             grids.append(_grid(_rows(tb)))
             pos.append(sec.find(t[:200]))
     s = _summary_from_grids(grids)
+    # 1순위: 증권신고서 표준 【공모가 산정 요약표】(평가모형 / ② 비교회사 배수 / 주당 평가가액 / ④ 할인율 / 희망공모가액)
+    #   기술특례 회사의 '할인율 15%'(현가할인율) 같은 다른 할인율과 섞이지 않도록 이 표를 먼저 읽는다
+    for k, v in summary_table(plain).items():
+        s[k] = v
 
     # 본문 문장에서 보완
     if "applied" not in s:
