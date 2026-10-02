@@ -583,8 +583,10 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
                 det["parseVer"] = PARSE_VER
                 det.pop("listingType", None)
                 det["_bizText"] = info["bizText"]
+                det["uwFeeRateDoc"] = info.get("uwFeeRateDoc")
                 if not spac:
                     det.update(dt.estk(corp, listed))
+                    det["estkVer"] = 2
                 det["dartDone"] = True
                 det["dartStatus"] = "ok"
             else:
@@ -610,6 +612,12 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
         det["summaryAI"] = False
     if not light:
         return ai_budget
+    if det.get("dartDone") and not spac and det.get("estkVer") != 2:   # 인수수수료 등 주요정보만 한 번 더(빠름)
+        try:
+            det.update(dt.estk(corp, listed))
+            det["estkVer"] = 2
+        except Exception as e:
+            log(f"  - {name} 주요정보 실패: {e}")
     det["disclosures"], det["events"] = dt.recent_disclosures(corp)
     det["discAt"] = date.today().isoformat()
     fin_at = det.get("finAt")
@@ -925,6 +933,25 @@ def main():
         it["discOffer"] = round((1 - it["offer"] / fair) * 100, 1) if fair and it.get("offer") and not it.get("spac") else None
         it["peers"] = [{"n": x["name"], "v": x["v"]} for x in (v.get("peers") or [])]
         it["trackManual"] = it["code"] in manual_tracks
+        # 공모 데이터 시트용(증권신고서·주요정보)
+        tl = det.get("lockup") or []
+        for key, m in (("float1m", 1), ("float3m", 3), ("float6m", 6), ("float1y", 12)):
+            pts = [x["pct"] for x in tl if x["m"] <= m]
+            it[key] = pts[-1] if pts else None
+        it["totalShares"] = det.get("totalShares")
+        it["offerShares"] = det.get("shares")
+        it["offerAmount"] = det.get("amount") or (round(det["shares"] * it["offer"]) if det.get("shares") and it.get("offer") else None)
+        it["oldShareRatio"] = det.get("oldShareRatio")
+        it["uwFee"] = det.get("uwFee")
+        it["uwFeeRate"] = det.get("uwFeeRate") or (round(det["uwFee"] / it["offerAmount"] * 100, 2)
+                                                   if det.get("uwFee") and it.get("offerAmount") else None)
+        it["uwFeeRateDoc"] = det.get("uwFeeRateDoc")
+        it["uwMethod"] = det.get("uwMethod")
+        it["underwriters"] = det.get("underwriters") or None
+        it["putback"] = det.get("putback")
+        if v.get("appliedMult") and fair and it.get("offer") and not it.get("spac"):
+            it["impliedMult"] = round(v["appliedMult"] * it["offer"] / fair, 2)   # 확정공모가 기준 실제 배수
+        it["rcpNo"] = det.get("rcpNo")
         it["marcap"] = det["market"].get("시총")
         mc = parse_won(it["marcap"])
         if mc and it.get("price") and det.get("market"):

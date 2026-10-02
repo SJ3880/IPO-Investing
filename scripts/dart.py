@@ -237,11 +237,33 @@ class Dart:
         uw = g.get("인수인정보") or []
         if uw:
             last_rcp = max(x.get("rcept_no", "") for x in uw)
-            names = []
+            names, detail, fee, amt, how = [], [], 0, 0, None
             for x in uw:
-                if x.get("rcept_no", "") == last_rcp and x.get("actnmn") and x["actnmn"] not in names:
-                    names.append(x["actnmn"].strip())
+                if x.get("rcept_no", "") != last_rcp:
+                    continue
+                n = (x.get("actnmn") or "").strip()
+                if n and n not in names:
+                    names.append(n)
+                raw_fee = str(x.get("udtprc") or "")
+                f_ = num(raw_fee) if re.fullmatch(r"[\d,\s원\-]+", raw_fee) else 0   # 인수대가(=인수수수료)
+                a_ = num(x.get("udtamt")) if re.fullmatch(r"[\d,\s원\-]+", str(x.get("udtamt") or "")) else 0
+                mr = re.search(r"(\d(?:\.\d{1,2})?)\s*%", raw_fee)
+                if mr and "uwFeeRateTxt" not in out:
+                    out["uwFeeRateTxt"] = float(mr.group(1))
+                fee += f_
+                amt += a_
+                how = how or (str(x.get("udtmth") or "").strip() or None)
+                if n:
+                    detail.append({"n": n, "role": (x.get("actsen") or "").strip(), "amt": a_ or None, "fee": f_ or None})
             out["underwriters"] = names
+            out["uwDetail"] = detail
+            out["uwFee"] = fee or None
+            out["uwMethod"] = how
+            base = out.get("amount") or amt
+            if fee and base and fee < base * 0.2:
+                out["uwFeeRate"] = round(fee / base * 100, 2)
+            elif out.get("uwFeeRateTxt"):
+                out["uwFeeRate"] = out["uwFeeRateTxt"]
         sellers = g.get("매출인에관한사항") or []
         if sellers and out.get("shares"):
             last_rcp = max(x.get("rcept_no", "") for x in sellers)
@@ -574,6 +596,17 @@ def discount_evidence(plain):
     return ""
 
 
+def fee_rate(plain):
+    """본문의 '인수수수료 … 공모금액의 N%' (기본수수료율)"""
+    for p in (r"(?:인수|모집|기본)\s*수수료[^%\n]{0,80}?(\d(?:\.\d{1,2})?)\s*%",
+              r"공모\s*금액의\s*(\d(?:\.\d{1,2})?)\s*%[^\n]{0,30}수수료"):
+        for m in re.finditer(p, plain[:2000000]):
+            v = float(m.group(1))
+            if 0.3 <= v <= 8:
+                return v
+    return None
+
+
 def discount_rate(plain):
     """미래 추정이익에 적용한 현가할인율(%)"""
     pats = [r"(\d{1,2}(?:\.\d+)?)\s*%\s*의\s*현가\s*할인율",
@@ -616,6 +649,7 @@ def analyze_document(xml_text):
     plain = strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml_text[:4000000], flags=re.I))
     out["track"], out["trackEvidence"] = listing_track(plain)
     out["discountRate"] = discount_rate(plain)
+    out["uwFeeRateDoc"] = fee_rate(plain)
     try:                                         # 공모가 산정 근거(PER·비교회사·할인율)
         out["valuation"] = valuation.valuation_info(xml_text) or None
         v = out["valuation"] or {}
