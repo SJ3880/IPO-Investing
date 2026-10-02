@@ -47,7 +47,7 @@ DART_KEY = os.environ.get("DART_API_KEY", "").strip()
 CLAUDE_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 MAX_AI_PER_RUN = 300
 SUMMARY_VER = 2       # 사업 요약 형식 버전. 올리면 AI 요약을 새 형식으로 다시 만듦
-PARSE_VER = 8         # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
+PARSE_VER = 9         # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
 DART_BUDGET_MIN = 40   # (참고용) 아래 시각 기준으로 제한
 # GitHub 실행 시간 제한(90분) 안에 반드시 저장까지 끝내도록 '실행 시작부터 몇 분째'로 단계를 끊는다.
 DOC_UNTIL_MIN = 45     # 이때까지만 증권신고서 새로 읽기(남은 건 다음 실행 때 이어서)
@@ -142,9 +142,42 @@ def ipo_filter(listings):
 SPAC_BASE = 2000      # 스팩 공모가·합병가액(2015년 이후 스팩은 모두 2,000원)
 
 
-def spac_targets(inv_df, listings_all):
-    """KIND 예비심사 목록의 '스팩 존속합병/소멸합병' 중 '상장 승인'(합병상장 완료)된 회사를
-    상장법인목록에서 이름으로 찾는다. 합병 후 회사 이름 = 예비심사 회사명."""
+def spac_targets(inv_df, listings_all, kml=None):
+    """스팩합병 상장 회사 목록
+       1순위: KIND 합병상장기업현황(SPAC 존속·소멸합병) — 합병상장일을 그대로 씀
+       2순위(KIND 합병상장 목록을 못 받았을 때): 예비심사 목록의 '스팩 … 합병' + '상장 승인'"""
+    by, by5 = {}, {}
+    for _, r in listings_all.iterrows():
+        by.setdefault(norm(str(r["name"])), r)
+        by5.setdefault(str(r["code"])[:5], r)
+    inv = {}
+    if inv_df is not None and len(inv_df):
+        for _, r in inv_df.iterrows():
+            if "스팩" in str(r.get("listType") or ""):
+                inv[norm(str(r.get("name") or ""))] = r
+    if kml is not None and len(kml) and "mergeDate" in kml.columns:
+        out, seen = [], set()
+        for _, r in kml.iterrows():
+            md = first_date(r.get("mergeDate"))
+            if not md:
+                continue
+            kc = re.sub(r"\D", "", str(r.get("kindCode") or ""))
+            row = by.get(norm(str(r.get("name") or "")))
+            if row is None and kc:
+                row = by5.get(kc[:5])
+            if row is None or row["code"] in seen:
+                continue
+            seen.add(row["code"])
+            iv = inv.get(norm(str(r.get("name") or "")))
+            iv = {} if iv is None else iv.to_dict()
+            lt = str(r.get("listType") or "").replace("SPAC", "스팩").strip() or "스팩합병"
+            out.append({"code": row["code"], "name": str(row["name"]), "sector": row["sector"], "product": row["product"],
+                        "kindListed": row["listed"], "market": row["market"], "listType": lt,
+                        "kindMergeDate": md.isoformat(),
+                        "applied": first_date(iv.get("applied")),
+                        "resultDate": first_date(iv.get("resultDate")),
+                        "uw": str(r.get("uw") or "") or None})
+        return out
     if inv_df is None or not len(inv_df):
         return []
     by = {}
@@ -176,8 +209,10 @@ def _snap(ratio):
 
 def merge_point(bars, sp):
     """합병 신주 상장일 찾기
-       · 소멸합병(회사가 새로 상장): 상장법인목록의 상장일
-       · 존속합병(스팩이 이름을 바꿔 계속 상장): 합병 전후 매매정지로 생긴 긴 공백(14일+) 뒤 첫 거래일"""
+       · 소멸합병(회사가 새로 상장): 상장법인목록(KIND)의 상장일
+       · 존속합병(스팩이 이름을 바꿔 계속 상장): 상장 승인 뒤 '합병 매매정지'가 풀린 첫 거래일
+         네이버 일봉은 정지 기간에도 거래량 0인 봉을 채워 넣으므로, 거래량 0이 3일 이상 이어진 구간(또는 14일+ 공백)을 정지로 본다.
+         (2025년 추석처럼 연휴로 생긴 공백은 거래량 0 봉이 없어 정지로 보지 않음)"""
     if not bars:
         return None, 1.0
     ap = sp.get("applied") or sp.get("resultDate")
@@ -185,10 +220,26 @@ def merge_point(bars, sp):
         d0 = sp["kindListed"].isoformat()
         b = next((x for x in bars if x[0] >= d0), None)
         return (b[0] if b else None), 1.0
-    after = (sp.get("resultDate") or ap or date(2000, 1, 1)) - timedelta(days=30)
-    idx = [i for i in range(1, len(bars)) if date.fromisoformat(bars[i][0]) >= after]
-    gap = lambda i: (date.fromisoformat(bars[i][0]) - date.fromisoformat(bars[i - 1][0])).days
-    k = next((i for i in idx if gap(i) >= 14), None) or next((i for i in idx if gap(i) >= 8), None)
+    start = sp.get("resultDate") or ap or date(2000, 1, 1)
+    lo, hi = (start - timedelta(days=20)).isoformat(), (start + timedelta(days=300)).isoformat()
+    k, i = None, 1
+    while i < len(bars):
+        if not (lo <= bars[i][0] <= hi):
+            i += 1
+            continue
+        if bars[i][5] == 0:                                   # 거래량 0 구간
+            j = i
+            while j < len(bars) and bars[j][5] == 0:
+                j += 1
+            if j - i >= 3 and j < len(bars):
+                k = j
+                break
+            i = j
+            continue
+        if (date.fromisoformat(bars[i][0]) - date.fromisoformat(bars[i - 1][0])).days >= 14:
+            k = i
+            break
+        i += 1
     if k is None:
         return None, 1.0
     early = sorted(b[4] for b in bars[:10])            # 스팩 상장 초기 가격 ≈ 2,000원(수정주가 비율 추정)
@@ -196,19 +247,58 @@ def merge_point(bars, sp):
     return bars[k][0], adj
 
 
+def listing_date_doc(text, after):
+    """합병 증권신고서의 '(합병)신주 상장예정일 / 상장 예정일'"""
+    f = re.sub(r"\s+", " ", dartlib.strip_tags(text[:3000000]))
+    for m in re.finditer(r"상장\s*예정\s*일[^0-9]{0,30}(20\d{2})\s*[년.\-/]\s*(\d{1,2})\s*[월.\-/]\s*(\d{1,2})", f):
+        try:
+            d = date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        except ValueError:
+            continue
+        if after and d >= after:
+            return d
+    return None
+
+
 def spac_info(sp, dt, cache):
     """합병상장일·기준가(합병가액). 한 번 찾으면 data/spac_merge.json 에 저장"""
     c = cache.get(sp["code"]) or {}
     tried = c.get("baseTried")
-    if c.get("mergeDate") and (c.get("base") or "존속" in sp["listType"]
+    kmd = sp.get("kindMergeDate")
+    if kmd and c.get("mergeDate") and c.get("mdSrc") != "KIND":     # KIND 합병상장일로 바로잡기(기준가 등은 유지)
+        c["mergeDate"], c["mdSrc"] = kmd, "KIND"
+    if kmd and c.get("mdSrc") == "KIND" and (c.get("base") or "존속" in sp["listType"]
+                                             or (tried and (date.today() - date.fromisoformat(tried)).days < 7)):
+        c["mergeDate"] = kmd
+        cache[sp["code"]] = c
+        return c
+    if c.get("mdVer") == 2 and c.get("mergeDate") and (c.get("base") or "존속" in sp["listType"]
                                or (tried and (date.today() - date.fromisoformat(tried)).days < 7)):
         return c
     bars = fetch_daily(sp["code"])
     md, adj = merge_point(bars, sp)
+    doc_md = None
+    if kmd:                                          # KIND 합병상장일이 있으면 그게 정답
+        b = next((x for x in bars if x[0] >= kmd), None)
+        md = kmd if not b else b[0]
+    if dt and "존속" in sp["listType"] and not kmd:            # 신고서의 상장예정일이 있으면 그 날(또는 그 뒤 첫 거래일)
+        try:
+            corp = dt.corp_code(sp["code"])
+            for f in (dt.prospectus(corp, min(date.today(), (sp.get("resultDate") or date.today()) + timedelta(days=300)), merger="all") if corp else [])[:3]:
+                d0 = listing_date_doc(dt.document_text(f["rcept_no"]), sp.get("resultDate") or sp.get("applied"))
+                if d0:
+                    b = next((x for x in bars if x[0] >= d0.isoformat()), None)
+                    doc_md = b[0] if b else None
+                    break
+        except Exception as e:
+            log(f"  - {sp['name']} 합병 상장예정일 찾기 실패: {e}")
+    if doc_md and (not md or abs((date.fromisoformat(doc_md) - date.fromisoformat(md)).days) > 3):
+        log(f"  - {sp['name']}: 상장일 {md} → 신고서 상장예정일 기준 {doc_md}")
+        md = doc_md
     if not md:
         return {}
-    c = {"mergeDate": md, "adj": adj}
-    first_open = next(b[1] for b in bars if b[0] >= md)
+    c = {"mergeDate": md, "adj": adj, "mdVer": 2, "mdSrc": "KIND" if kmd else "추정"}
+    first_open = next((b[1] for b in bars if b[0] >= md), None) or 1
     doc_base = None
     if dt:
         try:
@@ -506,6 +596,8 @@ def load_or_fetch(code, listed):
             old = json.loads(p.read_text("utf-8"))
         except Exception:
             old = []
+        if old and old[0][0] > (listed + timedelta(days=10)).isoformat():
+            old = []                                   # 상장일이 앞당겨진 경우(스팩합병 상장일 수정 등) → 전체 새로 받기
         if old:
             recent = fetch_daily(code, count=15)
             if recent:
@@ -583,7 +675,8 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
                 det["parseVer"] = PARSE_VER
                 det.pop("listingType", None)
                 det["_bizText"] = info["bizText"]
-                det["uwFeeRateDoc"] = info.get("uwFeeRateDoc")
+                for k in ("uwFeeRateDoc", "uwFeeAmtDoc", "perfFeeRate"):
+                    det[k] = info.get(k)
                 if not spac:
                     det.update(dt.estk(corp, listed))
                     det["estkVer"] = 2
@@ -700,7 +793,12 @@ def main():
     except Exception:
         spac_cache = {}
     spacs = []
-    for sp in spac_targets(inv_df, listings_all):
+    try:
+        kml = kindlib.merge_listings(SINCE.isoformat(), debug_dir=DATA / "debug", log=log)
+    except Exception as e:
+        log(f"[KIND 합병상장] 실패 → 예비심사 목록으로 추정: {e}")
+        kml = None
+    for sp in spac_targets(inv_df, listings_all, kml):
         try:
             info = spac_info(sp, dt, spac_cache)
         except Exception as e:
@@ -946,6 +1044,9 @@ def main():
         it["uwFeeRate"] = det.get("uwFeeRate") or (round(det["uwFee"] / it["offerAmount"] * 100, 2)
                                                    if det.get("uwFee") and it.get("offerAmount") else None)
         it["uwFeeRateDoc"] = det.get("uwFeeRateDoc")
+        it["uwPerfFee"] = det.get("uwPerfFeeDoc")
+        it["perfFeeRate"] = det.get("perfFeeRate")
+        it["uwFeeAmtDoc"] = det.get("uwFeeAmtDoc")
         it["uwMethod"] = det.get("uwMethod")
         it["underwriters"] = det.get("underwriters") or None
         it["putback"] = det.get("putback")

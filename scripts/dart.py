@@ -596,15 +596,69 @@ def discount_evidence(plain):
     return ""
 
 
+def uw_fee(xml_text, plain):
+    """증권신고서 '5. 인수 등에 관한 사항 - 나. 인수대가에 관한 사항 - (1) 인수수수료' 표
+       → 기본 인수수수료율(%), 금액(원), 성과수수료율(% 이내)"""
+    out = {"uwFeeRateDoc": None, "uwFeeAmtDoc": None, "perfFeeRate": None}
+    pct = lambda t: next((float(x) for x in re.findall(r"(\d{1,2}(?:\.\d{1,3})?)\s*%", t) if 0.2 <= float(x) <= 10), None)
+    for m in re.finditer(r"<TABLE\b.*?</TABLE>", xml_text[:4000000], re.S | re.I):
+        chunk = m.group(0)
+        if "인수수수료" not in chunk or len(chunk) > 60000:
+            continue
+        before = strip_tags(xml_text[max(0, m.start() - 600): m.start()])
+        unit = 1000 if "천원" in before or "천원" in chunk[:600] else 1_000_000 if "백만원" in before else 1
+        grid = expand(table_rows(BeautifulSoup(chunk, "html.parser").find("table")))
+        for r in grid:
+            head = (r[0] if r else "").replace(" ", "")
+            rest = " ".join(dict.fromkeys(r[1:]))
+            if "인수수수료" in head and out["uwFeeRateDoc"] is None:
+                out["uwFeeRateDoc"] = pct(rest)
+                for c in r[1:]:
+                    if re.fullmatch(r"[\d,]{4,}", c.replace(" ", "")):
+                        out["uwFeeAmtDoc"] = int(c.replace(",", "").replace(" ", "")) * unit
+                        break
+            elif "성과수수료" in head and out["perfFeeRate"] is None:
+                out["perfFeeRate"] = pct(rest)
+        if out["uwFeeRateDoc"] is not None:
+            break
+    if out["uwFeeRateDoc"] is None:                      # 표가 없으면 본문 문장(…인수금액의 4.5%에 해당하는 금액…)
+        f = re.sub(r"\s+", " ", plain[:3000000])
+        m = re.search(r"인수\s*수수료[^%]{0,250}?(?:인수|공모)\s*(?:금액|총액)의\s*(\d(?:\.\d{1,3})?)\s*%", f)
+        out["uwFeeRateDoc"] = float(m.group(1)) if m else fee_rate(plain)
+        if out["perfFeeRate"] is None:
+            m = re.search(r"성과\s*수수료[^%]{0,200}?(\d(?:\.\d{1,3})?)\s*%", f)
+            out["perfFeeRate"] = float(m.group(1)) if m else None
+    return out
+
+
+def fee_info(plain):
+    """증권신고서 '5. 인수 등에 관한 사항 - 나. 인수대가에 관한 사항 - (1) 인수수수료' 표
+       예) 인수수수료(성과수수료 제외) | KB증권㈜ | 990,036 | 인수금액의 4.5% …  /  성과수수료 | … | 인수금액의 1.5% 이내
+       → (기본 수수료율, 성과수수료율)"""
+    f = re.sub(r"\s+", " ", plain[:3000000])
+    PC = r"(\d{1,2}(?:\.\d{1,3})?)\s*%"
+    base = perf = None
+    for m in re.finditer(r"인수\s*수수료(?:\s*\(\s*성과\s*수수료\s*제외\s*\))?", f):
+        w = f[m.end(): m.end() + 220]
+        mm = re.search(r"(?:인수\s*금액|공모\s*금액|총\s*인수\s*금액|모집\s*총액|발행\s*금액)\s*(?:의|x|×|\*)?\s*" + PC, w)
+        if mm and 0.3 <= float(mm.group(1)) <= 10:
+            base = float(mm.group(1))
+            break
+    if base is None:
+        m = re.search(r"인수\s*수수료[^%]{0,80}?" + PC, f)
+        if m and 0.3 <= float(m.group(1)) <= 10:
+            base = float(m.group(1))
+    for m in re.finditer(r"성과\s*수수료(?!\s*(?:제외|를\s*제외|는\s*제외))", f):
+        w = f[m.end(): m.end() + 200]
+        mm = re.search(r"(?:인수\s*금액|공모\s*금액|총\s*인수\s*금액)\s*(?:의|x|×)?\s*" + PC, w)
+        if mm and 0.1 <= float(mm.group(1)) <= 5:
+            perf = float(mm.group(1))
+            break
+    return base, perf
+
+
 def fee_rate(plain):
-    """본문의 '인수수수료 … 공모금액의 N%' (기본수수료율)"""
-    for p in (r"(?:인수|모집|기본)\s*수수료[^%\n]{0,80}?(\d(?:\.\d{1,2})?)\s*%",
-              r"공모\s*금액의\s*(\d(?:\.\d{1,2})?)\s*%[^\n]{0,30}수수료"):
-        for m in re.finditer(p, plain[:2000000]):
-            v = float(m.group(1))
-            if 0.3 <= v <= 8:
-                return v
-    return None
+    return fee_info(plain)[0]
 
 
 def discount_rate(plain):
@@ -649,7 +703,7 @@ def analyze_document(xml_text):
     plain = strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml_text[:4000000], flags=re.I))
     out["track"], out["trackEvidence"] = listing_track(plain)
     out["discountRate"] = discount_rate(plain)
-    out["uwFeeRateDoc"] = fee_rate(plain)
+    out.update(uw_fee(xml_text, plain))
     try:                                         # 공모가 산정 근거(PER·비교회사·할인율)
         out["valuation"] = valuation.valuation_info(xml_text) or None
         v = out["valuation"] or {}

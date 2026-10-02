@@ -123,6 +123,30 @@ def listing_companies(market, from_date="2020-01-01", to_date=None):
     return list_table(html, cols, "회사코드")
 
 
+# ------------------------------------------------------------------ 합병상장기업(스팩합병)
+def merge_listings(from_date="2020-01-01", to_date=None, debug_dir=None, log=print):
+    """KIND > 신규상장기업 > 합병상장기업현황 (SPAC 존속합병 06 · 소멸합병 07)
+       → 회사명, 합병상장일, 상장유형, 상장주선인, 회사코드 (스팩합병의 '진짜' 상장일)"""
+    to_date = to_date or date.today().isoformat()
+    form = {"method": "searchMergeListingCompSub", "forward": "mergeListingCompany_sub", "searchCodeType": "",
+            "choicTypeArrStr": "01|02|03|04|05|", "secuGrpArrStr": "0|ST|FS|MF|SC|RT|DR|",
+            "currentPageSize": "3000", "pageIndex": "1", "orderMode": "1", "orderStat": "D", "marketType": "",
+            "searchCorpName": "", "searchCorpNameTmp": "", "isurCd": "", "repIsuSrtCd": "", "country": "",
+            "industry": "", "repMajAgntDesignAdvserComp": "", "repMajAgntComp": "", "designAdvserComp": "",
+            "listTypeArrStr": "06|07|", "fromDate": from_date, "toDate": to_date}
+    html = post("listinvstg/mergeListingCompany.do", form, as_data=True)
+    cols = ["회사명", "합병상장일", "상장유형", "증권구분", "업종", "국적", "상장주선인",
+            "액면가", "공모가", "공모금액", "주요제품", "최초상장주식수"]
+    df = list_table(html, cols, "회사코드")
+    if debug_dir:
+        Path(debug_dir).mkdir(parents=True, exist_ok=True)
+        (Path(debug_dir) / "kind_merge_head.html").write_text(html[:150000], "utf-8")
+    df = standardize(df, {"name": ("회사명",), "mergeDate": ("합병상장일", "상장일"), "listType": ("상장유형",),
+                          "uw": ("상장주선인", "주선인"), "kindCode": ("회사코드",)})
+    log(f"[KIND 합병상장] {len(df)}건")
+    return df
+
+
 # ------------------------------------------------------------------ 상장예비심사
 INVSTG_MAIN = "listinvstg/listinvstgcom.do"
 
