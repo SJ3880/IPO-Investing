@@ -183,6 +183,7 @@ footer details{margin-bottom:12px}
     <a href="#approved" data-v="approved">심사승인<span class="n" id="n-approved">–</span></a>
     <a href="#offering" data-v="offering">수요예측·청약<span class="n" id="n-offering">–</span></a>
     <a href="#listed" data-v="listed">상장완료<span class="n" id="n-listed">–</span></a>
+    <a href="#data" data-v="data">공모 데이터<span class="n" id="n-data">–</span></a>
     <a href="#withdrawn" data-v="withdrawn">철회·미승인<span class="n" id="n-withdrawn">–</span></a>
   </nav>
 
@@ -237,6 +238,7 @@ footer details{margin-bottom:12px}
       </table>
     </div></div>
     <p class="note" id="tabnote"></p>
+    <button class="install" id="dlBtn" hidden style="margin-top:8px">⬇ 엑셀로 받기 (CSV)</button>
   </section>
 
   <footer>
@@ -357,6 +359,14 @@ function valHtml(v, pvRate, offer, band){
   return h;
 }
 
+// 공모가 확정 전이면 밴드 하단~상단 시총, 확정 후면 확정공모가 시총
+const mcapUp = x => {
+  const sh = x.totalShares;
+  if (!x.offer && x.band && sh) return `${eok(x.band[0] * sh)}~<br>${eok(x.band[1] * sh)}<div class="mu" style="font-size:12px">밴드 기준</div>`;
+  return eok(x.marcapAtOffer || (x.offer && sh ? x.offer * sh : null));
+};
+const uwText = x => (x.underwriters && x.underwriters.length ? x.underwriters.join(', ') : x.uw38) || '';
+const pc1 = v => v != null ? (+v).toFixed(1) + '%' : '<span class="mu">–</span>';
 const hz = (x, k) => x[k] != null ? pct(x[k]) : '<span class="mu">–</span>';
 
 const TABS = {
@@ -391,14 +401,14 @@ const TABS = {
       {k:'listDate', t:'상장예정', l:1, r: x => x.listDate ? `${md(x.listDate)}` : '<span class="mu">미정</span>'},
       {k:'offer', t:'공모가(밴드)', r: x => x.offer ? `<b>${fmt(x.offer)}</b>${x.band ? `<div class="mu" style="font-size:12px">${fmt(x.band[0])}~${fmt(x.band[1])}</div>` : ''}` : (x.band ? `${fmt(x.band[0])}~${fmt(x.band[1])}` : '–')},
       {k:'amount', t:'공모금액', r: x => eok(x.amount)},
-      {k:'marcapAtOffer', t:'공모 시총', r: x => eok(x.marcapAtOffer)},
+      {k:'marcapAtOffer', t:'공모 시총', r: x => mcapUp(x)},
       {k:'valMult', t:'적용 PER·공모할인율', r: x => valCell(x.valuation)},
       {k:'floatAtListing', t:'상장일 유통', r: x => x.floatAtListing != null ? x.floatAtListing.toFixed(1) + '%' : '–'},
       {k:'instComp', t:'경쟁률(기관·일반)', r: x => (x.instComp ? `기관 ${fmt(x.instComp)}:1<div class="mu" style="font-size:12px">확약 ${x.commit ?? '–'}%</div>` : '') + (x.subComp ? `<div class="mu" style="font-size:12px">일반 ${fmt(x.subComp)}:1</div>` : '') || '–'},
       {k:'oldShareRatio', t:'구주매출', r: x => x.oldShareRatio != null ? x.oldShareRatio + '%' : '–'},
       {k:'uw', t:'주관사', l:1, r: x => esc((x.underwriters && x.underwriters.length ? x.underwriters.join(', ') : x.uw) || '–')},
     ],
-    note: () => '단계는 오늘 날짜 기준 자동 분류. 공모가는 확정 전이면 희망밴드. 공모 시총 = 상장예정주식수 × (확정공모가, 없으면 밴드 상단).' },
+    note: () => '단계는 오늘 날짜 기준 자동 분류. 공모가는 확정 전이면 희망밴드. 공모 시총 = 상장예정주식수 × 확정공모가(확정 전이면 희망밴드 하단~상단).' },
   listed: { src: () => DATA, sort: 'listed', yr: true, track: true, screen: true,
     cols: [
       {k:'name', t:'회사', l:1, r: x => nm(x, trackChip(x.track) + (x.listType && !x.spac && /이전|합병/.test(x.listType) ? `<span class="chip">${esc(x.listType)}</span>` : '') + (x.opLoss ? '<span class="chip warn">영업적자</span>' : '') + (x.mezz ? '<span class="chip warn">CB·BW</span>' : ''))},
@@ -406,6 +416,8 @@ const TABS = {
       {k:'listed', t:'상장일', l:1, r: x => `${x.listed}<div class="mu" style="font-size:12px">D+${x.days}</div>`},
       {k:'offer', t:'공모가', r: x => x.offer ? fmt(x.offer) + (x.spac ? '<div class="mu" style="font-size:12px">합병 기준가</div>' : '') : '–'},
       {k:'marcapAtOffer', t:'공모 시총', r: x => eok(x.marcapAtOffer)},
+      {k:'floatAtListing', t:'유통가능물량', r: x => x.floatAtListing != null
+        ? `${x.floatAtListing.toFixed(1)}%<div class="mu" style="font-size:12px">${x.totalShares ? fmt(Math.round(x.totalShares * x.floatAtListing / 100)) + '주' : ''}${x.float3m != null && x.float3m > x.floatAtListing ? ' · 3개월 ' + x.float3m.toFixed(1) + '%' : ''}</div>` : '<span class="mu">–</span>'},
       {k:'valMult', t:'적용 PER', r: x => x.valMult ? `${f2(x.valMult)}배${x.valMethod && x.valMethod !== 'PER' ? `<div class="mu" style="font-size:12px">${esc(x.valMethod)}</div>` : ''}` : '<span class="mu">–</span>'},
       {k:'discOffer', t:'공모할인율', r: x => x.discOffer != null ? `${f2(x.discOffer)}%${x.discBand ? `<div class="mu" style="font-size:12px">밴드 ${f2(x.discBand[0])}~${f2(x.discBand[1])}%</div>` : ''}`
         : x.discBand ? `<span class="mu" style="font-size:12px">밴드 ${f2(x.discBand[0])}~${f2(x.discBand[1])}%</span>` : '<span class="mu">–</span>'},
@@ -422,6 +434,35 @@ const TABS = {
       {k:'instComp', t:'기관경쟁률', r: x => x.instComp ? fmt(x.instComp) + ':1' : '–'},
     ],
     note: () => '수익률은 모두 공모가 대비 종가 기준입니다. 초일 = 상장일 종가, 1개월·3개월·6개월·1년 = 상장일로부터 그 기간이 지난 날(휴장이면 다음 거래일)의 종가. 아직 기간이 안 지났으면 ‘–’. 스팩합병은 공모가 대신 합병 기준가(합병가액)로 계산하고, 공모 시총 = 기준가 × 상장주식수입니다. 무상증자·액면분할은 수정주가로 맞췄습니다. 행을 누르면 상세가 열립니다.' },
+  data: { src: () => DATA.filter(x => !x.spac), sort: 'listed', yr: true, track: true, dl: true,
+    cols: [
+      {k:'name', t:'회사', l:1, r: x => `<span class="nm">${esc(x.name)}</span>${trackChip(x.track)}<span class="sc">${esc(x.market)} · ${esc(x.sector || '')}</span>`},
+      {k:'listed', t:'상장일', l:1},
+      {k:'uwMain', t:'주관사', l:1, r: x => esc(uwText(x))},
+      {k:'offer', t:'확정공모가', r: x => fmt(x.offer)},
+      {k:'bandHi', t:'희망밴드', r: x => x.band ? `${fmt(x.band[0])}~${fmt(x.band[1])}<div class="mu" style="font-size:12px">${esc(x.bandPos || '')}</div>` : '–'},
+      {k:'offerShares', t:'공모주식수', r: x => x.offerShares ? fmt(x.offerShares) : '–'},
+      {k:'offerAmount', t:'공모금액', r: x => eok(x.offerAmount)},
+      {k:'oldShareRatio', t:'신주 : 구주', r: x => x.oldShareRatio != null ? `${(100 - x.oldShareRatio).toFixed(0)} : ${(+x.oldShareRatio).toFixed(0)}` : '–'},
+      {k:'marcapAtOffer', t:'공모 시총', r: x => eok(x.marcapAtOffer)},
+      {k:'totalShares', t:'상장예정주식수', r: x => x.totalShares ? fmt(x.totalShares) : '–'},
+      {k:'floatAtListing', t:'유통 상장일', r: x => pc1(x.floatAtListing)},
+      {k:'float1m', t:'1개월', r: x => pc1(x.float1m)},
+      {k:'float3m', t:'3개월', r: x => pc1(x.float3m)},
+      {k:'float6m', t:'6개월', r: x => pc1(x.float6m)},
+      {k:'valMult', t:'평가 배수', r: x => x.valMult ? `${esc(x.valMethod || '')} ${f2(x.valMult)}배` : '–'},
+      {k:'impliedMult', t:'공모가 기준 배수', r: x => x.impliedMult ? f2(x.impliedMult) + '배' : '–'},
+      {k:'fairValue', t:'주당 평가가액', r: x => x.fairValue ? fmt(x.fairValue) : '–'},
+      {k:'discOffer', t:'공모할인율', r: x => x.discOffer != null ? `${f2(x.discOffer)}%${x.discBand ? `<div class="mu" style="font-size:12px">밴드 ${f2(x.discBand[0])}~${f2(x.discBand[1])}%</div>` : ''}` : '–'},
+      {k:'peerCount', t:'비교회사', l:1, r: x => (x.peers || []).length ? `<div class="peers" title="${esc(x.peers.map(p => p.n + ' ' + f2(p.v) + '배').join(', '))}">${x.peers.map(p => `<span>${esc(p.n)}</span>`).join('')}</div>` : '–'},
+      {k:'instComp', t:'기관경쟁률', r: x => x.instComp ? fmt(x.instComp) + ':1' : '–'},
+      {k:'commit', t:'의무확약', r: x => x.commit != null ? x.commit + '%' : '–'},
+      {k:'uwFee', t:'인수수수료', r: x => x.uwFee ? eok(x.uwFee) : '–'},
+      {k:'feeRate', t:'수수료율', r: x => x.feeRate != null ? f2(x.feeRate) + '%' : '–'},
+      {k:'putback', t:'환매청구권', r: x => x.putback == null ? '–' : x.putback ? '있음' : '없음'},
+      {k:'firstDayRet', t:'초일', r: x => pct(x.firstDayRet)},
+    ],
+    note: () => '직상장(공모) 회사의 증권신고서·DART 주요정보에서 모은 공모 데이터입니다. 유통 = 상장예정주식수 대비 유통가능물량 누적 비율. 공모할인율 = 1 − 확정공모가 ÷ 주당 평가가액. 공모가 기준 배수 = 평가 배수 × 확정공모가 ÷ 주당 평가가액. 수수료율 = 인수수수료 ÷ 공모금액(신고서에 금액이 없으면 본문 수수료율). 오른쪽 위 ‘엑셀로 받기’로 전체 열(비교회사별 배수 포함)을 내려받을 수 있습니다. 신고서를 아직 읽지 않은 회사는 매일 업데이트 때 채워집니다.' },
   withdrawn: { src: () => PIPE.withdrawn || [], sort: 'resultDate', yr: true, track: false,
     cols: [
       {k:'result', t:'결과', l:1, r: x => `<span class="tag ${/미승인/.test(x.result) ? 't-미승인' : 't-철회'}">${esc(x.result || '–')}</span>`},
@@ -439,7 +480,7 @@ function rowsFor(v){
   const T = TABS[v];
   const q = $('#q').value.trim().toLowerCase(), mk = $('#mk').value, yr = $('#yr').value, tr = $('#track').value;
   // 연도·월 필터 기준 날짜: 심사중=청구일, 승인·철회=결정일, 수요예측·청약=상장(예정)일→청약일→수요예측일, 상장완료=상장일
-  const dateOf = r => v === 'listed' ? r.listed : v === 'review' ? r.applied
+  const dateOf = r => (v === 'listed' || v === 'data') ? r.listed : v === 'review' ? r.applied
     : v === 'offering' ? (r.listDate || (r.sub || [])[0] || (r.demand || [])[0] || r.filed) : r.resultDate;
   let rows = T.src().filter(r =>
     (!q || [r.name, r.sector, r.product, r.uw, (r.underwriters || []).join(' '), r.uw38].join(' ').toLowerCase().includes(q)) &&
@@ -472,11 +513,12 @@ function renderList(){
   const sk = sortKey || T.sort;
   $('#head').innerHTML = T.cols.map(c => `<th class="${c.l ? 'l' : ''}" data-k="${c.k}">${c.t}${sk === c.k ? (sortDir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('');
   const rows = rowsFor(VIEW);
-  const key = VIEW === 'listed' ? 'code' : 'name';
+  const key = (VIEW === 'listed' || VIEW === 'data') ? 'code' : 'name';
   $('#body').innerHTML = rows.length
     ? rows.map(r => `<tr data-id="${esc(r[key])}">${T.cols.map(c => `<td class="${c.l ? 'l' : ''}">${c.r ? c.r(r) : esc(r[c.k] ?? '–')}</td>`).join('')}</tr>`).join('')
     : `<tr><td colspan="${T.cols.length}" class="empty">${emptyMsg(VIEW)}</td></tr>`;
   $('#tabnote').textContent = (T.note && T.note()) || '';
+  $('#dlBtn').hidden = !T.dl;
   $('#track').style.display = T.track ? '' : 'none';
   $('#af').style.display = VIEW === 'approved' ? '' : 'none';
   $('#how').style.display = VIEW === 'offering' ? 'none' : '';
@@ -831,7 +873,7 @@ function openUp(name){
     <h3>공모 일정·구조</h3>
     <div class="grid3">${s('수요예측', rng(x.demand))}${s('청약', rng(x.sub))}${s('상장예정', x.listDate || '미정')}
       ${s('희망밴드', x.band ? fmt(x.band[0]) + '~' + fmt(x.band[1]) : '–')}${s('확정공모가', fmt(x.offer))}${s('공모금액', eok(x.amount))}
-      ${s('공모주식수', x.shares ? fmt(x.shares) + '주' : '–')}${s('상장예정주식수', x.totalShares ? fmt(x.totalShares) + '주' : '–')}${s('공모 시총', eok(x.marcapAtOffer))}
+      ${s('공모주식수', x.shares ? fmt(x.shares) + '주' : '–')}${s('상장예정주식수', x.totalShares ? fmt(x.totalShares) + '주' : '–')}${s('공모 시총', mcapUp(x))}
       ${s('기관경쟁률', x.instComp ? fmt(x.instComp) + ':1' : '–')}${s('일반청약 경쟁률', x.subComp ? fmt(x.subComp) + ':1' : '–')}${s('의무보유확약', x.commit != null ? x.commit + '%' : '–')}${s('구주매출', x.oldShareRatio != null ? x.oldShareRatio + '%' : '–')}
       ${s('상장일 유통가능', x.floatAtListing != null ? x.floatAtListing.toFixed(1) + '%' : '–')}${s('환매청구권', x.putback == null ? '–' : x.putback ? '있음' : '없음')}
       ${s('주관사', esc((x.underwriters || []).join(', ') || x.uw || '–'))}</div>
@@ -848,6 +890,27 @@ function openUp(name){
   $('#dim').classList.add('on'); $('#drawer').classList.add('on'); $('#drawer').scrollTop = 0;
 }
 
+/* ---------- 공모 데이터 엑셀(CSV) 내려받기 ---------- */
+function downloadCsv(){
+  const rows = rowsFor('data');
+  const H = ['종목코드','회사','시장','상장트랙','업종','상장일','주관사','인수방법','확정공모가','밴드하단','밴드상단','공모가 결정','공모주식수','공모금액(원)',
+    '신주비율(%)','구주매출비율(%)','공모시총(원)','상장예정주식수','유통 상장일(%)','유통 1개월(%)','유통 3개월(%)','유통 6개월(%)','유통 1년(%)',
+    '평가방법','평가배수','공모가 기준 배수','주당 평가가액','공모할인율 확정(%)','공모할인율 밴드 하단(%)','공모할인율 밴드 상단(%)','비교회사(배수)',
+    '기관경쟁률','의무보유확약(%)','인수수수료(원)','인수수수료율(%)','환매청구권','초일 수익률(%)','1개월(%)','3개월(%)','6개월(%)','1년(%)','증권신고서'];
+  const q = v => v == null ? '' : /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
+  const lines = [H.join(',')].concat(rows.map(x => [x.code, x.name, x.market, x.track, x.sector, x.listed, uwText(x), x.uwMethod, x.offer,
+    x.band && x.band[0], x.band && x.band[1], x.bandPos, x.offerShares, x.offerAmount,
+    x.oldShareRatio != null ? +(100 - x.oldShareRatio).toFixed(1) : null, x.oldShareRatio, x.marcapAtOffer, x.totalShares,
+    x.floatAtListing, x.float1m, x.float3m, x.float6m, x.float1y, x.valMethod, x.valMult, x.impliedMult, x.fairValue, x.discOffer,
+    x.discBand && Math.min(...x.discBand), x.discBand && Math.max(...x.discBand), (x.peers || []).map(p => `${p.n}(${p.v})`).join(' / '),
+    x.instComp, x.commit, x.uwFee, x.feeRate, x.putback == null ? '' : x.putback ? '있음' : '없음',
+    x.firstDayRet, x.ret1m, x.ret3m, x.ret6m, x.ret1y, x.rcpNo ? 'https://dart.fss.or.kr/dsaf001/main.do?rcpNo=' + x.rcpNo : ''].map(q).join(',')));
+  const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `IPO_공모데이터_${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
+}
+$('#dlBtn').addEventListener('click', downloadCsv);
+
 /* ---------- 이벤트 ---------- */
 $('#head').addEventListener('click', e => {
   const k = e.target.closest('th')?.dataset.k; if (!k) return;
@@ -856,7 +919,7 @@ $('#head').addEventListener('click', e => {
 });
 $('#body').addEventListener('click', e => {
   const tr = e.target.closest('tr[data-id]'); if (!tr) return;
-  if (VIEW === 'listed') { $('#dUp').hidden = true; $('#dListed').hidden = false; openDetail(tr.dataset.id); }
+  if (VIEW === 'listed' || VIEW === 'data') { $('#dUp').hidden = true; $('#dListed').hidden = false; openDetail(tr.dataset.id); }
   else if (VIEW === 'offering') openUp(tr.dataset.id);
 });
 ['#q', '#mk', '#af', '#how', '#yr', '#mo', '#track', '#sOn', '#sMin', '#sMax', '#sDrop', '#sOffer', '#sRebound', '#sMa'].forEach(s => $(s).addEventListener('input', renderList));
@@ -871,11 +934,17 @@ Promise.all([
   fetch('data/pipeline.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
 ]).then(([d, p]) => {
   META = d; PIPE = p || {}; (PIPE.offering || []).forEach(x => x.valMult = x.valuation ? x.valuation.appliedMult : null);
-  DATA.forEach(x => x.peerCount = (x.peers || []).length || null);
   DATA = (d.items || []).map(x => ({ ...x, market: x.market || '코스닥' }));
+  DATA.forEach(x => {
+    x.peerCount = (x.peers || []).length || null;
+    x.feeRate = x.uwFeeRate ?? x.uwFeeRateDoc ?? null;
+    x.bandHi = x.band ? x.band[1] : null;
+    x.uwMain = uwText(x) || null;
+  });
   $('#meta').textContent = d.updated ? `마지막 업데이트 ${p.updated || d.updated} (KST)` : '아직 데이터가 없습니다.';
   $('#n-review').textContent = (PIPE.review || []).length; $('#n-approved').textContent = (PIPE.approved || []).filter(x => !x.after).length;
   $('#n-offering').textContent = (PIPE.offering || []).length; $('#n-listed').textContent = DATA.length;
+  $('#n-data').textContent = DATA.filter(x => !x.spac).length;
   $('#n-withdrawn').textContent = (PIPE.withdrawn || []).length;
   const tracks = [...new Set([...DATA, ...(PIPE.offering || [])].map(x => x.track).filter(Boolean))].sort();
   $('#track').innerHTML = '<option value="">상장트랙 전체</option>' + tracks.map(t => `<option>${esc(t)}</option>`).join('');
