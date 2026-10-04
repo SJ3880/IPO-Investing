@@ -164,6 +164,67 @@ def peers_from_grid(g):
     return best
 
 
+# ---------------- 최종 비교회사: 적용 배수(평균)가 적힌 칸에서 거꾸로 찾기 ----------------
+def peers_by_applied(g, applied):
+    """표 안에서 '적용 배수(=최종 비교회사 평균)' 값이 적힌 칸을 찾고, 같은 열(세로형) 또는 같은 행(가로형)의
+    다른 배수들 중 평균이 그 값과 맞는 회사들 = 최종 비교회사. 1·2차 후보 표는 평균이 안 맞아서 걸러진다."""
+    if not g or not applied:
+        return None
+    best = None
+    H, W = len(g), max(len(r) for r in g)
+    for i in range(H):
+        for j in range(len(g[i])):
+            v = _multiple(g[i][j])
+            if v is None or abs(v - applied) > max(0.006, applied * 0.002):
+                continue
+            cands = []
+            # 세로형: 같은 열의 위쪽 행들, 이름은 그 행의 앞쪽 칸
+            col = []
+            for k in range(H):
+                if k == i or j >= len(g[k]):
+                    continue
+                x = _multiple(g[k][j])
+                nm = next((c for c in g[k][:j] if _is_name(c)), None)
+                if x is not None and nm:
+                    col.append({"name": _name(nm), "v": x})
+            cands.append(col)
+            # 가로형: 같은 행의 다른 칸, 이름은 그 열의 위쪽 행
+            row = []
+            for l in range(len(g[i])):
+                if l == j:
+                    continue
+                x = _multiple(g[i][l])
+                nm = next((g[k][l] for k in range(i - 1, -1, -1) if l < len(g[k]) and _is_name(g[k][l])), None)
+                if x is not None and nm:
+                    row.append({"name": _name(nm), "v": x})
+            cands.append(row)
+            for c in cands:
+                seen, u = set(), []
+                for p in c:
+                    if p["name"] not in seen and p["name"] != _name(g[i][0]):
+                        seen.add(p["name"])
+                        u.append(p)
+                if len(u) < 2:
+                    continue
+                m = sum(p["v"] for p in u) / len(u)
+                if abs(m - applied) / applied <= 0.03 and (not best or len(u) > len(best)):
+                    best = u
+    return best
+
+
+def peers_from_text(plain, pool, applied):
+    """본문 '최종 … 선정' 문장에 나온 회사만 남겨서 평균이 맞으면 그 회사들"""
+    if not pool or not applied:
+        return None
+    f = re.sub(r"\s+", " ", plain)
+    for m in re.finditer(r"최종[^.。]{0,400}", f):
+        w = m.group(0)
+        hit = [p for p in pool if p["name"] and p["name"] in w]
+        if len(hit) >= 2 and abs(sum(p["v"] for p in hit) / len(hit) - applied) / applied <= 0.03:
+            return hit
+    return None
+
+
 # ---------------- 공모가 산정 근거가 있는 구간 ----------------
 def _section_from(xml_text, st, limit=1500000):
     rest = xml_text[st: st + limit]
@@ -332,6 +393,24 @@ def valuation_info(xml_text):
             sc += 1
         return sc
     peer = max(found, key=score) if found else None
+    # 최종 비교회사만: 적용 배수와 평균이 맞는 표를 우선. 안 맞으면 '적용 배수 칸'에서 거꾸로, 그다음 '최종 선정' 문장으로
+    if applied and not (peer and score(peer) >= 4):
+        fin = None
+        for g in grids:
+            fin = peers_by_applied(g, applied)
+            if fin:
+                break
+        if not fin:
+            pool = {}
+            for p in found:
+                for q in p["peers"]:
+                    pool.setdefault(q["name"], q)
+            fin = peers_from_text(plain, list(pool.values()), applied)
+        if fin:
+            peer = {"mult": s.get("appliedMult") or (peer or {}).get("mult"), "peers": fin, "avg": applied,
+                    "final": True, "mean": sum(x["v"] for x in fin) / len(fin)}
+        elif peer:
+            peer = None                     # 평균이 적용 배수와 안 맞는 표 = 1·2차 후보일 가능성 → 보여주지 않음
 
     out = {"method": s.get("appliedMult") or (peer["mult"] if peer else None),
            "appliedMult": applied if applied is not None else (round(peer["mean"], 2) if peer and score(peer) >= 4 else
@@ -342,6 +421,9 @@ def valuation_info(xml_text):
            "peerChecked": bool(peer and score(peer) >= 4)}
     disc = s.get("disc")
     fair, band = out["fairValue"], out["bandDoc"]
+    if fair and band and fair < band[0] * 0.9:          # '주당 평가가액'을 엉뚱한 숫자(단위 칸 등)로 읽은 경우
+        ok = [d for d in (disc or []) if 0 < d < 80]
+        fair = out["fairValue"] = round(band[1] / (1 - min(ok) / 100)) if ok else None
     if disc:
         disc = sorted(d for d in disc if 0 <= d < 80)
     if not disc and fair and band:                      # 표에 없으면 직접 계산

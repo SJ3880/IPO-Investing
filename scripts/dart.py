@@ -230,10 +230,16 @@ class Dart:
         num = lambda s: int(re.sub(r"[^\d]", "", str(s)) or 0)
         out = {}
         kinds = g.get("증권의종류") or []
-        if kinds:
-            k = kinds[-1]
-            out["shares"] = num(k.get("stkcnt"))
-            out["amount"] = num(k.get("slta"))
+        sell_rows = 0
+        if kinds:                                   # 모집(신주)·매출(구주)이 따로 줄로 올 수 있어 최근 신고서의 줄을 모두 더한다
+            last = max(x.get("rcept_no", "") for x in kinds)
+            rows = [x for x in kinds if x.get("rcept_no", "") == last] or kinds[-1:]
+            cnts = [num(k.get("stkcnt")) for k in rows]
+            if len(rows) > 2 and max(cnts) == sum(cnts) - max(cnts):      # '합계' 줄이 섞여 있으면 그 줄만
+                rows = [rows[cnts.index(max(cnts))]]
+            out["shares"] = sum(num(k.get("stkcnt")) for k in rows)
+            out["amount"] = sum(num(k.get("slta")) for k in rows)
+            sell_rows = sum(num(k.get("stkcnt")) for k in rows if "매출" in str(k.get("slmthn") or "") and "모집" not in str(k.get("slmthn") or ""))
         uw = g.get("인수인정보") or []
         if uw:
             last_rcp = max(x.get("rcept_no", "") for x in uw)
@@ -269,8 +275,12 @@ class Dart:
             last_rcp = max(x.get("rcept_no", "") for x in sellers)
             old = sum(num(x.get("slstk")) for x in sellers if x.get("rcept_no", "") == last_rcp)
             out["oldShareRatio"] = round(old / out["shares"] * 100, 1) if old else 0.0
+        elif sell_rows and out.get("shares"):
+            out["oldShareRatio"] = round(sell_rows / out["shares"] * 100, 1)
         else:
             out["oldShareRatio"] = 0.0 if out.get("shares") else None
+        if out.get("oldShareRatio") is not None:
+            out["oldShareRatio"] = min(100.0, out["oldShareRatio"])
         uses = g.get("자금의사용목적") or []
         if uses:
             last_rcp = max(x.get("rcept_no", "") for x in uses)

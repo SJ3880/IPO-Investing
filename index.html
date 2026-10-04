@@ -399,6 +399,8 @@ const peerCell = x => {
   return `<span class="peerx" data-code="${esc(x.code)}">${head}${p.length > 2 ? ` 등 <b>${p.length}개사</b>` : ''}</span>`;
 };
 const uwText = x => (x.underwriters && x.underwriters.length ? x.underwriters.join(', ') : x.uw38) || '';
+const fmtR = v => (Math.round(v * 10) / 10).toString();
+const man = n => n >= 1e4 ? (Math.round(n / 1e3) / 10).toLocaleString('ko-KR') + '만주' : Math.round(n).toLocaleString('ko-KR') + '주';
 const pc1 = v => v != null ? (+v).toFixed(1) + '%' : '<span class="mu">–</span>';
 const hz = (x, k) => x[k] != null ? pct(x[k]) : '<span class="mu">–</span>';
 
@@ -449,6 +451,8 @@ const TABS = {
       {k:'listed', t:'상장일', l:1, r: x => `${x.listed}<div class="mu" style="font-size:12px">D+${x.days}</div>`},
       {k:'offer', t:'공모가', r: x => x.offer ? fmt(x.offer) + (x.spac ? '<div class="mu" style="font-size:12px">합병 기준가</div>' : '') : '–'},
       {k:'marcapAtOffer', t:'공모 시총', r: x => eok(x.marcapAtOffer)},
+      {k:'newRatio', t:'신주 : 구주', r: x => x.newRatio == null ? '<span class="mu">–</span>'
+        : `${fmtR(x.newRatio)} : ${fmtR(100 - x.newRatio)}${x.offerShares ? `<div class="mu" style="font-size:12px">${x.oldShareRatio > 0 ? `신주 ${man(x.offerShares * x.newRatio / 100)} · 구주 ${man(x.offerShares * x.oldShareRatio / 100)}` : `신주 ${man(x.offerShares)}`}</div>` : ''}`},
       {k:'floatAtListing', t:'유통가능물량', r: x => x.floatAtListing != null
         ? `${x.floatAtListing.toFixed(1)}%<div class="mu" style="font-size:12px">${x.totalShares ? fmt(Math.round(x.totalShares * x.floatAtListing / 100)) + '주' : ''}${x.float3m != null && x.float3m > x.floatAtListing ? ' · 3개월 ' + x.float3m.toFixed(1) + '%' : ''}</div>` : '<span class="mu">–</span>'},
       {k:'valMult', t:'적용 PER', r: x => x.valMult ? `${f2(x.valMult)}배${x.valMethod && x.valMethod !== 'PER' ? `<div class="mu" style="font-size:12px">${esc(x.valMethod)}</div>` : ''}` : '<span class="mu">–</span>'},
@@ -981,7 +985,8 @@ Promise.all([
   DATA = (d.items || []).map(x => ({ ...x, market: x.market || '코스닥' }));
   DATA.forEach(x => {
     x.peerCount = (x.peers || []).length || null;
-    x.feeRate = x.uwFeeRateDoc ?? x.uwFeeRate ?? null;   // 신고서 '인수수수료' 표의 수수료율 우선
+    x.feeRate = x.uwFeeRateDoc ?? x.uwFeeRate ?? null;
+    x.newRatio = x.spac || x.oldShareRatio == null ? null : 100 - x.oldShareRatio;   // 신고서 '인수수수료' 표의 수수료율 우선
     x.bandHi = x.band ? x.band[1] : null;
     x.uwMain = uwText(x) || null;
   });

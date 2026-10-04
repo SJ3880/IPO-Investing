@@ -103,6 +103,7 @@ def fetch_listings(since: date) -> pd.DataFrame:
         df["market"] = label
         frames.append(df)
     df = pd.concat(frames, ignore_index=True)
+    df = df.drop_duplicates(subset=["종목코드"]) if "종목코드" in df.columns else df   # 같은 종목이 두 번 오는 경우
     df = df.rename(columns={"회사명": "name", "종목코드": "code", "업종": "sector",
                             "주요제품": "product", "상장일": "listed"})
     df["code"] = df["code"].astype(str).str.zfill(6)
@@ -639,6 +640,46 @@ def horizon_returns(bars, listed, base):
     return out
 
 
+SNAP = (1.5, 2, 2.5, 3, 4, 5, 6, 10, 20)
+
+
+def fix_adj(it, det, so, dt=None):
+    """38에 시초가가 없어 수정주가 비율(adj)을 못 구한 종목: 상장 당시 주식수 대비 지금 주식수가
+    무상증자·액면분할 배수(2배, 3배…)와 딱 맞고, 그대로 두면 시초가가 공모가의 상·하한을 벗어나면 그 배수로 맞춘다."""
+    ts = det.get("totalShares")
+    if it.get("adjSrc") != "none" or not ts or not so or not it.get("offer"):
+        return
+    r = so / ts
+    k = next((x for x in SNAP if abs(r / x - 1) < 0.05), None)
+    if not k:
+        return
+    adj = 1 / k
+    ratio_now = it["openAdj"] / it["offer"]              # 지금(조정 없이) 시초가/공모가
+    ratio_new = it["openAdj"] / (it["offer"] * adj)
+    if not (0.6 <= ratio_new <= 4.0):
+        return
+    if 0.6 <= ratio_now <= 4.0:                           # 둘 다 그럴듯하면 DART에 무상증자·주식분할 공시가 있을 때만
+        if det.get("splitEvidence") is None and dt:
+            try:
+                corp = dt.corp_code(it["code"])
+                rows = dt.filings(corp, date.fromisoformat(it["listed"]), date.today()) if corp else []
+                det["splitEvidence"] = any(any(w in r["report_nm"] for w in ("무상증자결정", "주식분할결정", "액면분할"))
+                                           for r in rows)
+            except Exception:
+                return
+        if not det.get("splitEvidence"):
+            return
+    try:
+        bars = json.loads((PRICES / f"{it['code']}.json").read_text("utf-8"))
+    except Exception:
+        return
+    oa = it["offer"] * adj
+    it.update({"adj": round(adj, 4), "offerAdj": round(oa), "adjSrc": "주식수",
+               "open": round(bars[0][1] / adj), "firstClose": round(bars[0][4] / adj),
+               "retVsOffer": pct(it["price"], oa), "openVsOffer": pct(bars[0][1], oa),
+               "firstDayRet": pct(bars[0][4], oa), **horizon_returns(bars, date.fromisoformat(it["listed"]), oa)})
+
+
 def pct(a, b):
     if a is None or b in (None, 0):
         return None
@@ -646,6 +687,22 @@ def pct(a, b):
 
 
 # ---------------------------------------------------------------- 4. DART 상세
+VAL_VER = 2   # 비교회사 판별 방식 버전(최종 비교회사만)
+
+
+def peers_bad(det):
+    """예전 방식으로 읽은 비교회사가 '최종'이 아닐 수 있으면(평균 ≠ 적용 배수) 신고서를 다시 읽는다(한 번만)"""
+    if det.get("valVer", 1) >= VAL_VER:
+        return False
+    v = det.get("valuation") or {}
+    ps, am = v.get("peers") or [], v.get("appliedMult")
+    if not am:
+        return False
+    if not ps:
+        return True
+    return abs(sum(p["v"] for p in ps) / len(ps) - am) / am > 0.03
+
+
 def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, light=True):
     """det(기존 상세)를 갱신. 무거운 작업(문서 파싱·요약)은 한 번만."""
     corp = dt.corp_code(code)
@@ -654,7 +711,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
         return ai_budget
     tried = det.get("dartTried")
     retry = not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
-    reparse = det.get("dartDone") and det.get("rcpNo") and det.get("parseVer", 1) < PARSE_VER
+    reparse = det.get("dartDone") and det.get("rcpNo") and (det.get("parseVer", 1) < PARSE_VER or peers_bad(det))
     need_doc = heavy and (retry or reparse)
     if need_doc:
         det["dartTried"] = date.today().isoformat()
@@ -670,6 +727,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
                 det["floatAtListing"] = info["floatAtListing"]
                 det["discountRate"] = info.get("discountRate")
                 det["valuation"] = info.get("valuation")
+                det["valVer"] = VAL_VER
                 det["totalShares"] = info["totalShares"]
                 det["trackEvidence"] = info["trackEvidence"]
                 det["parseVer"] = PARSE_VER
@@ -679,7 +737,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
                     det[k] = info.get(k)
                 if not spac:
                     det.update(dt.estk(corp, listed))
-                    det["estkVer"] = 2
+                    det["estkVer"] = 3
                 det["dartDone"] = True
                 det["dartStatus"] = "ok"
             else:
@@ -705,10 +763,10 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
         det["summaryAI"] = False
     if not light:
         return ai_budget
-    if det.get("dartDone") and not spac and det.get("estkVer") != 2:   # 인수수수료 등 주요정보만 한 번 더(빠름)
+    if det.get("dartDone") and not spac and det.get("estkVer") != 3:   # 인수수수료 등 주요정보만 한 번 더(빠름)
         try:
             det.update(dt.estk(corp, listed))
-            det["estkVer"] = 2
+            det["estkVer"] = 3
         except Exception as e:
             log(f"  - {name} 주요정보 실패: {e}")
     det["disclosures"], det["events"] = dt.recent_disclosures(corp)
@@ -895,6 +953,7 @@ def main():
             "open": (m38 or {}).get("open") or round(bars[0][1] / adj),
             "firstClose": (m38 or {}).get("firstClose") or round(bars[0][4] / adj),
             "openAdj": bars[0][1], "price": price, "asOf": bars[-1][0],
+            "adjSrc": "spac" if sp else ("38" if (m38 or {}).get("open") else "none"),
             "retVsOpen": pct(price, bars[0][1]), "retVsOffer": pct(price, offer_adj),
             "openVsOffer": pct(bars[0][1], offer_adj),
             "peak": peak, "fromPeak": pct(price, peak),
@@ -1024,10 +1083,17 @@ def main():
         # 공모가 산정 근거(증권신고서 'Ⅳ. 인수인의 의견') → 상장완료 표에 바로 보이도록 요약
         v = det.get("valuation") or {}
         fair = v.get("fairValue")
+        disc_b = v.get("discountRange")
+        bd = it.get("band") or v.get("bandDoc")
+        if fair and bd and fair < bd[0] * 0.9:             # 평가가액을 잘못 읽은 경우(예: 14원) → 할인율·밴드로 다시 계산
+            ok_disc = [x for x in (disc_b or []) if 0 < x < 80]
+            fair = round(bd[1] / (1 - min(ok_disc) / 100)) if ok_disc else None
+        if disc_b and any(x < 0 or x >= 80 for x in disc_b):
+            disc_b = None
         it["valMethod"] = v.get("method")
         it["valMult"] = v.get("appliedMult")
         it["fairValue"] = fair
-        it["discBand"] = v.get("discountRange")
+        it["discBand"] = disc_b
         it["discOffer"] = round((1 - it["offer"] / fair) * 100, 1) if fair and it.get("offer") and not it.get("spac") else None
         it["peers"] = [{"n": x["name"], "v": x["v"]} for x in (v.get("peers") or [])]
         it["trackManual"] = it["code"] in manual_tracks
@@ -1061,9 +1127,16 @@ def main():
                 det["marketAt"] = it["asOf"]
                 det["sharesAdj"] = it.get("adj")
         so = det.get("sharesOut")
+        if so and det.get("totalShares") and det["totalShares"] > so * 3:   # 상장예정주식수를 잘못 읽은 경우
+            det["totalShares"] = None
+            it["totalShares"] = None
+        fix_adj(it, det, so, dt)
         if so and it.get("price"):
             it["marcapNum"] = round(so * it["price"])
-            it["marcapAtOffer"] = round(so * (it.get("offerAdj") or it["offer"])) if it.get("offer") else None
+        ts = it.get("totalShares") or det.get("totalShares")
+        if it.get("offer"):                                   # 공모 시총 = 상장 당시 주식수 × 공모가(없으면 지금 주식수 × 수정 공모가)
+            it["marcapAtOffer"] = round(ts * it["offer"]) if ts and not it.get("spac") else (
+                round(so * (it.get("offerAdj") or it["offer"])) if so else None)
         fin = det.get("fin") or {}
         it["opLoss"] = fin.get("op") is not None and fin["op"] < 0
         it["mezz"] = any(e.get("tag") == "메자닌(CB·BW·EB)" for e in det.get("events") or [])
