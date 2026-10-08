@@ -2,9 +2,12 @@
  "0017J0": {
   "mergeDate": "2026-06-10",
   "adj": 1.0,
-  "rcpNo": "20260331004551",
-  "baseTried": "2026-10-01",
-  "mdSrc": "KIND"
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20260331002781",
+  "baseTried": "2026-10-08",
+  "base": 4512,
+  "baseSrc": "증권신고서(합병) 합병가액"
  },
  "288180": {
   "mergeDate": "2026-05-19",
@@ -27,9 +30,12 @@
  "493330": {
   "mergeDate": "2026-01-14",
   "adj": 1.0,
-  "rcpNo": "20251024000215",
-  "baseTried": "2026-10-01",
-  "mdSrc": "KIND"
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20251023000422",
+  "baseTried": "2026-10-08",
+  "base": 12584,
+  "baseSrc": "증권신고서(합병) 합병가액"
  },
  "012210": {
   "mergeDate": "2025-12-29",
@@ -106,9 +112,10 @@
  "462310": {
   "mergeDate": "2025-07-09",
   "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
   "rcpNo": "20250407002904",
-  "baseTried": "2026-10-01",
-  "mdSrc": "KIND"
+  "baseTried": "2026-10-08"
  },
  "188040": {
   "mergeDate": "2025-05-16",
@@ -283,9 +290,10 @@
  "140430": {
   "mergeDate": "2024-05-03",
   "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
   "rcpNo": "20240215000683",
-  "baseTried": "2026-10-01",
-  "mdSrc": "KIND"
+  "baseTried": "2026-10-08"
  },
  "199550": {
   "mergeDate": "2024-02-01",
@@ -299,16 +307,20 @@
  "443670": {
   "mergeDate": "2024-02-15",
   "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
   "rcpNo": "20231116000510",
-  "baseTried": "2026-10-01",
-  "mdSrc": "KIND"
+  "baseTried": "2026-10-08"
  },
  "362990": {
   "mergeDate": "2024-01-25",
   "adj": 1.0,
-  "rcpNo": "20231108000561",
-  "baseTried": "2026-10-01",
-  "mdSrc": "KIND"
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20231108000537",
+  "baseTried": "2026-10-08",
+  "base": 27256,
+  "baseSrc": "증권신고서(합병) 합병가액"
  },
  "188260": {
   "mergeDate": "2023-11-03",
@@ -375,16 +387,18 @@
  "146060": {
   "mergeDate": "2023-09-08",
   "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
   "rcpNo": "20230609000076",
-  "baseTried": "2026-10-01",
-  "mdSrc": "KIND"
+  "baseTried": "2026-10-08"
  },
  "318160": {
   "mergeDate": "2023-04-20",
   "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
   "rcpNo": "20230126000026",
-  "baseTried": "2026-10-01",
-  "mdSrc": "KIND"
+  "baseTried": "2026-10-08"
  },
  "271830": {
   "mergeDate": "2023-05-23",
@@ -501,9 +515,10 @@
  "419540": {
   "mergeDate": "2022-10-18",
   "adj": 1.0,
-  "rcpNo": "20220803000285",
-  "baseTried": "2026-10-01",
-  "mdSrc": "KIND"
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20220715000167",
+  "baseTried": "2026-10-08"
  },
  "323280": {
   "mergeDate": "2022-06-30",
