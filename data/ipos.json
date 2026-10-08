@@ -127,7 +127,8 @@
    "marcapAtOffer": 221591155500,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "266690",
@@ -239,7 +240,8 @@
    "marcapAtOffer": 275590198600,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "486510",
@@ -359,7 +361,8 @@
    "marcapAtOffer": 195830670000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0035S0",
@@ -466,7 +469,8 @@
    "marcapAtOffer": 184867398000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "0010S0",
@@ -569,7 +573,8 @@
    "marcapAtOffer": 120048360000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0161M0",
@@ -685,7 +690,8 @@
    "marcapAtOffer": 121958450000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "386380",
@@ -803,7 +809,8 @@
    "marcapAtOffer": 187419770000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0155E0",
@@ -917,7 +924,8 @@
    "marcapAtOffer": 126894450000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "417030",
@@ -1022,7 +1030,8 @@
    "marcapAtOffer": 237785182000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "282620",
@@ -1143,7 +1152,8 @@
    "marcapAtOffer": 165961278800,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "950260",
@@ -1262,7 +1272,8 @@
    "marcapAtOffer": 593269332000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "487400",
@@ -1375,7 +1386,8 @@
    "marcapAtOffer": 112869702000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "483350",
@@ -1492,7 +1504,8 @@
    "marcapAtOffer": 152998720000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0156T0",
@@ -1618,7 +1631,8 @@
    "marcapAtOffer": 166927161000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "387690",
@@ -1736,7 +1750,8 @@
    "marcapAtOffer": 157853873700,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "365660",
@@ -1819,7 +1834,7 @@
      "v": 12.15
     },
     {
-     "n": "이지케어텍 주3)",
+     "n": "이지케어텍",
      "v": 38.82
     }
    ],
@@ -1850,7 +1865,8 @@
    "marcapAtOffer": 133515590000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0039P0",
@@ -1976,7 +1992,8 @@
    "marcapAtOffer": 149974400000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "475040",
@@ -2094,7 +2111,8 @@
    "marcapAtOffer": 638982552000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "153890",
@@ -2208,7 +2226,8 @@
    "marcapAtOffer": 150628812500,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0017J0",
@@ -2410,7 +2429,8 @@
    "marcapAtOffer": 304763166500,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "477850",
@@ -2540,7 +2560,8 @@
    "marcapAtOffer": 263310360000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "288180",
@@ -2739,7 +2760,8 @@
    "marcapAtOffer": 125914305000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "439960",
@@ -2869,7 +2891,8 @@
    "marcapAtOffer": 192653436000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0011T0",
@@ -2969,11 +2992,11 @@
    "discOffer": 40.0,
    "peers": [
     {
-     "n": "Fastned BV 주2)",
+     "n": "Fastned BV",
      "v": 17.4
     },
     {
-     "n": "Qingdao TGOOD Electric 주3)",
+     "n": "Qingdao TGOOD Electric",
      "v": 23.5
     },
     {
@@ -2981,7 +3004,7 @@
      "v": 24.3
     },
     {
-     "n": "Shenzhen Sinexcel Electric 주3)",
+     "n": "Shenzhen Sinexcel Electric",
      "v": 30.9
     }
    ],
@@ -3015,7 +3038,8 @@
    "marcapAtOffer": 586651944000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0010F0",
@@ -3223,7 +3247,8 @@
    "marcapAtOffer": 130570852400,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "394420",
@@ -3349,7 +3374,8 @@
    "marcapAtOffer": 119353278000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0088M0",
@@ -3463,7 +3489,8 @@
    "marcapAtOffer": 213864213600,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "408470",
@@ -3589,7 +3616,8 @@
    "marcapAtOffer": 200868000000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "493280",
@@ -3711,7 +3739,8 @@
    "marcapAtOffer": 384547280000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0082N0",
@@ -3833,7 +3862,8 @@
    "marcapAtOffer": 259320600000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0011A0",
@@ -3947,7 +3977,8 @@
    "marcapAtOffer": 107338010000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "458350",
@@ -4064,7 +4095,8 @@
    "marcapAtOffer": 73807200000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "279570",
@@ -4180,7 +4212,8 @@
    "marcapAtOffer": 3367269753300,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "0001A0",
@@ -4297,7 +4330,8 @@
    "marcapAtOffer": 248088420000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "493330",
@@ -4582,7 +4616,8 @@
    "marcapAtOffer": 809194056000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "012210",
@@ -4794,7 +4829,8 @@
    "marcapAtOffer": 535822430000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0013V0",
@@ -4907,7 +4943,8 @@
    "marcapAtOffer": 75381785600,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "476830",
@@ -5033,7 +5070,8 @@
    "marcapAtOffer": 309833527500,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "478340",
@@ -5147,7 +5185,8 @@
    "marcapAtOffer": 190020451500,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0007C0",
@@ -5269,7 +5308,8 @@
    "marcapAtOffer": 148649319000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "217590",
@@ -5378,7 +5418,8 @@
    "marcapAtOffer": 224076292500,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "464490",
@@ -5496,7 +5537,8 @@
    "marcapAtOffer": 170121645000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "261520",
@@ -5614,7 +5656,8 @@
    "marcapAtOffer": 143271300000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0015S0",
@@ -5736,7 +5779,8 @@
    "marcapAtOffer": 149772315000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "950250",
@@ -5840,7 +5884,8 @@
    "marcapAtOffer": 284141848000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0009K0",
@@ -5966,7 +6011,8 @@
    "marcapAtOffer": 705717771000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0015N0",
@@ -6088,7 +6134,8 @@
    "marcapAtOffer": 101720400000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "488900",
@@ -6211,7 +6258,8 @@
    "marcapAtOffer": 199937456700,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "388210",
@@ -6329,7 +6377,8 @@
    "marcapAtOffer": 561183903500,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "403850",
@@ -6459,7 +6508,8 @@
    "marcapAtOffer": 545338380000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "459550",
@@ -6666,7 +6716,8 @@
    "marcapAtOffer": 187240656000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "061090",
@@ -6787,7 +6838,8 @@
    "marcapAtOffer": 316789163200,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "494120",
@@ -6859,20 +6911,7 @@
     39.05
    ],
    "discOffer": 25.5,
-   "peers": [
-    {
-     "n": "88.99USD",
-     "v": 27.1
-    },
-    {
-     "n": "1,246.36USD",
-     "v": 27.1
-    },
-    {
-     "n": "3,317백만원",
-     "v": 27.1
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": 50.1,
    "float3m": 62.57,
@@ -6900,7 +6939,8 @@
    "marcapAtOffer": 167905865484,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "469610",
@@ -7022,7 +7062,8 @@
    "marcapAtOffer": 130490430000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "486990",
@@ -7140,7 +7181,8 @@
    "marcapAtOffer": 192573108000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "014950",
@@ -7344,7 +7386,8 @@
    "marcapAtOffer": 846800000000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "488280",
@@ -7437,10 +7480,6 @@
     {
      "n": "엠로",
      "v": 30.41
-    },
-    {
-     "n": "안랩",
-     "v": 20.04
     }
    ],
    "trackManual": false,
@@ -7470,7 +7509,8 @@
    "marcapAtOffer": 139761019200,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "342870",
@@ -7672,7 +7712,8 @@
    "marcapAtOffer": 165590205000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "397810",
@@ -7888,7 +7929,8 @@
    "marcapAtOffer": 102108000000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "125490",
@@ -7993,7 +8035,8 @@
    "marcapAtOffer": 211850898600,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "0008Z0",
@@ -8115,7 +8158,8 @@
    "marcapAtOffer": 283208040000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "484590",
@@ -8236,7 +8280,8 @@
    "marcapAtOffer": 317320465000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "446840",
@@ -8444,7 +8489,8 @@
    "marcapAtOffer": 311418530000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "309710",
@@ -8531,20 +8577,12 @@
      "v": 31.24
     },
     {
-     "n": "파미셀",
-     "v": 37.78
-    },
-    {
      "n": "켐트로스",
      "v": 23.71
     },
     {
      "n": "폴라리스AI파마",
      "v": 14.17
-    },
-    {
-     "n": "제이아이테크",
-     "v": 9.57
     }
    ],
    "trackManual": false,
@@ -8574,7 +8612,8 @@
    "marcapAtOffer": 202586316100,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "439260",
@@ -8707,7 +8746,8 @@
    "marcapAtOffer": 1926315600000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "468530",
@@ -8829,7 +8869,8 @@
    "marcapAtOffer": 150981110000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "475230",
@@ -8963,7 +9004,8 @@
    "marcapAtOffer": 219136575000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "380550",
@@ -9077,7 +9119,8 @@
    "marcapAtOffer": 160664490000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "484120",
@@ -9203,7 +9246,8 @@
    "marcapAtOffer": 344328128000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "331740",
@@ -9325,7 +9369,8 @@
    "marcapAtOffer": 210532784000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "0030R0",
@@ -9618,7 +9663,8 @@
    "marcapAtOffer": 110943500000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "463020",
@@ -9730,7 +9776,8 @@
    "marcapAtOffer": 133188000000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "388610",
@@ -9848,7 +9895,8 @@
    "marcapAtOffer": 79953347700,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "455180",
@@ -10045,7 +10093,8 @@
    "marcapAtOffer": 248499993000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "474650",
@@ -10163,7 +10212,8 @@
    "marcapAtOffer": 128317736000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "475430",
@@ -10276,7 +10326,8 @@
    "marcapAtOffer": 64253196000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "287840",
@@ -10398,7 +10449,8 @@
    "marcapAtOffer": 252094598000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "483650",
@@ -10520,7 +10572,8 @@
    "marcapAtOffer": 800218789500,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "489460",
@@ -10650,7 +10703,8 @@
    "marcapAtOffer": 136904313000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "424870",
@@ -10764,7 +10818,8 @@
    "marcapAtOffer": 262815512400,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "188040",
@@ -10850,7 +10905,8 @@
    "marcapAtOffer": 63066714952,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "125020",
@@ -11057,7 +11113,8 @@
    "marcapAtOffer": 137891369000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "476040",
@@ -11179,7 +11236,8 @@
    "marcapAtOffer": 136624950000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "136150",
@@ -11297,7 +11355,8 @@
    "marcapAtOffer": 113143905000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "459510",
@@ -11416,7 +11475,8 @@
    "marcapAtOffer": 85332860000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "364950",
@@ -11632,7 +11692,8 @@
    "marcapAtOffer": 130883025000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "448900",
@@ -11727,16 +11788,8 @@
      "v": 5.87
     },
     {
-     "n": "삼기",
-     "v": 6.75
-    },
-    {
      "n": "씨티알모빌리티",
      "v": 11.64
-    },
-    {
-     "n": "대동전자",
-     "v": 28.42
     },
     {
      "n": "케이에이치필룩스",
@@ -11753,10 +11806,6 @@
     {
      "n": "에스코넥",
      "v": 7.82
-    },
-    {
-     "n": "모베이스",
-     "v": 2.21
     },
     {
      "n": "장원테크",
@@ -11802,7 +11851,8 @@
    "marcapAtOffer": 67250232000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "481070",
@@ -11915,7 +11965,8 @@
    "marcapAtOffer": 226560000000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "101970",
@@ -11971,16 +12022,7 @@
    "fairValue": 11,
    "discBand": null,
    "discOffer": null,
-   "peers": [
-    {
-     "n": "(주3)",
-     "v": 9.4
-    },
-    {
-     "n": "K-IFRS 연결",
-     "v": 9.4
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": null,
    "float3m": null,
@@ -12005,7 +12047,8 @@
    "marcapAtOffer": 182504042028,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "462860",
@@ -12118,7 +12161,8 @@
    "marcapAtOffer": 212054202000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "444530",
@@ -12236,7 +12280,8 @@
    "marcapAtOffer": 92031705000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "484810",
@@ -12357,7 +12402,8 @@
    "marcapAtOffer": 208587352500,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "098070",
@@ -12466,7 +12512,8 @@
    "marcapAtOffer": 120180445200,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "480370",
@@ -12580,7 +12627,8 @@
    "marcapAtOffer": 164022915000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "031210",
@@ -12701,7 +12749,8 @@
    "marcapAtOffer": 1815361548000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "226590",
@@ -12815,7 +12864,8 @@
    "marcapAtOffer": 88240996400,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "460870",
@@ -13018,7 +13068,8 @@
    "marcapAtOffer": 133171380000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "435570",
@@ -13221,7 +13272,8 @@
    "marcapAtOffer": 131839176000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "463480",
@@ -13339,7 +13391,8 @@
    "marcapAtOffer": 74342148000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "303810",
@@ -13477,7 +13530,8 @@
    "marcapAtOffer": 143928630000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "475830",
@@ -13591,7 +13645,8 @@
    "marcapAtOffer": 418582360000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "240550",
@@ -13717,7 +13772,8 @@
    "marcapAtOffer": 216162870000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "212710",
@@ -13839,7 +13895,8 @@
    "marcapAtOffer": 102594049200,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "064400",
@@ -13954,7 +14011,8 @@
    "marcapAtOffer": 5997240181200,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "452450",
@@ -14068,7 +14126,8 @@
    "marcapAtOffer": 179130000000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "462980",
@@ -14182,7 +14241,8 @@
    "marcapAtOffer": 127641059000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "482630",
@@ -14304,7 +14364,8 @@
    "marcapAtOffer": 194942520000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "373160",
@@ -14441,7 +14502,8 @@
    "marcapAtOffer": 176339722000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "450950",
@@ -14546,7 +14608,8 @@
    "marcapAtOffer": 167967353200,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "096250",
@@ -14664,7 +14727,8 @@
    "marcapAtOffer": 222115404000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "475460",
@@ -14778,7 +14842,8 @@
    "marcapAtOffer": 105635250000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "478560",
@@ -14985,7 +15050,8 @@
    "marcapAtOffer": 56259000000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "432980",
@@ -15205,7 +15271,8 @@
    "marcapAtOffer": 102154800000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "176750",
@@ -15323,7 +15390,8 @@
    "marcapAtOffer": 227641760000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "398120",
@@ -15527,7 +15595,8 @@
    "marcapAtOffer": 140451480000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "382150",
@@ -15641,7 +15710,8 @@
    "marcapAtOffer": 86562940100,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "484870",
@@ -15771,7 +15841,8 @@
    "marcapAtOffer": 614503500000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "457600",
@@ -15872,7 +15943,8 @@
    "marcapAtOffer": 53459250000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "471820",
@@ -15958,7 +16030,8 @@
    "marcapAtOffer": 99552314845,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": false
+   "hasLockup": false,
+   "peerChecked": false
   },
   {
    "code": "459100",
@@ -16076,7 +16149,8 @@
    "marcapAtOffer": 83372800000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "389680",
@@ -16366,7 +16440,8 @@
    "marcapAtOffer": 123407063500,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "413390",
@@ -16484,7 +16559,8 @@
    "marcapAtOffer": 115801800000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "475660",
@@ -16610,7 +16686,8 @@
    "marcapAtOffer": 77818350000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "394800",
@@ -16724,7 +16801,8 @@
    "marcapAtOffer": 141498171000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "464580",
@@ -16838,7 +16916,8 @@
    "marcapAtOffer": 118923324000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "473980",
@@ -16955,7 +17034,8 @@
    "marcapAtOffer": 323454231000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "163280",
@@ -17069,7 +17149,8 @@
    "marcapAtOffer": 188020147000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "475960",
@@ -17178,7 +17259,8 @@
    "marcapAtOffer": 203699104000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "475560",
@@ -17303,7 +17385,8 @@
    "marcapAtOffer": 491845020000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "336680",
@@ -17421,7 +17504,8 @@
    "marcapAtOffer": 352310022000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "475580",
@@ -17530,7 +17614,8 @@
    "marcapAtOffer": 211806880000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "458650",
@@ -17648,7 +17733,8 @@
    "marcapAtOffer": 481461440000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "466100",
@@ -17778,7 +17864,8 @@
    "marcapAtOffer": 311427779000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "044990",
@@ -17896,7 +17983,8 @@
    "marcapAtOffer": 176793408000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "289930",
@@ -18018,7 +18106,8 @@
    "marcapAtOffer": 186301665000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "457370",
@@ -18141,7 +18230,8 @@
    "marcapAtOffer": 144488412000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "474170",
@@ -18258,7 +18348,8 @@
    "marcapAtOffer": 212919624000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "209640",
@@ -18335,48 +18426,7 @@
     32.47
    ],
    "discOffer": 5.8,
-   "peers": [
-    {
-     "n": "22.3월말",
-     "v": 31.83
-    },
-    {
-     "n": "22.5월말",
-     "v": 28.64
-    },
-    {
-     "n": "22.8월말",
-     "v": 22.14
-    },
-    {
-     "n": "22.11월말",
-     "v": 17.3
-    },
-    {
-     "n": "23.3월말",
-     "v": 28.46
-    },
-    {
-     "n": "23.5월말",
-     "v": 22.3
-    },
-    {
-     "n": "23.8월말",
-     "v": 28.87
-    },
-    {
-     "n": "23.11월말",
-     "v": 59.83
-    },
-    {
-     "n": "24.3월말",
-     "v": 59.47
-    },
-    {
-     "n": "24.5월말",
-     "v": 56.47
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": 33.95,
    "float3m": 38.25,
@@ -18404,7 +18454,8 @@
    "marcapAtOffer": 170940480000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "465480",
@@ -18522,7 +18573,8 @@
    "marcapAtOffer": 121653264000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "308430",
@@ -18652,7 +18704,8 @@
    "marcapAtOffer": 191085135000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "351870",
@@ -18925,7 +18978,8 @@
    "marcapAtOffer": 128141674388,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "461300",
@@ -19222,7 +19276,8 @@
    "marcapAtOffer": 124560000000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "464280",
@@ -19327,7 +19382,8 @@
    "marcapAtOffer": 71890000000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "389650",
@@ -19532,7 +19588,8 @@
    "marcapAtOffer": 116039851000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "079900",
@@ -19646,7 +19703,8 @@
    "marcapAtOffer": 253449471000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "088340",
@@ -19772,7 +19830,8 @@
    "marcapAtOffer": 90931428000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "199480",
@@ -19877,7 +19936,8 @@
    "marcapAtOffer": 173012576000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "460470",
@@ -19974,7 +20034,8 @@
    "marcapAtOffer": 149656200000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "062040",
@@ -20087,7 +20148,8 @@
    "marcapAtOffer": 1065582000000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "373110",
@@ -20201,7 +20263,8 @@
    "marcapAtOffer": 108302120000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "462870",
@@ -20301,7 +20364,8 @@
    "marcapAtOffer": 3481543200000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "450330",
@@ -20406,7 +20470,8 @@
    "marcapAtOffer": 125376144000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "462350",
@@ -20507,7 +20572,8 @@
    "marcapAtOffer": 406157117600,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "481850",
@@ -20692,7 +20758,8 @@
    "marcapAtOffer": 214530768000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "413630",
@@ -20883,7 +20950,8 @@
    "marcapAtOffer": 216216000000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "464080",
@@ -21006,7 +21074,8 @@
    "marcapAtOffer": 201585110000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "107640",
@@ -21095,10 +21164,6 @@
     {
      "n": "신성에스티",
      "v": 33.6
-    },
-    {
-     "n": "신흥에스이씨",
-     "v": 14.14
     }
    ],
    "trackManual": false,
@@ -21128,7 +21193,8 @@
    "marcapAtOffer": 262983390000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "462510",
@@ -21334,7 +21400,8 @@
    "marcapAtOffer": 317886440000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "323350",
@@ -21617,7 +21684,8 @@
    "marcapAtOffer": 222089920000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "443060",
@@ -21723,7 +21791,8 @@
    "marcapAtOffer": 3707130000000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "126730",
@@ -21828,7 +21897,8 @@
    "marcapAtOffer": 157862268000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "140430",
@@ -21926,7 +21996,8 @@
    "marcapNum": 28445715480,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": false
+   "hasLockup": false,
+   "peerChecked": true
   },
   {
    "code": "452200",
@@ -22101,24 +22172,7 @@
    "fairValue": null,
    "discBand": null,
    "discOffer": null,
-   "peers": [
-    {
-     "n": "인 원",
-     "v": 1.0
-    },
-    {
-     "n": "인 원",
-     "v": 1.0
-    },
-    {
-     "n": "인 원",
-     "v": 1.0
-    },
-    {
-     "n": "인 원",
-     "v": 3.0
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": null,
    "float3m": null,
@@ -22145,7 +22199,8 @@
    "marcapAtOffer": 344253657000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "412540",
@@ -22250,7 +22305,8 @@
    "marcapAtOffer": 398272314000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "451250",
@@ -22357,7 +22413,8 @@
    "marcapAtOffer": 74947451452,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "461030",
@@ -22532,24 +22589,7 @@
    "fairValue": null,
    "discBand": null,
    "discOffer": null,
-   "peers": [
-    {
-     "n": "2022년",
-     "v": 314.2
-    },
-    {
-     "n": "2023년",
-     "v": 437.1
-    },
-    {
-     "n": "2024년",
-     "v": 619.0
-    },
-    {
-     "n": "2025년",
-     "v": 878.7
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": 46.87,
    "float3m": 47.84,
@@ -22576,7 +22616,8 @@
    "marcapAtOffer": 265947620000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "420570",
@@ -22639,14 +22680,6 @@
    "discOffer": null,
    "peers": [
     {
-     "n": "선진뷰티사이언스(*1)",
-     "v": 4.2
-    },
-    {
-     "n": "엔에프씨(*1)",
-     "v": 43.31
-    },
-    {
      "n": "현대바이오랜드",
      "v": 40.45
     },
@@ -22679,7 +22712,8 @@
    "marcapAtOffer": 101043928484,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "437730",
@@ -22784,7 +22818,8 @@
    "marcapAtOffer": 317575680000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "036220",
@@ -22889,7 +22924,8 @@
    "marcapAtOffer": 282088320000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "199430",
@@ -23103,7 +23139,8 @@
    "marcapAtOffer": 1896094500000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "360350",
@@ -23208,7 +23245,8 @@
    "marcapAtOffer": 90591520000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "068100",
@@ -23285,72 +23323,7 @@
     28.89
    ],
    "discOffer": -3.7,
-   "peers": [
-    {
-     "n": "케이엔솔",
-     "v": 49.4
-    },
-    {
-     "n": "비에이치아이",
-     "v": 423.2
-    },
-    {
-     "n": "케이아이비플러그에너지",
-     "v": 22.9
-    },
-    {
-     "n": "한온시스템",
-     "v": 49.1
-    },
-    {
-     "n": "한독크린텍",
-     "v": 13.0
-    },
-    {
-     "n": "일신바이오베이스",
-     "v": 14.1
-    },
-    {
-     "n": "SNT에너지",
-     "v": 6.5
-    },
-    {
-     "n": "나노팀",
-     "v": 67.4
-    },
-    {
-     "n": "경동나비엔",
-     "v": 12.3
-    },
-    {
-     "n": "파세코",
-     "v": 41.3
-    },
-    {
-     "n": "하츠",
-     "v": 11.8
-    },
-    {
-     "n": "에스씨디",
-     "v": 16.4
-    },
-    {
-     "n": "신성델타테크",
-     "v": 50.7
-    },
-    {
-     "n": "위닉스",
-     "v": 49.6
-    },
-    {
-     "n": "자이글",
-     "v": 10.0
-    },
-    {
-     "n": "에브리봇",
-     "v": 45.0
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": null,
    "float3m": null,
@@ -23378,7 +23351,8 @@
    "marcapAtOffer": 69577298000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "452430",
@@ -23662,7 +23636,8 @@
    "marcapAtOffer": 76058964000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "452400",
@@ -23783,7 +23758,8 @@
    "marcapAtOffer": 127260000000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "199550",
@@ -23971,7 +23947,8 @@
    "marcapAtOffer": 168398730000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "460930",
@@ -24057,16 +24034,8 @@
      "v": 1.53
     },
     {
-     "n": "동방선기",
-     "v": 1.02
-    },
-    {
      "n": "한국카본",
      "v": 1.31
-    },
-    {
-     "n": "일승",
-     "v": 2.61
     }
    ],
    "trackManual": false,
@@ -24096,7 +24065,8 @@
    "marcapAtOffer": 254215200000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "362990",
@@ -24274,7 +24244,8 @@
    "marcapAtOffer": 65222234000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "457550",
@@ -24378,7 +24349,8 @@
    "marcapAtOffer": 49138096700,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "452190",
@@ -24558,7 +24530,8 @@
    "marcapAtOffer": 586140400000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "109670",
@@ -24747,7 +24720,8 @@
    "marcapAtOffer": 202353591000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "417200",
@@ -24876,7 +24850,8 @@
    "marcapAtOffer": 405915954000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "432470",
@@ -24981,7 +24956,8 @@
    "marcapAtOffer": 102172394000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "338840",
@@ -25200,7 +25176,8 @@
    "marcapAtOffer": 96213240000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "453860",
@@ -25321,7 +25298,8 @@
    "marcapAtOffer": 158583880000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "452160",
@@ -25548,7 +25526,8 @@
    "marcapAtOffer": 119017500000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "402490",
@@ -25718,20 +25697,7 @@
    "fairValue": null,
    "discBand": null,
    "discOffer": null,
-   "peers": [
-    {
-     "n": "결산월",
-     "v": 12.0
-    },
-    {
-     "n": "2022년",
-     "v": 5.78
-    },
-    {
-     "n": "2023년 반기",
-     "v": 7.66
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": 29.96,
    "float3m": 29.96,
@@ -25758,7 +25724,8 @@
    "marcapAtOffer": 192300000000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "448280",
@@ -25953,7 +25920,8 @@
    "marcapAtOffer": 147868853000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "450080",
@@ -26073,7 +26041,8 @@
    "marcapAtOffer": 2574622119600,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "452300",
@@ -26172,7 +26141,8 @@
    "marcapAtOffer": 36008520000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "445090",
@@ -26276,7 +26246,8 @@
    "marcapAtOffer": 264941900000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "365330",
@@ -26389,7 +26360,8 @@
    "marcapAtOffer": 55098000000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "451760",
@@ -26771,16 +26743,7 @@
     29.9
    ],
    "discOffer": 52.9,
-   "peers": [
-    {
-     "n": "동아에스티",
-     "v": 27.6
-    },
-    {
-     "n": "HK이노엔",
-     "v": 29.9
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": null,
    "float3m": null,
@@ -26809,7 +26772,8 @@
    "marcapAtOffer": 304547460000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "088280",
@@ -27196,7 +27160,8 @@
    "marcapAtOffer": 106445245000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "432720",
@@ -27310,7 +27275,8 @@
    "marcapAtOffer": 138189498000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "396470",
@@ -27629,7 +27595,8 @@
    "marcapAtOffer": 235216046000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "445180",
@@ -27751,7 +27718,8 @@
    "marcapAtOffer": 179646216200,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "451220",
@@ -27959,7 +27927,8 @@
    "marcapAtOffer": 164548800000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "454910",
@@ -28332,32 +28301,7 @@
    "fairValue": null,
    "discBand": null,
    "discOffer": null,
-   "peers": [
-    {
-     "n": "추 정",
-     "v": 0.5
-    },
-    {
-     "n": "추 정",
-     "v": 1.5
-    },
-    {
-     "n": "추 정",
-     "v": 2.5
-    },
-    {
-     "n": "추 정",
-     "v": 3.5
-    },
-    {
-     "n": "추 정",
-     "v": 4.5
-    },
-    {
-     "n": "추 정",
-     "v": 5.5
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": null,
    "float3m": null,
@@ -28382,7 +28326,8 @@
    "marcapAtOffer": 191260191346,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "146060",
@@ -28767,7 +28712,8 @@
    "marcapAtOffer": 118690720000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "092790",
@@ -28866,7 +28812,8 @@
    "marcapAtOffer": 299023000000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "445680",
@@ -28971,7 +28918,8 @@
    "marcapAtOffer": 104142584000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "448710",
@@ -29416,7 +29364,8 @@
    "marcapAtOffer": 112656250000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "172670",
@@ -29520,7 +29469,8 @@
    "marcapAtOffer": 212241775000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "388870",
@@ -29743,7 +29693,8 @@
    "marcapAtOffer": 174345600000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "406820",
@@ -29848,7 +29799,8 @@
    "marcapAtOffer": 70886712000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "432430",
@@ -29965,7 +29917,8 @@
    "marcapAtOffer": 142482186000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "321370",
@@ -30069,7 +30022,8 @@
    "marcapAtOffer": 116720595000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "378340",
@@ -30210,7 +30164,8 @@
    "marcapAtOffer": 320042782000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "274400",
@@ -30312,7 +30267,8 @@
    "marcapAtOffer": 117297390000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "354320",
@@ -30429,7 +30385,8 @@
    "marcapAtOffer": 225666650000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "440320",
@@ -30531,7 +30488,8 @@
    "marcapAtOffer": 98050000000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "348080",
@@ -30653,7 +30611,8 @@
    "marcapAtOffer": 107507644000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "439090",
@@ -30765,7 +30724,8 @@
    "marcapAtOffer": 262052160000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "405920",
@@ -30970,7 +30930,8 @@
    "marcapAtOffer": 88431600000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "420770",
@@ -31074,7 +31035,8 @@
    "marcapAtOffer": 545057594000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "271830",
@@ -31360,7 +31322,8 @@
    "marcapAtOffer": 131995800000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "304360",
@@ -31464,7 +31427,8 @@
    "marcapAtOffer": 197860968000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "424760",
@@ -31828,7 +31792,8 @@
    "marcapAtOffer": 91742795000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "318160",
@@ -32196,7 +32161,8 @@
    "marcapAtOffer": 286054600000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "309960",
@@ -32284,7 +32250,8 @@
    "marcapAtOffer": 118407918900,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "451800",
@@ -32557,7 +32524,8 @@
    "marcapAtOffer": 121195000000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "418420",
@@ -32924,7 +32892,8 @@
    "marcapAtOffer": 249006264000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "199730",
@@ -33029,7 +32998,8 @@
    "marcapAtOffer": 100734207000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "344860",
@@ -33143,7 +33113,8 @@
    "marcapAtOffer": 36090000000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "127980",
@@ -33204,16 +33175,7 @@
    "fairValue": null,
    "discBand": null,
    "discOffer": null,
-   "peers": [
-    {
-     "n": "2020년",
-     "v": 132.0
-    },
-    {
-     "n": "2025년(E)",
-     "v": 174.0
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": null,
    "float3m": null,
@@ -33238,7 +33200,8 @@
    "marcapAtOffer": 74613846118,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "418550",
@@ -33411,44 +33374,7 @@
     29.3
    ],
    "discOffer": 14.1,
-   "peers": [
-    {
-     "n": "에스에스알",
-     "v": 13.43
-    },
-    {
-     "n": "케이사인",
-     "v": 27.36
-    },
-    {
-     "n": "휴네시온",
-     "v": 2.92
-    },
-    {
-     "n": "한컴위드",
-     "v": 9.1
-    },
-    {
-     "n": "안랩",
-     "v": 52.4
-    },
-    {
-     "n": "싸이버원",
-     "v": 20.29
-    },
-    {
-     "n": "수산아이앤티",
-     "v": 30.68
-    },
-    {
-     "n": "시큐브",
-     "v": 9.42
-    },
-    {
-     "n": "파수",
-     "v": 12.98
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": 25.73,
    "float3m": 26.46,
@@ -33476,7 +33402,8 @@
    "marcapAtOffer": 158665500000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "388790",
@@ -33670,7 +33597,8 @@
    "marcapAtOffer": 39694650000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "408900",
@@ -33795,7 +33723,8 @@
    "marcapAtOffer": 100435725000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "417860",
@@ -33921,7 +33850,8 @@
    "marcapAtOffer": 69835950000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "254490",
@@ -33985,24 +33915,7 @@
     21.14
    ],
    "discOffer": 10.7,
-   "peers": [
-    {
-     "n": "매커스",
-     "v": 4.98
-    },
-    {
-     "n": "유니트론텍",
-     "v": 4.9
-    },
-    {
-     "n": "에스에이엠티",
-     "v": 4.57
-    },
-    {
-     "n": "유니퀘스트",
-     "v": 3.2
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": null,
    "float3m": null,
@@ -34030,7 +33943,8 @@
    "marcapAtOffer": 86628000000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "425040",
@@ -34798,7 +34712,8 @@
    "marcapAtOffer": 85417136000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "389470",
@@ -35017,7 +34932,8 @@
    "marcapAtOffer": 105207850000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "084440",
@@ -35121,7 +35037,8 @@
    "marcapAtOffer": 38295240000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "204610",
@@ -35214,7 +35131,8 @@
    "marcapAtOffer": 111499178400,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "425420",
@@ -35324,7 +35242,8 @@
    "marcapAtOffer": 119500500000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "372170",
@@ -35415,10 +35334,6 @@
      "v": 41.07
     },
     {
-     "n": "대보마그네틱",
-     "v": 23.09
-    },
-    {
      "n": "엔시스",
      "v": 24.91
     }
@@ -35450,7 +35365,8 @@
    "marcapAtOffer": 390973352000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "383930",
@@ -35669,7 +35585,8 @@
    "marcapAtOffer": 131138976000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "348340",
@@ -35773,7 +35690,8 @@
    "marcapAtOffer": 185353623000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "405100",
@@ -35891,7 +35809,8 @@
    "marcapAtOffer": 175320464000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "331520",
@@ -36095,7 +36014,8 @@
    "marcapAtOffer": 72886800000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "419120",
@@ -36199,7 +36119,8 @@
    "marcapAtOffer": 144230328800,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "335870",
@@ -36773,7 +36694,8 @@
    "marcapAtOffer": 239641410000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "419540",
@@ -36966,7 +36888,8 @@
    "marcapAtOffer": 73711676000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "368970",
@@ -37065,7 +36988,8 @@
    "marcapAtOffer": 78507744000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "417970",
@@ -37169,7 +37093,8 @@
    "marcapAtOffer": 172710900000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "432320",
@@ -37365,10 +37290,6 @@
     {
      "n": "한미약품",
      "v": 48.71
-    },
-    {
-     "n": "비씨월드제약 (주1)",
-     "v": 31.42
     }
    ],
    "trackManual": false,
@@ -37398,7 +37319,8 @@
    "marcapAtOffer": 135490256000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "393890",
@@ -37548,7 +37470,8 @@
    "marcapAtOffer": 2040581880000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "314140",
@@ -37666,7 +37589,8 @@
    "marcapAtOffer": 105039246000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "394280",
@@ -37844,24 +37768,7 @@
     30.8
    ],
    "discOffer": 15.9,
-   "peers": [
-    {
-     "n": "삼익THK",
-     "v": 20.6
-    },
-    {
-     "n": "서암기계공업",
-     "v": 62.4
-    },
-    {
-     "n": "화천기공",
-     "v": 5.9
-    },
-    {
-     "n": "화천기계",
-     "v": 9.7
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": null,
    "float3m": null,
@@ -37889,7 +37796,8 @@
    "marcapAtOffer": 119506914000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "328380",
@@ -38085,7 +37993,8 @@
    "marcapAtOffer": 941798256000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "148930",
@@ -38222,7 +38131,8 @@
    "marcapAtOffer": 151152705000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "107600",
@@ -38326,7 +38236,8 @@
    "marcapAtOffer": 198467430000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "126720",
@@ -38621,7 +38532,8 @@
    "marcapAtOffer": 192601670000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "397030",
@@ -38867,7 +38779,8 @@
    "marcapAtOffer": 595008550000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "328130",
@@ -38985,7 +38898,8 @@
    "marcapAtOffer": 209264160000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "403870",
@@ -39096,7 +39010,8 @@
    "marcapAtOffer": 493829825000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "402030",
@@ -39319,7 +39234,8 @@
    "marcapAtOffer": 360595859064,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "323280",
@@ -39596,7 +39512,8 @@
    "marcapAtOffer": 134812352000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "310210",
@@ -39844,7 +39761,8 @@
    "marcapAtOffer": 225130960000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "363260",
@@ -40032,7 +39950,8 @@
    "marcapAtOffer": 127547994000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "357430",
@@ -40230,7 +40149,8 @@
    "marcapAtOffer": 160836480000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "389260",
@@ -40704,7 +40624,8 @@
    "marcapAtOffer": 60464094000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "417310",
@@ -41018,7 +40939,8 @@
    "marcapAtOffer": 85808460000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "288980",
@@ -41148,7 +41070,8 @@
    "marcapAtOffer": 107701440000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "332290",
@@ -41363,7 +41286,8 @@
    "marcapAtOffer": 76891190000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "146320",
@@ -41480,7 +41404,8 @@
    "marcapAtOffer": 160782999000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "371950",
@@ -41598,7 +41523,8 @@
    "marcapAtOffer": 357618896800,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "330730",
@@ -41705,7 +41631,8 @@
    "marcapAtOffer": 142947528000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "365900",
@@ -41810,7 +41737,8 @@
    "marcapAtOffer": 104817000000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "370090",
@@ -41882,44 +41810,7 @@
     37.0
    ],
    "discOffer": 17.1,
-   "peers": [
-    {
-     "n": "나무가",
-     "v": 5.4
-    },
-    {
-     "n": "액트로",
-     "v": 16.91
-    },
-    {
-     "n": "유티아이",
-     "v": 268.18
-    },
-    {
-     "n": "옵트론텍",
-     "v": 31.11
-    },
-    {
-     "n": "덕우전자",
-     "v": 23.18
-    },
-    {
-     "n": "엠씨넥스",
-     "v": 33.07
-    },
-    {
-     "n": "팅크웨어",
-     "v": 35.1
-    },
-    {
-     "n": "모바일어플라이언스",
-     "v": 46.46
-    },
-    {
-     "n": "탑엔지니어링",
-     "v": 37.64
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": 32.2,
    "float3m": 32.8,
@@ -41948,7 +41839,8 @@
    "marcapAtOffer": 119489700000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "251120",
@@ -42263,7 +42155,8 @@
    "marcapAtOffer": 193539885000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "136410",
@@ -42372,7 +42265,8 @@
    "marcapAtOffer": 88152848000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "276040",
@@ -42473,7 +42367,8 @@
    "marcapAtOffer": 164103212000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "377330",
@@ -42590,7 +42485,8 @@
    "marcapAtOffer": 175397882000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "373220",
@@ -42822,7 +42718,8 @@
    "marcapAtOffer": 63656908000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "102370",
@@ -42921,7 +42818,8 @@
    "marcapAtOffer": 178188400000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "353590",
@@ -43046,7 +42944,8 @@
    "marcapAtOffer": 68240521000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "373200",
@@ -43501,7 +43400,8 @@
    "marcapAtOffer": 548919910000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "404990",
@@ -44007,7 +43907,8 @@
    "marcapAtOffer": 169714626000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "307870",
@@ -44310,7 +44211,8 @@
    "marcapAtOffer": 159607668000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "372800",
@@ -44424,7 +44326,8 @@
    "marcapAtOffer": 85470957000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "311320",
@@ -44558,7 +44461,8 @@
    "marcapAtOffer": 61934100000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "376300",
@@ -44678,7 +44582,8 @@
    "marcapAtOffer": 618887100000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "389030",
@@ -44816,7 +44721,8 @@
    "marcapAtOffer": 217386300000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "376180",
@@ -44921,7 +44827,8 @@
    "marcapAtOffer": 38269725000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "377300",
@@ -45046,7 +44953,8 @@
    "marcapAtOffer": 11733041250000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "348370",
@@ -45125,32 +45033,7 @@
     34.2
    ],
    "discOffer": 7.9,
-   "peers": [
-    {
-     "n": "에코프로비엠",
-     "v": 81.0
-    },
-    {
-     "n": "엘앤에프",
-     "v": 284.0
-    },
-    {
-     "n": "코스모신소재",
-     "v": 61.1
-    },
-    {
-     "n": "천보",
-     "v": 58.7
-    },
-    {
-     "n": "일진머티리얼즈",
-     "v": 40.2
-    },
-    {
-     "n": "솔루스첨단소재",
-     "v": 36.7
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": null,
    "float3m": null,
@@ -45179,7 +45062,8 @@
    "marcapAtOffer": 634534866000,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "377450",
@@ -45278,7 +45162,8 @@
    "marcapAtOffer": 195596499000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "114840",
@@ -45382,7 +45267,8 @@
    "marcapAtOffer": 103033525000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "321260",
@@ -45666,7 +45552,8 @@
    "marcapAtOffer": 110334000000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "376290",
@@ -45788,7 +45675,8 @@
    "marcapAtOffer": 105945948000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": false
+   "hasLockup": false,
+   "peerChecked": true
   },
   {
    "code": "382840",
@@ -45906,7 +45794,8 @@
    "marcapAtOffer": 326562405000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "159010",
@@ -46035,7 +45924,8 @@
    "marcapAtOffer": 111122825000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "260970",
@@ -46230,7 +46120,8 @@
    "marcapAtOffer": 272673580800,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "377220",
@@ -46359,7 +46250,8 @@
    "marcapAtOffer": 257850000000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "099430",
@@ -46464,7 +46356,8 @@
    "marcapAtOffer": 438293740500,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "395400",
@@ -46693,7 +46586,8 @@
    "marcapAtOffer": 151004000000,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "203400",
@@ -46817,7 +46711,8 @@
    "marcapAtOffer": 259409307000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "271940",
@@ -46910,28 +46805,7 @@
     40.0
    ],
    "discOffer": 19.9,
-   "peers": [
-    {
-     "n": "상아프론테크",
-     "v": 45.44
-    },
-    {
-     "n": "두산퓨얼셀",
-     "v": 406.0
-    },
-    {
-     "n": "한온시스템",
-     "v": 12.88
-    },
-    {
-     "n": "SNT모티브",
-     "v": 4.95
-    },
-    {
-     "n": "Hexagon",
-     "v": 53.18
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": null,
    "float3m": null,
@@ -46962,7 +46836,8 @@
    "marcapAtOffer": 1245542417000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "377190",
@@ -47184,7 +47059,8 @@
    "marcapAtOffer": 497087480000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "139990",
@@ -47301,7 +47177,8 @@
    "marcapAtOffer": 307922053900,
    "opLoss": false,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "291230",
@@ -47504,7 +47381,8 @@
    "marcapAtOffer": 102719900000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "089860",
@@ -47645,7 +47523,8 @@
    "marcapAtOffer": 2161409717000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "315640",
@@ -47763,7 +47642,8 @@
    "marcapAtOffer": 194120682000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "372910",
@@ -47885,7 +47765,8 @@
    "marcapAtOffer": 379139362200,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "058970",
@@ -48007,7 +47888,8 @@
    "marcapAtOffer": 122628956000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "340360",
@@ -48218,7 +48100,8 @@
    "marcapAtOffer": 64456777000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "376980",
@@ -48295,40 +48178,7 @@
     38.67
    ],
    "discOffer": 23.3,
-   "peers": [
-    {
-     "n": "Recruit Holdings",
-     "v": 66.74
-    },
-    {
-     "n": "O",
-     "v": 27.16
-    },
-    {
-     "n": "Medley",
-     "v": 238.76
-    },
-    {
-     "n": "Atrae",
-     "v": 71.38
-    },
-    {
-     "n": "Omnibridge Holdings",
-     "v": 51.75
-    },
-    {
-     "n": "Tsukui Staff",
-     "v": 342.1
-    },
-    {
-     "n": "Benext-Yumeshin Group",
-     "v": 34.79
-    },
-    {
-     "n": "JAC Recruitment",
-     "v": 40.91
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": null,
    "float3m": null,
@@ -48356,7 +48206,8 @@
    "marcapAtOffer": 164607380000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "259960",
@@ -48571,7 +48422,8 @@
    "marcapAtOffer": 1705365441000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "323410",
@@ -48758,32 +48610,7 @@
     31.4
    ],
    "discOffer": 22.8,
-   "peers": [
-    {
-     "n": "코웨이",
-     "v": 13.3
-    },
-    {
-     "n": "쿠쿠홈시스",
-     "v": 10.8
-    },
-    {
-     "n": "파세코",
-     "v": 15.4
-    },
-    {
-     "n": "하츠",
-     "v": 16.9
-    },
-    {
-     "n": "자이글",
-     "v": 25.0
-    },
-    {
-     "n": "iRobot Corp",
-     "v": 15.5
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": null,
    "float3m": null,
@@ -48811,7 +48638,8 @@
    "marcapAtOffer": 146177311100,
    "opLoss": true,
    "mezz": true,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "353190",
@@ -49018,7 +48846,8 @@
    "marcapAtOffer": 334149200000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "137310",
@@ -49116,32 +48945,7 @@
     47.8
    ],
    "discOffer": 39.7,
-   "peers": [
-    {
-     "n": "원",
-     "v": 6.39
-    },
-    {
-     "n": "USD",
-     "v": 27.24
-    },
-    {
-     "n": "USD",
-     "v": 21.37
-    },
-    {
-     "n": "원",
-     "v": 19.6
-    },
-    {
-     "n": "원",
-     "v": 5.74
-    },
-    {
-     "n": "원",
-     "v": 7.47
-    }
-   ],
+   "peers": [],
    "trackManual": false,
    "float1m": null,
    "float3m": null,
@@ -49172,7 +48976,8 @@
    "marcapAtOffer": 5283852756000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "352910",
@@ -49281,7 +49086,8 @@
    "marcapAtOffer": 158145144300,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "357580",
@@ -49403,7 +49209,8 @@
    "marcapAtOffer": 138799412400,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "303530",
@@ -49513,7 +49320,8 @@
    "marcapAtOffer": 125102430000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "363250",
@@ -51671,7 +51479,8 @@
    "marcapAtOffer": 103482470000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": false
   },
   {
    "code": "239890",
@@ -51788,7 +51597,8 @@
    "marcapAtOffer": 81288288000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "307280",
@@ -51988,7 +51798,8 @@
    "marcapAtOffer": 108460000000,
    "opLoss": false,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "277810",
@@ -52110,7 +51921,8 @@
    "marcapAtOffer": 155845000000,
    "opLoss": true,
    "mezz": false,
-   "hasLockup": true
+   "hasLockup": true,
+   "peerChecked": true
   },
   {
    "code": "248070",

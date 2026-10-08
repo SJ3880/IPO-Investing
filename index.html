@@ -396,7 +396,8 @@ const mcapUp = x => {
 const peerCell = x => {
   const p = x.peers || []; if (!p.length) return '<span class="mu">–</span>';
   const head = p.slice(0, 2).map(q => esc(q.n)).join(', ');
-  return `<span class="peerx" data-code="${esc(x.code)}">${head}${p.length > 2 ? ` 등 <b>${p.length}개사</b>` : ''}</span>`;
+  const warn = x.peerChecked === false && x.valMult ? ' <span class="mu" title="비교회사 평균이 적용 배수와 맞지 않습니다. 원문 확인">⚠</span>' : '';
+  return `<span class="peerx" data-code="${esc(x.code)}">${head}${p.length > 2 ? ` 등 <b>${p.length}개사</b>` : ''}</span>${warn}`;
 };
 const uwText = x => (x.underwriters && x.underwriters.length ? x.underwriters.join(', ') : x.uw38) || '';
 const fmtR = v => (Math.round(v * 10) / 10).toString();
@@ -946,7 +947,7 @@ const peerTip = document.createElement('div'); peerTip.id = 'peerTip'; peerTip.h
 function showPeers(el){
   const x = DATA.find(r => r.code === el.dataset.code); if (!x) return;
   peerTip.innerHTML = `<b>비교회사 ${x.peers.length}개사</b>${x.valMethod ? ` <span class="mu">(${esc(x.valMethod)}${x.valMult ? ' 평균 ' + f2(x.valMult) + '배' : ''})</span>` : ''}
-    <table>${x.peers.map(p => `<tr><td>${esc(p.n)}</td><td>${f2(p.v)}배</td></tr>`).join('')}</table>`;
+    <table>${x.peers.map(p => `<tr><td>${esc(p.n)}</td><td>${f2(p.v)}배</td></tr>`).join('')}</table>${x.peerChecked === false && x.valMult ? `<div class="mu" style="margin-top:4px;font-size:12px">⚠ 평균 ${f2((x.peers.reduce((a, p) => a + p.v, 0) / x.peers.length).toFixed(2))}배 ≠ 적용 ${f2(x.valMult)}배 · 원문 확인</div>` : ''}`;
   peerTip.hidden = false;
   const r = el.getBoundingClientRect(), w = peerTip.offsetWidth, h = peerTip.offsetHeight;
   peerTip.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left)) + 'px';

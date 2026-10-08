@@ -32,6 +32,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import dart as dartlib          # noqa: E402
 import kind as kindlib          # noqa: E402
 import pipeline as pipelib      # noqa: E402
+import valuation               # noqa: E402
 from model import SimilarCaseModel, features  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -687,7 +688,7 @@ def pct(a, b):
 
 
 # ---------------------------------------------------------------- 4. DART 상세
-VAL_VER = 2   # 비교회사 판별 방식 버전(최종 비교회사만)
+VAL_VER = 3   # 비교회사 판별 방식 버전(3: 평균=적용 배수 엄격 검증, 제외 회사 덜어내기)
 
 
 def peers_bad(det):
@@ -700,7 +701,7 @@ def peers_bad(det):
         return False
     if not ps:
         return True
-    return abs(sum(p["v"] for p in ps) / len(ps) - am) / am > 0.03
+    return not valuation.mean_ok(ps, am)
 
 
 def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, light=True):
@@ -795,6 +796,7 @@ def upcoming_detail(dt, name, filed):
     if cache.exists():
         c = json.loads(cache.read_text("utf-8"))
         if c.get("rcpNo") == f["rcept_no"] and c.get("ver") == PARSE_VER:
+            c["data"]["valuation"] = valuation.sanitize(c["data"].get("valuation"))
             return c["data"]
     info = dartlib.analyze_document(dt.document_text(f["rcept_no"]))
     est = dt.estk(corp, date.today())
@@ -802,7 +804,7 @@ def upcoming_detail(dt, name, filed):
             "trackSrc": "증권신고서(할인율)" if str(info["trackEvidence"]).startswith("할인율") else "증권신고서",
             "trackEvidence": info["trackEvidence"], "floatAtListing": info["floatAtListing"],
             "totalShares": info["totalShares"], "lockup": info["lockup"], "discountRate": info.get("discountRate"),
-            "valuation": info.get("valuation"),
+            "valuation": valuation.sanitize(info.get("valuation")),
             "shares": est.get("shares"), "underwriters": est.get("underwriters"),
             "oldShareRatio": est.get("oldShareRatio"), "putback": est.get("putback"),
             "fundUse": est.get("fundUse"), "summary": excerpt(info["bizText"], 300) if info["bizText"] else None}
@@ -1081,7 +1083,7 @@ def main():
             it["track"] = "공모 없음(스팩합병·이전상장)"
         it["floatAtListing"] = det.get("floatAtListing")
         # 공모가 산정 근거(증권신고서 'Ⅳ. 인수인의 의견') → 상장완료 표에 바로 보이도록 요약
-        v = det.get("valuation") or {}
+        v = valuation.sanitize(det.get("valuation")) or {}   # 비교회사 평균 = 적용 배수 재검증(제외 회사·기간 칸 정리)
         fair = v.get("fairValue")
         disc_b = v.get("discountRange")
         bd = it.get("band") or v.get("bandDoc")
@@ -1096,6 +1098,7 @@ def main():
         it["discBand"] = disc_b
         it["discOffer"] = round((1 - it["offer"] / fair) * 100, 1) if fair and it.get("offer") and not it.get("spac") else None
         it["peers"] = [{"n": x["name"], "v": x["v"]} for x in (v.get("peers") or [])]
+        it["peerChecked"] = bool(v.get("peerChecked"))
         it["trackManual"] = it["code"] in manual_tracks
         # 공모 데이터 시트용(증권신고서·주요정보)
         tl = det.get("lockup") or []

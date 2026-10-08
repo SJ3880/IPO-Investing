@@ -60,11 +60,23 @@ def _is_name(s):
         return False
     if MULT_RE.search(s) or re.search(r"(순이익|시가총액|주식수|EBITDA|매출|자본|평균|합계|적용|단위|기준일)", s):
         return False
+    if NOT_PEER.search(_name(s)) or not _name(s) or UNIT_ONLY.match(s.replace(" ", "")):
+        return False
     return bool(re.search(r"[가-힣A-Za-z]", s))
+
+
+# 회사명이 아닌 칸: 기간(2022년, 23.5월말, 2025년(E), 반기), 금액·단위(88.99USD, 3,317백만원), 각주만 있는 칸((주3))
+NOT_PEER = re.compile(r"^(\d{2,4}\s*[.년/]\s*(\d{1,2}\s*월\s*말?)?.*|.*\d\s*(USD|KRW|EUR|JPY|CNY|원|백만원|억원|천원|달러|%)\s*$|"
+                      r"(\d{4}\s*년)?\s*(반기|분기|상반기|하반기|연간|\d\s*Q)\s*(\(E\))?)$", re.I)
+UNIT_ONLY = re.compile(r"^(원|천원|백만원|억원|USD|KRW|EUR|JPY|CNY|달러|배|%|주|인원|추정|결산월|결산|연결|별도|"
+                       r"K-?IFRS(연결|별도)?|IFRS|GAAP|해당없음|N/?A|-)$", re.I)
+FOOTNOTE = re.compile(r"\s*(\(\s*(주|\*)\s*\d+\s*\)|(주|\*)\s*\d+\s*\)|\*+\d*|주\d+)\s*$")
 
 
 def _name(s):
     s = re.sub(r"\(\s*주\s*\)|㈜|주식회사", "", _clean(s))
+    for _ in range(2):
+        s = FOOTNOTE.sub("", s)
     s = re.sub(r"\s*\((?:\d{6}|코스닥|코스피|KOSDAQ|KOSPI|유가증권|[A-Z]{2,5}:?[A-Z0-9.]*)\)\s*$", "", s)
     return _clean(s)
 
@@ -164,6 +176,50 @@ def peers_from_grid(g):
     return best
 
 
+# ---------------- 평균 = 적용 배수 검증(엄격) ----------------
+def match_tol(applied):
+    """적용 배수가 적힌 자릿수 기준 허용 오차. 19.36 → ±0.011, 21.8 → ±0.056, 30 → ±0.506
+    (예전엔 ±3%라서, 제외된 회사 1곳이 섞여 있어도(예: 에스투더블유의 안랩) 통과됐다)"""
+    s = f"{applied:.4f}".rstrip("0")
+    dec = len(s.split(".")[1]) if "." in s and not s.endswith(".") else 0
+    return 0.5 * 10 ** (-dec) + 0.006
+
+
+def mean_ok(peers, applied):
+    if not peers or not applied:
+        return False
+    m = sum(p["v"] for p in peers) / len(peers)
+    return abs(m - applied) <= match_tol(applied)
+
+
+def reconcile_peers(peers, applied, max_n=16, marked=None):
+    """비교회사 목록의 평균이 적용 배수와 정확히 맞는지 보고, 안 맞으면
+    '최종 단계에서 빠진 회사'를 덜어내 평균이 맞는 가장 큰 조합을 찾는다.
+    반환: (회사 목록, 확인됨 여부). 맞는 조합이 없거나 같은 크기 조합이 여러 개면 원래 목록 + 미확인."""
+    from itertools import combinations
+    if not peers or not applied:
+        return peers, False
+    if mean_ok(peers, applied):
+        return peers, True
+    n = len(peers)
+    # 각주(주1)·(*1)가 붙은 회사 = 보통 '최종 제외' 표시. 그 회사들만 빼서 맞으면 그대로 채택
+    if marked:
+        rest = [p for i, p in enumerate(peers) if i not in marked]
+        if len(rest) >= 2 and mean_ok(rest, applied):
+            return rest, True
+    if n > max_n:
+        return peers, False
+    for k in range(n - 1, 1, -1):
+        if n - k > max(1, n // 3):             # 3분의 1 넘게 빼야 맞는 조합은 우연일 가능성이 커서 믿지 않음
+            break
+        hits = [c for c in combinations(range(n), k) if mean_ok([peers[i] for i in c], applied)]
+        if len(hits) == 1:
+            return [peers[i] for i in hits[0]], True
+        if len(hits) > 1:
+            break                               # 같은 크기 조합이 여럿 = 어느 회사가 빠졌는지 모름
+    return peers, False
+
+
 # ---------------- 최종 비교회사: 적용 배수(평균)가 적힌 칸에서 거꾸로 찾기 ----------------
 def peers_by_applied(g, applied):
     """표 안에서 '적용 배수(=최종 비교회사 평균)' 값이 적힌 칸을 찾고, 같은 열(세로형) 또는 같은 행(가로형)의
@@ -206,8 +262,8 @@ def peers_by_applied(g, applied):
                         u.append(p)
                 if len(u) < 2:
                     continue
-                m = sum(p["v"] for p in u) / len(u)
-                if abs(m - applied) / applied <= 0.03 and (not best or len(u) > len(best)):
+                u, ok = reconcile_peers(u, applied)
+                if ok and (not best or len(u) > len(best)):
                     best = u
     return best
 
@@ -220,7 +276,7 @@ def peers_from_text(plain, pool, applied):
     for m in re.finditer(r"최종[^.。]{0,400}", f):
         w = m.group(0)
         hit = [p for p in pool if p["name"] and p["name"] in w]
-        if len(hit) >= 2 and abs(sum(p["v"] for p in hit) / len(hit) - applied) / applied <= 0.03:
+        if len(hit) >= 2 and mean_ok(hit, applied):
             return hit
     return None
 
@@ -383,15 +439,21 @@ def valuation_info(xml_text):
     def score(p):
         sc = 0
         ref = applied or p.get("avg")
-        if ref and abs(p["mean"] - ref) / ref < 0.03:
+        if ref and mean_ok(p["peers"], ref):
             sc += 4
-        if p.get("avg") and abs(p["mean"] - p["avg"]) / p["avg"] < 0.03:
+        if p.get("avg") and mean_ok(p["peers"], p["avg"]):
             sc += 2
         if p["final"]:
             sc += 2
         if applied and s.get("appliedMult") == p["mult"]:
             sc += 1
         return sc
+    # 표 평균이 적용 배수와 정확히 안 맞으면, 최종 단계에서 빠진 회사를 덜어내 맞춰 본다(예: 5곳 중 1곳 제외)
+    if applied:
+        for p in found:
+            ps, ok = reconcile_peers(p["peers"], applied)
+            if ok and ps is not p["peers"]:
+                p["peers"], p["mean"], p["final"] = ps, sum(x["v"] for x in ps) / len(ps), True
     peer = max(found, key=score) if found else None
     # 최종 비교회사만: 적용 배수와 평균이 맞는 표를 우선. 안 맞으면 '적용 배수 칸'에서 거꾸로, 그다음 '최종 선정' 문장으로
     if applied and not (peer and score(peer) >= 4):
@@ -434,10 +496,38 @@ def valuation_info(xml_text):
     out["peerNote"] = _clean(m.group(0))[:220] if m else None
     if not any([out["appliedMult"], out["fairValue"], out["peers"], out["discountRange"]]):
         return {}
-    return out
+    return sanitize(out)
 
 
 def debug_sample(xml_text, limit=15000):
     """실제 문서에서 잘 읽히는지 확인용(웹 저장소 data/debug 에 남김)"""
     sec = pricing_section(xml_text)
     return {"found": bool(sec), "len": len(sec), "head": _plain(sec)[:limit] if sec else ""}
+
+
+def sanitize(v):
+    """이미 저장된 평가 정보의 비교회사 목록을 다시 점검(문서를 다시 읽지 않고)
+    · 회사명이 아닌 칸(기간·금액·각주) 제거, 각주 표시 정리
+    · 평균이 적용 배수와 정확히 맞는지 확인하고, 안 맞으면 빠진 회사를 덜어내 맞춰 본다"""
+    if not v:
+        return v
+    ps, marked = [], set()
+    for p in v.get("peers") or []:
+        raw = p.get("name") or ""
+        n = _name(raw)
+        if _is_name(n) and n not in {q["name"] for q in ps}:
+            if FOOTNOTE.search(re.sub(r"\(\s*주\s*\)\s*$", "", _clean(raw))):
+                marked.add(len(ps))
+            ps.append({"name": n, "v": p["v"]})
+    if len(ps) < 2:
+        ps = []
+    am = v.get("appliedMult")
+    if ps and am:
+        ps, ok = reconcile_peers(ps, am, marked=marked)
+        # 평균이 적용 배수와 3% 넘게 다르면 최종 비교회사 표가 아님(1·2차 후보·다른 표) → 보여주지 않음
+        if not ok and abs(sum(p["v"] for p in ps) / len(ps) - am) / am > 0.03:
+            ps = []
+    else:
+        ok = False
+    v["peers"], v["peerChecked"] = ps, bool(ok)
+    return v
