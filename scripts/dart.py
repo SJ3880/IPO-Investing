@@ -224,13 +224,19 @@ def fund_from_blocks(blocks, gross_hint=None):
     # 조달 내역 산식 검산: (신주 모집금액 또는 총공모금액) + 의무인수 − 구주매출 − 발행제비용 = 순수입금
     net = out.get("net")
     if net:
-        calc = lambda: ((out.get("newGross") or out.get("gross") or 0) + (out.get("sponsor") or 0)
-                        - (out.get("sell") or 0) - (out.get("cost") or 0))
+        def calc():
+            if out.get("newGross"):                        # 신주 모집금액이 따로 있으면 거기서 시작(구주매출은 이미 빠져 있음)
+                return out["newGross"] + (out.get("sponsor") or 0) - (out.get("cost") or 0)
+            return ((out.get("gross") or 0) + (out.get("sponsor") or 0)
+                    - (out.get("sell") or 0) - (out.get("cost") or 0))
         if (not out.get("gross") and out.get("sell")
                 and abs(out["sell"] + (out.get("sponsor") or 0) - (out.get("cost") or 0) - net) / net <= 0.005):
             out["gross"] = out.pop("sell")             # '공모(매출)금액'처럼 총액 줄에 '매출'이 들어간 경우
         out["math"] = abs(calc() - net) / net <= 0.005
-        if not out["math"] and out.get("gross"):          # 안 맞으면 구주매출을 역산(다른 줄을 구주매출로 잘못 읽은 경우)
+        if (out.get("newGross") and out.get("gross") and not out.get("sell") and out["gross"] - out["newGross"] > net * 0.02
+                and abs(out["gross"] - out["newGross"] - (out.get("sponsor") or 0)) > net * 0.005):   # 차이가 의무인수면 구주 아님
+            out["sell"] = out["gross"] - out["newGross"]     # 총공모금액 − 신주 모집금액 = 구주매출
+        if not out["math"] and out.get("gross") and not out.get("newGross"):   # 안 맞으면 구주매출 역산
             sell = out.pop("sell", None)
             out["sell"] = None
             d = calc() - net
