@@ -1134,10 +1134,11 @@ def main():
         det.setdefault("fundUseRaw", det.get("fundUse"))           # 처음 한 번: 지금 값을 원래 값으로 보관
         det["fundUse"], det["fundChk"] = dartlib.fund_fix(det.get("fundUseRaw"), det.get("amount"), det.get("oldShareRatio"))
         fd = det.get("fundDoc") or {}
-        if fd.get("gross") and fd.get("math") and "확정" in (fd.get("basis") or "") and not it.get("spac"):
-            it["offerAmount"] = fd["gross"]                       # 원문(확정공모가 기준) 총공모금액이 가장 정확
+        oa = dartlib.doc_offer_amount(fd, det.get("oldShareRatio"))
+        if oa and not it.get("spac"):
+            it["offerAmount"] = oa                                # 원문(확정공모가 기준) 공모금액이 가장 정확
             if it.get("offer"):
-                it["offerShares"] = round(fd["gross"] / it["offer"])
+                it["offerShares"] = round(oa / it["offer"])
         od = dartlib.doc_old_ratio(det.get("fundDoc"), it.get("offerAmount"))   # 구주매출 비중: 원문 조달 내역이 더 정확
         if od is not None:
             det["oldShareRatio"] = od

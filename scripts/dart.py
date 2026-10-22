@@ -247,6 +247,18 @@ def fund_from_blocks(blocks, gross_hint=None):
     return out
 
 
+def doc_offer_amount(fd, old_ratio=None):
+    """원문 조달 내역에서 '공모금액'(신주 모집 + 구주 매출, 의무인수 제외). 확정공모가 기준이고 산식이 맞을 때만.
+    원문 총액이 신주 몫만인 문서(구주매출 줄 없음 + 구주매출이 있는 공모)는 쓰지 않는다"""
+    if not fd or not fd.get("gross") or not fd.get("math") or "확정" not in (fd.get("basis") or ""):
+        return None
+    if fd.get("newGross"):                               # '총공모금액'이 의무인수까지 더한 값인 문서
+        return fd["newGross"] + (fd.get("sell") or 0)
+    if not fd.get("sell") and (old_ratio or 0) > 0:
+        return None
+    return fd["gross"]
+
+
 def doc_old_ratio(fd, total):
     """원문 조달 내역으로 구주매출 비중(%). 산식이 맞고 원문 총공모금액이 사이트 공모금액(주식수×공모가)과 같을 때만"""
     if (not fd or not fd.get("math") or not fd.get("gross") or not total or not fd.get("sell")

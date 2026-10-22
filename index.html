@@ -743,11 +743,11 @@ function renderFin(d){
 //   amount = 확정 공모가 기준 공모금액(없으면 밴드 하단), old = 구주매출 비중(%)
 const eok1 = v => v == null ? '–' : (Math.abs(v) >= 1e12 ? (v / 1e12).toFixed(2) + '조' : (v / 1e8).toLocaleString('ko-KR', { maximumFractionDigits: 1, minimumFractionDigits: 1 }) + '억');
 // 증권신고서 원문 'Ⅴ. 자금의 사용목적' 표: 조달 내역(총공모금액 → 순수입금)과 순수입금 사용 계획
-function fundDocHtml(doc, amount){
+function fundDocHtml(doc, amount, old){
   const u = (doc.uses || []).slice().sort((a, b) => b.v - a.v), tot = doc.usesTotal || u.reduce((a, x) => a + x.v, 0);
   const line = (l, v, sign, cls) => v ? `<tr><td${cls ? ` class="${cls}"` : ''}>${l}</td><td style="text-align:right">${sign}${eok1(v)}</td></tr>` : '';
   let h = `<table class="fin" style="max-width:420px"><tr><th>조달 내역</th><th style="text-align:right">금액</th></tr>
-    ${line('총공모금액', doc.gross, '')}${doc.newGross && doc.newGross !== doc.gross ? line('└ 신주 모집금액', doc.newGross, '', 'mu') : ''}
+    ${doc.newGross ? line('신주 모집금액', doc.newGross, '') : line('총공모금액', doc.gross, '')}
     ${line('상장주선인 의무인수', doc.sponsor, '+ ')}${line(doc.sellDerived ? '구주매출 등(역산)' : '구주매출(기존 주주 몫)', doc.sell, '− ')}${line('발행제비용', doc.cost, '− ')}
     <tr><td><b>순수입금 (회사가 쓰는 돈)</b></td><td style="text-align:right"><b>${eok1(doc.net)}</b></td></tr></table>`;
   if (u.length) h += `<div style="margin-top:10px;font-weight:700">순수입금 사용 계획</div><div class="tl" style="grid-template-columns:120px 1fr 90px">` +
@@ -758,7 +758,10 @@ function fundDocHtml(doc, amount){
   if (doc.sellDerived) notes.push('원문 표에서 구주매출 줄을 읽지 못해 총공모금액·발행제비용·순수입금으로 역산했습니다.');
   if (doc.tie === false) notes.push(`<span class="up">⚠ 사용 계획 합계(${eok1(tot)})가 순수입금(${eok1(doc.net)})과 다릅니다. 원문을 확인하세요.</span>`);
   if (doc.basis) notes.push(`원문 기준: ${esc(doc.basis)}.`);
-  if (amount && doc.gross && Math.abs(amount / doc.gross - 1) > 0.005)
+  const docAmt = doc.newGross ? doc.newGross + (doc.sell || 0) : doc.gross;
+  if (amount && docAmt && !doc.sell && old > 0 && Math.abs(amount * (1 - old / 100) / docAmt - 1) < 0.01)
+    notes.push(`원문 총공모금액은 신주 몫만 적은 것이고, 위쪽 공모금액(${eok1(amount)})에는 구주매출 ${f2(old)}%가 더해져 있습니다.`);
+  else if (amount && docAmt && Math.abs(amount / docAmt - 1) > 0.005)
     notes.push(/확정/.test(doc.basis || '')
       ? `위쪽 공모금액(${eok1(amount)})은 DART 요약의 공모주식수로 계산한 값이라 원문 총공모금액과 다릅니다. 원문 금액이 정확합니다.`
       : `원문 금액은 위 기준가라서, 위쪽 공모금액(${eok1(amount)})과 다릅니다. 공모가가 정해지면 정정 신고서에서 같은 비율로 바뀝니다.`);
@@ -767,7 +770,7 @@ function fundDocHtml(doc, amount){
   return h + notes.map(n => `<p class="note">${n}</p>`).join('');
 }
 function fundHtml(fu, chk, amount, old, offer, doc){
-  if (doc && doc.net && (doc.uses || []).length) return fundDocHtml(doc, amount);
+  if (doc && doc.net && (doc.uses || []).length) return fundDocHtml(doc, amount, old);
   const u = (fu || []).slice();
   if (!u.length) return '<span class="mu">정보 없음</span>';
   const tot = u.reduce((a, x) => a + x.v, 0);

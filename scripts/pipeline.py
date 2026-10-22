@@ -177,9 +177,10 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
             elif sh and bd:                              # 확정 전: 희망밴드 하단~상단
                 row["amount"], row["amountHi"] = int(sh * bd[0]), int(sh * bd[1])
             from dart import doc_old_ratio
-            fdc = row.get("fundDoc") or {}
-            if fdc.get("gross") and fdc.get("math") and "확정" in (fdc.get("basis") or "") and row["offer"]:
-                row["amount"], row["amountHi"] = int(fdc["gross"]), None   # 원문(확정공모가 기준) 총공모금액
+            from dart import doc_offer_amount
+            oa = doc_offer_amount(row.get("fundDoc"), row.get("oldShareRatio"))
+            if oa and row["offer"]:
+                row["amount"], row["amountHi"] = int(oa), None             # 원문(확정공모가 기준) 공모금액
             od = doc_old_ratio(row.get("fundDoc"), row.get("amount"))   # 구주매출 비중은 원문 조달 내역 기준
             if od is not None:
                 row["oldShareRatio"] = od
