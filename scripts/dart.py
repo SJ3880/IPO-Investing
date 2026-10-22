@@ -174,7 +174,7 @@ def fund_from_blocks(blocks, gross_hint=None):
                     rows["cost"] = val
                 elif re.search(r"매출(대금|금액)|구주", lab) and not re.search(r"모집|총", lab):
                     rows["sell"] = val
-                elif "신주" in lab and "모집" in lab:
+                elif "신주" in lab and "모집" in lab and not re.search(r"구주|매출", lab):
                     rows["newGross"] = val
                 elif "gross" not in rows and re.search(r"총|공모|모집", lab):
                     rows["gross"] = val
@@ -221,10 +221,40 @@ def fund_from_blocks(blocks, gross_hint=None):
         mul = scale(tot, uses.get("unit"), ref)
         out["uses"] = [{"k": x["k"], "v": x["v"] * mul} for x in uses["items"]]
         out["usesTotal"] = tot * mul
+    # 조달 내역 산식 검산: (신주 모집금액 또는 총공모금액) + 의무인수 − 구주매출 − 발행제비용 = 순수입금
+    net = out.get("net")
+    if net:
+        calc = lambda: ((out.get("newGross") or out.get("gross") or 0) + (out.get("sponsor") or 0)
+                        - (out.get("sell") or 0) - (out.get("cost") or 0))
+        if (not out.get("gross") and out.get("sell")
+                and abs(out["sell"] + (out.get("sponsor") or 0) - (out.get("cost") or 0) - net) / net <= 0.005):
+            out["gross"] = out.pop("sell")             # '공모(매출)금액'처럼 총액 줄에 '매출'이 들어간 경우
+        out["math"] = abs(calc() - net) / net <= 0.005
+        if not out["math"] and out.get("gross"):          # 안 맞으면 구주매출을 역산(다른 줄을 구주매출로 잘못 읽은 경우)
+            sell = out.pop("sell", None)
+            out["sell"] = None
+            d = calc() - net
+            if d > 0:
+                out["sell"], out["sellDerived"] = d, True
+            elif sell:
+                out["sell"] = sell
+            out["math"] = abs(calc() - net) / net <= 0.005
+            if not out["sell"]:
+                out.pop("sell")
     # 검산: 사용 계획 합계 = 순수입금(반올림 차이 0.5% 이내)
     if out.get("net") and out.get("usesTotal"):
         out["tie"] = abs(out["usesTotal"] / out["net"] - 1) <= 0.005
     return out
+
+
+def doc_old_ratio(fd, total):
+    """원문 조달 내역으로 구주매출 비중(%). 산식이 맞고 원문 총공모금액이 사이트 공모금액(주식수×공모가)과 같을 때만"""
+    if (not fd or not fd.get("math") or not fd.get("gross") or not total or not fd.get("sell")
+            or fd.get("sellDerived") or not fd.get("tie")):
+        return None   # 원문에 '구주매출(매출대금)' 차감 줄이 있을 때만. 없으면 자기주식 매출 등일 수 있어 판단 안 함
+    if abs(fd["gross"] / total - 1) > 0.01:              # 원문 총액이 신주 몫만이거나 기준가가 다르면 판단 안 함
+        return None
+    return round((fd.get("sell") or 0) / fd["gross"] * 100, 1)
 
 
 def fund_from_doc(xml_text, gross_hint=None):

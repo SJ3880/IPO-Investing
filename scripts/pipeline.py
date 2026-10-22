@@ -176,9 +176,13 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
                 row["amount"], row["amountHi"] = int(sh * row["offer"]), None
             elif sh and bd:                              # 확정 전: 희망밴드 하단~상단
                 row["amount"], row["amountHi"] = int(sh * bd[0]), int(sh * bd[1])
-            fd = row.get("fundDoc") or {}
-            if fd.get("gross") and fd.get("sell"):           # 구주매출 비중은 원문 조달 내역 기준
-                row["oldShareRatio"] = round(fd["sell"] / fd["gross"] * 100, 1)
+            from dart import doc_old_ratio
+            fdc = row.get("fundDoc") or {}
+            if fdc.get("gross") and fdc.get("math") and "확정" in (fdc.get("basis") or "") and row["offer"]:
+                row["amount"], row["amountHi"] = int(fdc["gross"]), None   # 원문(확정공모가 기준) 총공모금액
+            od = doc_old_ratio(row.get("fundDoc"), row.get("amount"))   # 구주매출 비중은 원문 조달 내역 기준
+            if od is not None:
+                row["oldShareRatio"] = od
             if row.get("fundUse"):                       # 자금 사용 목적 표 보정·점검(신고서 기준 금액 = 희망가 하단 기준)
                 from dart import fund_fix
                 base = row.get("fundBase") or (int(sh * bd[0]) if sh and bd else row.get("amount"))
