@@ -644,6 +644,16 @@ def horizon_returns(bars, listed, base):
 SNAP = (1.5, 2, 2.5, 3, 4, 5, 6, 10, 20)
 
 
+def first_close(bars, m38, adj):
+    """상장일 종가(원래 가격). 시세가 배당 등으로 수정되지 않았으면(첫날 시가가 38 시가와 같음) 거래소 시세를,
+    수정된 시세면 38의 종가를 쓴다. 첫날 수익률도 이 값으로 계산해 표의 종가·수익률이 서로 맞게 한다."""
+    m38 = m38 or {}
+    raw = not m38.get("open") or abs(bars[0][1] / m38["open"] - 1) < 0.003
+    if adj == 1 and raw:
+        return bars[0][4]
+    return m38.get("firstClose") or round(bars[0][4] / adj)
+
+
 def fix_adj(it, det, so, dt=None):
     """38에 시초가가 없어 수정주가 비율(adj)을 못 구한 종목: 상장 당시 주식수 대비 지금 주식수가
     무상증자·액면분할 배수(2배, 3배…)와 딱 맞고, 그대로 두면 시초가가 공모가의 상·하한을 벗어나면 그 배수로 맞춘다."""
@@ -807,7 +817,7 @@ def upcoming_detail(dt, name, filed):
             "valuation": valuation.sanitize(info.get("valuation")),
             "shares": est.get("shares"), "underwriters": est.get("underwriters"),
             "oldShareRatio": est.get("oldShareRatio"), "putback": est.get("putback"),
-            "fundUse": est.get("fundUse"), "summary": excerpt(info["bizText"], 300) if info["bizText"] else None}
+            "fundUse": est.get("fundUse"), "fundUseRaw": est.get("fundUseRaw"), "fundChk": est.get("fundChk"), "fundBase": est.get("amount"), "summary": excerpt(info["bizText"], 300) if info["bizText"] else None}
     cache.write_text(json.dumps({"rcpNo": f["rcept_no"], "ver": PARSE_VER, "data": data}, ensure_ascii=False), "utf-8")
     return data
 
@@ -953,7 +963,7 @@ def main():
             "listed": listed.isoformat(), "days": (today - listed).days, "tradingDays": len(bars),
             "offer": offer, "offerAdj": round(offer_adj) if offer_adj and adj != 1 else None, "adj": round(adj, 4),
             "open": (m38 or {}).get("open") or round(bars[0][1] / adj),
-            "firstClose": (m38 or {}).get("firstClose") or round(bars[0][4] / adj),
+            "firstClose": first_close(bars, m38, adj),
             "openAdj": bars[0][1], "price": price, "asOf": bars[-1][0],
             "adjSrc": "spac" if sp else ("38" if (m38 or {}).get("open") else "none"),
             "retVsOpen": pct(price, bars[0][1]), "retVsOffer": pct(price, offer_adj),
@@ -964,7 +974,7 @@ def main():
             "ma20": ma20, "aboveMa20": price >= ma20,
             "instComp": dm.get("instComp"), "commit": dm.get("commit"), "uw38": dm.get("uw38"),
             "band": dm.get("band"), "bandPos": band_pos(offer, dm.get("band")),
-            "firstDayRet": pct(bars[0][4], offer_adj),
+            "firstDayRet": pct(first_close(bars, m38, adj), offer) if adj == 1 else pct(bars[0][4], offer_adj),
             **horizon_returns(bars, listed, offer_adj),
             "tradeValue20": round(sum(val20) / len(val20)) if val20 else None,
             **({"spac": True, "baseSrc": "직접 입력" if manual.get(code) else sp.get("baseSrc"),
@@ -1092,6 +1102,15 @@ def main():
             fair = round(bd[1] / (1 - min(ok_disc) / 100)) if ok_disc else None
         if disc_b and any(x < 0 or x >= 80 for x in disc_b):
             disc_b = None
+        bdoc = v.get("bandDoc") or bd                       # 할인율 = 1 − 희망밴드 ÷ 주당 평가가액. 문서에서 읽은 범위가
+        if fair and bdoc and len(bdoc) == 2 and not it.get("spac"):   # 이 정의와 1.5%p 넘게 다르면 다른 % 를 잘못 읽은 것 → 다시 계산
+            calc = sorted(round((1 - x / fair) * 100, 2) for x in bdoc)
+            # 문서 할인율 범위의 폭은 밴드 폭과 맞아야 한다: (1−큰 할인율)/(1−작은 할인율) = 밴드 하단/상단.
+            # 안 맞으면(예: 21.9~22.1%, 4~6%) 다른 % 를 읽은 것 → 평가가액·밴드로 다시 계산
+            lo, hi = sorted(bdoc)
+            off_width = disc_b and abs((1 - max(disc_b) / 100) / (1 - min(disc_b) / 100) - lo / hi) > 0.02
+            if all(0 <= x < 80 for x in calc) and (not disc_b or off_width):
+                disc_b = calc
         it["valMethod"] = v.get("method")
         it["valMult"] = v.get("appliedMult")
         it["fairValue"] = fair
@@ -1107,11 +1126,17 @@ def main():
             it[key] = pts[-1] if pts else None
         it["totalShares"] = det.get("totalShares")
         it["offerShares"] = det.get("shares")
-        it["offerAmount"] = det.get("amount") or (round(det["shares"] * it["offer"]) if det.get("shares") and it.get("offer") else None)
+        # 공모금액 = 공모주식수 × 확정 공모가. (DART 주요정보의 금액은 희망가 하단 기준이라 확정가와 다를 수 있음)
+        it["offerAmount"] = (round(det["shares"] * it["offer"]) if det.get("shares") and it.get("offer") and not it.get("spac")
+                             else det.get("amount"))
+        # 공모자금 사용 목적: 단위·10배 오기·합계 줄 보정 + 공모 규모와 맞는지 점검(희망가 하단 기준 금액과 비교)
+        det.setdefault("fundUseRaw", det.get("fundUse"))           # 처음 한 번: 지금 값을 원래 값으로 보관
+        det["fundUse"], det["fundChk"] = dartlib.fund_fix(det.get("fundUseRaw"), det.get("amount"), det.get("oldShareRatio"))
         it["oldShareRatio"] = det.get("oldShareRatio")
         it["uwFee"] = det.get("uwFee")
-        it["uwFeeRate"] = det.get("uwFeeRate") or (round(det["uwFee"] / it["offerAmount"] * 100, 2)
-                                                   if det.get("uwFee") and it.get("offerAmount") else None)
+        fee_base = det.get("amount") or it.get("offerAmount")       # 인수대가와 같은 기준(주요정보 금액)으로 나눈다
+        it["uwFeeRate"] = det.get("uwFeeRate") or (round(det["uwFee"] / fee_base * 100, 2)
+                                                   if det.get("uwFee") and fee_base else None)
         it["uwFeeRateDoc"] = det.get("uwFeeRateDoc")
         it["uwPerfFee"] = det.get("uwPerfFeeDoc")
         it["perfFeeRate"] = det.get("perfFeeRate")
@@ -1157,7 +1182,7 @@ def main():
     except Exception:
         pass
     KEEP = ("rcpNo", "market", "track", "trackSrc", "trackEvidence", "floatAtListing", "totalShares", "lockup",
-            "discountRate", "valuation", "shares", "underwriters", "oldShareRatio", "putback", "fundUse", "summary")
+            "discountRate", "valuation", "shares", "underwriters", "oldShareRatio", "putback", "fundUse", "fundUseRaw", "fundChk", "fundBase", "summary")
 
     enrich_dbg = []
 

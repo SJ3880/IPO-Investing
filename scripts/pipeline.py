@@ -171,6 +171,16 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
             if row.get("market") == "코넥스":
                 skipped.append({"name": name, "filed": iso(filed), "why": "코넥스로 판별"})
                 continue
+            sh, bd = row.get("shares"), row.get("band")
+            if sh and row["offer"]:                      # 공모금액 = 공모주식수 × 확정 공모가(38 금액은 희망가 하단 그대로인 경우가 있음)
+                row["amount"], row["amountHi"] = int(sh * row["offer"]), None
+            elif sh and bd:                              # 확정 전: 희망밴드 하단~상단
+                row["amount"], row["amountHi"] = int(sh * bd[0]), int(sh * bd[1])
+            if row.get("fundUse"):                       # 자금 사용 목적 표 보정·점검(신고서 기준 금액 = 희망가 하단 기준)
+                from dart import fund_fix
+                base = row.get("fundBase") or (int(sh * bd[0]) if sh and bd else row.get("amount"))
+                row.setdefault("fundUseRaw", row["fundUse"])
+                row["fundUse"], row["fundChk"] = fund_fix(row["fundUseRaw"], base, row.get("oldShareRatio"))
             price = row["offer"] or (row["band"][1] if row.get("band") else None)
             if price and row.get("totalShares"):
                 row["marcapAtOffer"] = int(price * row["totalShares"])

@@ -739,13 +739,36 @@ function renderFin(d){
     ${row2('매출액', f.rev, f.revPrev)}${row2('영업이익', f.op, f.opPrev)}${row2('순이익', f.net, f.netPrev)}</table>
     <p class="note">파란색 = 적자. 특례상장 종목은 증권신고서의 추정 실적과 비교해 보세요.</p>`;
 }
-function renderFund(d){
-  const u = d.fundUse || [];
-  if (!u.length) { $('#dFund').innerHTML = '<span class="mu">정보 없음</span>'; return; }
+// 공모자금 사용 목적: 항목 + 합계, 그리고 위쪽 '공모금액'과 왜 다른지(구주매출·가격 기준) 설명
+//   amount = 확정 공모가 기준 공모금액(없으면 밴드 하단), old = 구주매출 비중(%)
+function fundHtml(fu, chk, amount, old, offer){
+  const u = (fu || []).slice();
+  if (!u.length) return '<span class="mu">정보 없음</span>';
   const tot = u.reduce((a, x) => a + x.v, 0);
-  $('#dFund').innerHTML = '<div class="tl" style="grid-template-columns:120px 1fr 90px">' + u.sort((a, b) => b.v - a.v).map(x =>
+  let h = '<div class="tl" style="grid-template-columns:120px 1fr 90px">' + u.sort((a, b) => b.v - a.v).map(x =>
     `<div>${esc(x.k)}</div><div class="meter" style="margin:0"><i style="width:${x.v / tot * 100}%"></i></div><div style="text-align:right">${eok(x.v)}</div>`).join('') +
-    '</div><p class="note">채무상환 비중이 크면 성장 투자보다 재무구조 개선용 공모로 볼 수 있습니다.</p>';
+    `<div><b>합계</b></div><div></div><div style="text-align:right"><b>${eok(tot)}</b></div></div>`;
+  const notes = [];
+  const oldR = old || 0, newAmt = amount ? amount * (1 - oldR / 100) : null;
+  if (amount && oldR > 0)
+    notes.push(`공모금액 ${eok(amount)} 중 구주매출(${f2(oldR)}%) ${eok(amount - newAmt)}은 기존 주주 몫이라 회사에 들어오지 않습니다. 회사가 쓰는 돈 = 신주 모집 ${eok(newAmt)}.`);
+  if (amount && oldR >= 100)
+    notes.push(`<span class="up">⚠ 구주매출 100%(회사로 들어오는 돈 없음)로 집계됐는데 사용 목적 표가 있습니다. 구주매출 비중을 원문에서 확인하세요.</span>`);
+  else if (chk && chk.status === 'total')
+    notes.push(`<span class="up">⚠ 사용 목적 합계 ${eok(tot)}가 구주매출을 포함한 공모금액 전체와 같습니다. 구주매출 비중(${f2(oldR)}%) 또는 DART 요약 수치를 원문에서 확인하세요.</span>`);
+  else if (newAmt && Math.abs(tot / newAmt - 1) > 0.015) {
+    const bad = chk && chk.status === 'mismatch';
+    notes.push(bad
+      ? `<span class="up">⚠ 사용 목적 합계 ${eok(tot)}가 신주 모집금액 ${eok(newAmt)}와 맞지 않습니다. DART 요약 수치에 오기가 있을 수 있으니 원문 ‘자금의 사용목적’을 확인하세요.</span>`
+      : `사용 목적 표는 증권신고서 제출 당시의 계획(희망밴드 하단 등 가정 공모가 기준)이라 ${offer ? '확정 공모가' : '밴드 하단'} 기준 신주 모집금액 ${eok(newAmt)}와 ${eok(Math.abs(newAmt - tot))} 차이가 납니다. 실제 사용 금액은 공모가에 따라 비율대로 달라집니다.`);
+  }
+  if (chk && chk.fixed) notes.push(`DART 요약 수치 보정: ${esc(chk.fixed)}`);
+  notes.push('채무상환 비중이 크면 성장 투자보다 재무구조 개선용 공모로 볼 수 있습니다.');
+  return h + notes.map(n => `<p class="note">${n}</p>`).join('');
+}
+function renderFund(d, r){
+  const amt = r && r.offer && d.shares ? r.offer * d.shares : d.amount;
+  $('#dFund').innerHTML = fundHtml(d.fundUse, d.fundChk, amt, d.oldShareRatio, r && r.offer);
 }
 function renderPeer(r){
   const line = (label, st) => st ? `<tr><td>${label}</td><td>${st.n}개</td><td>${pct(st.firstMed)}</td><td>${pct(st.nowMed)}</td><td>${st.aboveOffer}%</td></tr>` : '';
@@ -818,7 +841,7 @@ async function openDetail(code){
     s('합병 기준 시총', eok(r.marcapAtOffer)) + s('현재 시총', eok(r.marcapNum)) + s('상장일 유통가능', r.floatAtListing != null ? r.floatAtListing.toFixed(1) + '%' : '–') +
     s('20일 평균 거래대금', eok(r.tradeValue20)) + s('상장 후 거래일', fmt(r.tradingDays) + '일');
   else $('#dOffer').innerHTML =
-    s('주관사', esc(uw)) + s('공모주식수', d.shares ? fmt(d.shares) + '주' : '–') + s('공모금액', eok(d.amount)) +
+    s('주관사', esc(uw)) + s('공모주식수', d.shares ? fmt(d.shares) + '주' : '–') + s('공모금액', eok(r.offer && d.shares ? r.offer * d.shares : d.amount)) +
     s('기관경쟁률', r.instComp != null ? fmt(r.instComp) + ':1' : '–') + s('의무보유확약', r.commit != null ? r.commit + '%' : '–') +
     s('구주매출 비중', d.oldShareRatio != null ? d.oldShareRatio + '%' : '–') +
     s('희망 밴드', r.band ? fmt(r.band[0]) + '~' + fmt(r.band[1]) : '–') + s('공모가 결정', esc(r.bandPos || '–')) +
@@ -827,7 +850,7 @@ async function openDetail(code){
     s('공모가 기준 시총', eok(r.marcapAtOffer)) + s('현재 시총', eok(r.marcapNum)) +
     s('20일 평균 거래대금', eok(r.tradeValue20)) + s('상장 후 거래일', fmt(r.tradingDays) + '일');
   $('#dVal').innerHTML = valHtml(d.valuation, d.discountRate, r.offer, r.band);
-  renderTrack(r, d); renderFin(d); renderFund(d); renderPeer(r); renderEvents(d);
+  renderTrack(r, d); renderFin(d); renderFund(d, r); renderPeer(r); renderEvents(d);
   renderLock(r, d);
   renderSummary(d);
   const m = d.market || {};
@@ -880,11 +903,10 @@ function openUp(name){
   const lock = tl.length && x.listDate ? '<div class="tl">' + tl.map(p => `<div>${periodLabel(p.m)}</div><div class="d">${ymd(addMonths(x.listDate, p.m))}</div>
       <div><div class="meter" style="margin:0"><i style="width:${Math.min(100, p.pct)}%"></i></div></div><div style="text-align:right">${p.pct.toFixed(1)}%</div>`).join('') + '</div>'
     : (tl.length ? '<span class="mu">상장일 확정 후 날짜가 표시됩니다.</span>' : '<span class="mu">증권신고서에서 유통가능물량 표를 찾지 못했습니다.</span>');
-  const fu = x.fundUse || [], tot = fu.reduce((a, f) => a + f.v, 0);
   $('#dUp').innerHTML = `
     <h3>공모 일정·구조</h3>
     <div class="grid3">${s('수요예측', rng(x.demand))}${s('청약', rng(x.sub))}${s('상장예정', x.listDate || '미정')}
-      ${s('희망밴드', x.band ? fmt(x.band[0]) + '~' + fmt(x.band[1]) : '–')}${s('확정공모가', fmt(x.offer))}${s('공모금액', eok(x.amount))}
+      ${s('희망밴드', x.band ? fmt(x.band[0]) + '~' + fmt(x.band[1]) : '–')}${s('확정공모가', fmt(x.offer))}${s('공모금액', x.amountHi && !x.offer ? `${eok(x.amount)}~${eok(x.amountHi)}<div class="mu" style="font-size:12px">밴드 기준</div>` : eok(x.amount))}
       ${s('공모주식수', x.shares ? fmt(x.shares) + '주' : '–')}${s('상장예정주식수', x.totalShares ? fmt(x.totalShares) + '주' : '–')}${s('공모 시총', mcapUp(x))}
       ${s('기관경쟁률', x.instComp ? fmt(x.instComp) + ':1' : '–')}${s('일반청약 경쟁률', x.subComp ? fmt(x.subComp) + ':1' : '–')}${s('의무보유확약', x.commit != null ? x.commit + '%' : '–')}${s('구주매출', x.oldShareRatio != null ? x.oldShareRatio + '%' : '–')}
       ${s('상장일 유통가능', x.floatAtListing != null ? x.floatAtListing.toFixed(1) + '%' : '–')}${s('환매청구권', x.putback == null ? '–' : x.putback ? '있음' : '없음')}
@@ -895,7 +917,7 @@ function openUp(name){
     <div class="card"><b>${esc(x.track || '–')}</b> <span class="mu" style="font-size:12px">· 판별 근거: ${esc(x.trackSrc || '증권신고서')} (상장 후 KIND 기술성장기업 목록으로 재확인)</span><div class="note" style="margin-top:4px">${esc(TRACK_NOTE[x.track] || '')}</div>
       ${x.trackEvidence ? `<div class="evi">근거(증권신고서): “${esc(x.trackEvidence)}”</div>` : ''}</div>
     <h3>유통가능물량 · 기간별</h3><div class="card">${lock}</div>
-    ${fu.length ? `<h3>공모자금 사용 목적</h3><div class="card"><div class="tl" style="grid-template-columns:120px 1fr 90px">${fu.sort((a, b) => b.v - a.v).map(f => `<div>${esc(f.k)}</div><div class="meter" style="margin:0"><i style="width:${f.v / tot * 100}%"></i></div><div style="text-align:right">${eok(f.v)}</div>`).join('')}</div></div>` : ''}
+    ${(x.fundUse || []).length ? `<h3>공모자금 사용 목적</h3><div class="card">${fundHtml(x.fundUse, x.fundChk, x.amount, x.oldShareRatio, x.offer)}</div>` : ''}
     ${x.summary ? `<h3>사업 개요 <span class="chip">증권신고서 발췌</span></h3><div class="card summary"><p>${esc(x.summary)}</p></div>` : ''}`;
   $('#dLinks').innerHTML = x.rcpNo ? `<a href="https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${x.rcpNo}" target="_blank" rel="noopener">증권신고서 원문(DART)</a>` : '';
   $('#dUp').hidden = false; $('#dListed').hidden = true;

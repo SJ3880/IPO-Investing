@@ -32,6 +32,78 @@ FUND_NAMES = {"fdpp_fclt": "시설자금", "fdpp_bsninh": "영업양수자금", 
 VIEWER = "https://dart.fss.or.kr/dsaf001/main.do?rcpNo="
 
 
+def _amt(v):
+    """'18,678,000,000' · '18678000000.0' · '1,234원' → 정수(원). 소수점을 지우지 않는다(예전엔 .0이 붙으면 10배가 됐음)"""
+    t = re.sub(r"[,\s원]", "", str(v or ""))
+    m = re.fullmatch(r"-?\d+(?:\.\d+)?", t)
+    return int(round(float(t))) if m else int(re.sub(r"[^\d]", "", t) or 0)
+
+
+def fund_fix(fund, amount=None, old_ratio=None):
+    """공모자금 사용 목적 표 점검·보정. 반환 (목록, 점검정보)
+    · '합계'·'계' 줄, 다른 항목 합과 같은 줄(합계가 엉뚱한 이름으로 들어온 경우) 제거
+    · 단위(천원·백만원) 보정, 일부 항목만 10배로 읽힌 경우 보정
+    · 기준 = 신주 모집금액 = 공모금액 × (1 − 구주매출 비중). 사용 목적 표는 신주 몫만 다룬다
+    status: ok(1.5% 이내) · price(15% 이내: 신고서 가정 공모가 기준 차이) · total(공모금액 전체와 같음: 구주매출 비중 또는
+            DART 수치 확인 필요) · mismatch(원문 확인) · unknown(기준 금액 없음)"""
+    from itertools import product
+    fund = [dict(f) for f in (fund or []) if f.get("v") and f.get("k") not in ("합계", "계", "총계", "합 계")]
+    if not fund:
+        return [], None
+    old = old_ratio or 0
+    exp = round(amount * (1 - old / 100)) if amount and old < 100 else None
+    tot = sum(f["v"] for f in fund)
+    dup = [i for i, f in enumerate(fund) if abs(f["v"] - (tot - f["v"])) <= max(2, f["v"] * 0.002)] if len(fund) >= 3 else []
+    # 후보: (합계 줄 제거 여부) × (단위 배수). 공모 규모에 가장 가까운 조합을 고른다
+    variants = [(False, fund)] + ([(True, [f for k, f in enumerate(fund) if k != dup[0]])] if len(dup) == 1 else [])
+    refs = [x for x in (exp, amount) if x]
+    best = None
+    for dropped, fl in variants:
+        S = sum(f["v"] for f in fl)
+        for mult in (1, 1000, 1000000):
+            if refs:
+                err = min(abs(S * mult / r - 1) for r in refs)
+            else:                                          # 기준 금액이 없으면 10억~1조원 사이가 되는 단위
+                err = 0 if 1e9 <= S * mult <= 1e12 else 9
+            if best is None or err < best[0] - 1e-9:
+                best = (err, dropped, fl, mult)
+    _, dropped, fund, mult = best
+    if dropped and not refs:                               # 기준이 없으면 합계 줄로 단정하지 않음
+        dropped, fund = False, variants[0][1]
+    fund = [{"k": f["k"], "v": f["v"] * mult} for f in fund]
+    fixes = []
+    if dropped:
+        fixes.append("합계 줄이 항목으로 들어와 제외")
+    if mult > 1 and refs:
+        fixes.append(("천원" if mult == 1000 else "백만원") + " 단위 → 원으로 환산")
+    S = sum(f["v"] for f in fund)
+    # 일부 항목만 10배(소수점·자릿수 오류): 항목 하나가 공모 전체보다 큰, 있을 수 없는 경우에만 고친다
+    if exp and S / exp > 1.6 and len(fund) <= 8 and max(f["v"] for f in fund) > (amount or exp) * 1.2:
+        cand = None
+        for mask in product((0, 1), repeat=len(fund)):
+            if not any(mask):
+                continue
+            s2 = sum(f["v"] / 10 if m else f["v"] for f, m in zip(fund, mask))
+            err = abs(s2 / exp - 1)
+            if err <= 0.05 and (cand is None or (sum(mask), err) < cand[:2]):   # 가장 적게 고치는 쪽 우선
+                cand = (sum(mask), err, mask)
+        if cand:
+            fund = [{"k": f["k"], "v": round(f["v"] / 10) if m else f["v"]} for f, m in zip(fund, cand[2])]
+            fixes.append("일부 금액 10배 오기 → 보정")
+    S = sum(f["v"] for f in fund)
+    chk = {"expected": exp, "sum": S, "fixed": ", ".join(fixes) or None}
+    if not exp:
+        chk["status"] = "unknown"
+    else:
+        r = S / exp
+        chk["status"] = "ok" if abs(r - 1) <= 0.015 else ("price" if 0.85 <= r <= 1.15 else "mismatch")
+        if any("10배" in x for x in fixes) and abs(r - 1) > 0.005:
+            chk["status"] = "mismatch"                     # 10배 오기를 고쳐도 딱 맞지 않음 = 다른 자리에도 오기 → 원문 확인
+        elif chk["status"] == "mismatch" and old > 0 and 0.97 <= S / amount <= 1.06:
+            chk["status"] = "total"
+    return fund, chk
+
+
 class Dart:
     def __init__(self, key, log=print):
         self.key = key
@@ -289,16 +361,17 @@ class Dart:
                 if x.get("rcept_no", "") != last_rcp:
                     continue
                 if "se" in x and "amt" in x:        # {구분, 금액} 형태
-                    if num(x["amt"]) > 0:
-                        fund.append({"k": str(x["se"]).strip(), "v": num(x["amt"])})
+                    if _amt(x["amt"]) > 0:
+                        fund.append({"k": str(x["se"]).strip(), "v": _amt(x["amt"])})
                     continue
                 for k, v in x.items():
                     if k in ("rcept_no", "corp_cls", "corp_code", "corp_name"):
                         continue
-                    n = num(v)
+                    n = _amt(v)
                     if n > 0 and not re.fullmatch(r"\d{8,}", str(v).strip()):
                         fund.append({"k": FUND_NAMES.get(k, k), "v": n})
-            out["fundUse"] = [f for f in fund if f["k"] not in ("합계", "계")]
+            out["fundUseRaw"] = fund                    # DART 원래 값(보정은 매번 이 값에서 다시 한다)
+            out["fundUse"], out["fundChk"] = fund_fix(fund, out.get("amount"), out.get("oldShareRatio"))
         put = g.get("일반청약자환매청구권") or []
         def real(v):
             v = str(v).strip()
