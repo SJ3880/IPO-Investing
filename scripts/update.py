@@ -48,7 +48,7 @@ DART_KEY = os.environ.get("DART_API_KEY", "").strip()
 CLAUDE_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 MAX_AI_PER_RUN = 300
 SUMMARY_VER = 2       # 사업 요약 형식 버전. 올리면 AI 요약을 새 형식으로 다시 만듦
-PARSE_VER = 9         # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
+PARSE_VER = 10        # 증권신고서 해석 방식 버전. 올리면 이미 읽은 문서도 한 번 다시 읽음(AI 요약은 유지)
 DART_BUDGET_MIN = 40   # (참고용) 아래 시각 기준으로 제한
 # GitHub 실행 시간 제한(90분) 안에 반드시 저장까지 끝내도록 '실행 시작부터 몇 분째'로 단계를 끊는다.
 DOC_UNTIL_MIN = 45     # 이때까지만 증권신고서 새로 읽기(남은 건 다음 실행 때 이어서)
@@ -738,6 +738,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
                 det["floatAtListing"] = info["floatAtListing"]
                 det["discountRate"] = info.get("discountRate")
                 det["valuation"] = info.get("valuation")
+                det["fundDoc"] = info.get("fundDoc")
                 det["valVer"] = VAL_VER
                 det["totalShares"] = info["totalShares"]
                 det["trackEvidence"] = info["trackEvidence"]
@@ -814,7 +815,7 @@ def upcoming_detail(dt, name, filed):
             "trackSrc": "증권신고서(할인율)" if str(info["trackEvidence"]).startswith("할인율") else "증권신고서",
             "trackEvidence": info["trackEvidence"], "floatAtListing": info["floatAtListing"],
             "totalShares": info["totalShares"], "lockup": info["lockup"], "discountRate": info.get("discountRate"),
-            "valuation": valuation.sanitize(info.get("valuation")),
+            "valuation": valuation.sanitize(info.get("valuation")), "fundDoc": info.get("fundDoc"),
             "shares": est.get("shares"), "underwriters": est.get("underwriters"),
             "oldShareRatio": est.get("oldShareRatio"), "putback": est.get("putback"),
             "fundUse": est.get("fundUse"), "fundUseRaw": est.get("fundUseRaw"), "fundChk": est.get("fundChk"), "fundBase": est.get("amount"), "summary": excerpt(info["bizText"], 300) if info["bizText"] else None}
@@ -1132,6 +1133,9 @@ def main():
         # 공모자금 사용 목적: 단위·10배 오기·합계 줄 보정 + 공모 규모와 맞는지 점검(희망가 하단 기준 금액과 비교)
         det.setdefault("fundUseRaw", det.get("fundUse"))           # 처음 한 번: 지금 값을 원래 값으로 보관
         det["fundUse"], det["fundChk"] = dartlib.fund_fix(det.get("fundUseRaw"), det.get("amount"), det.get("oldShareRatio"))
+        fd = det.get("fundDoc") or {}
+        if fd.get("gross") and fd.get("sell"):                   # 구주매출 비중: 원문 조달 내역(매출대금 ÷ 총공모금액)이 더 정확
+            det["oldShareRatio"] = round(fd["sell"] / fd["gross"] * 100, 1)
         it["oldShareRatio"] = det.get("oldShareRatio")
         it["uwFee"] = det.get("uwFee")
         fee_base = det.get("amount") or it.get("offerAmount")       # 인수대가와 같은 기준(주요정보 금액)으로 나눈다
@@ -1182,7 +1186,7 @@ def main():
     except Exception:
         pass
     KEEP = ("rcpNo", "market", "track", "trackSrc", "trackEvidence", "floatAtListing", "totalShares", "lockup",
-            "discountRate", "valuation", "shares", "underwriters", "oldShareRatio", "putback", "fundUse", "fundUseRaw", "fundChk", "fundBase", "summary")
+            "discountRate", "valuation", "shares", "underwriters", "oldShareRatio", "putback", "fundUse", "fundUseRaw", "fundChk", "fundBase", "fundDoc", "summary")
 
     enrich_dbg = []
 

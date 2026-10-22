@@ -19,7 +19,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -30,13 +30,13 @@ jobs:
         env:
           DART_API_KEY: ${{ secrets.DART_API_KEY }}
         run: python -u scripts/fund_check.py
-        timeout-minutes: 25
+        timeout-minutes: 50
       - name: 결과 저장
         if: ${{ !cancelled() }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/debug/fund_check.json
+          git add data/debug/fund_check2.json
           git diff --cached --quiet && exit 0
           git commit -m "자금 사용 목적 원문 대조 결과"
           for i in 1 2 3 4 5; do git pull --rebase -X theirs origin main && git push && break; sleep 20; done

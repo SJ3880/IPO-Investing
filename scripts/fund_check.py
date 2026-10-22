@@ -22,10 +22,9 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 
 # 상장완료 종목(코드)과 공모 진행 중 종목(이름)
-CODES = ("159010 111380 318020 464280 079900 378340 352480 459100 270660 262840 330350 088340 387570 136150 "
-         "102370 017860 332370 031210 244920 484590 448900 064850 411080 418250 274090 290520 453860 058970 "
-         "424870").split()
-NAMES = ["래블업", "다비오", "엠에스바이오", "영광"]
+CODES = ("378340 352480 459100 270660 262840 330350 088340 387570 136150 102370 017860 332370 031210 244920 "
+         "484590 448900 064850 411080 418250 274090 290520 453860 058970 424870").split()
+NAMES = []
 
 
 def fund_section(xml):
@@ -71,7 +70,7 @@ def main():
     items = {it["code"]: it for it in json.loads((DATA / "ipos.json").read_text("utf-8"))["items"]}
     out = []
     targets = [("name", n) for n in NAMES] + [("code", c) for c in CODES]
-    dest = DATA / "debug" / "fund_check.json"
+    dest = DATA / "debug" / "fund_check2.json"
     dest.parent.mkdir(exist_ok=True)
 
     def alarm(*_):
@@ -98,14 +97,16 @@ def main():
                 continue
             row["rcpNo"], row["title"] = f["rcept_no"], f["report_nm"]
             row["estk"] = raw_estk(dt, corp, listed)
-            sec = fund_section(dt.document_text(f["rcept_no"]))
+            xml = dt.document_text(f["rcept_no"])
+            row["fundDoc"] = dartlib.fund_from_doc(xml)
+            sec = fund_section(xml)
             row["section"] = sec or {"error": "자금의 사용목적 장을 못 찾음"}
         except Exception as e:
             row["error"] = str(e)[:300]
         finally:
             signal.alarm(0)
         out.append(row)
-        print(row.get("name"), row.get("rcpNo"), "ok" if row.get("section") else row.get("error"),
+        print(row.get("name"), row.get("rcpNo"), "ok" if row.get("fundDoc") else row.get("error"),
               f"{time.time() - t0:.0f}s", flush=True)
         dest.write_text(json.dumps(out, ensure_ascii=False, indent=1), "utf-8")   # 중간에 끊겨도 남도록 매번 저장
 

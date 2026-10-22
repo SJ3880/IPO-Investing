@@ -104,6 +104,136 @@ def fund_fix(fund, amount=None, old_ratio=None):
     return fund, chk
 
 
+# ---------------------------------------------------------------- 증권신고서 'Ⅴ. 자금의 사용목적' 원문 표
+UNIT_RE = re.compile(r"단\s*위\s*[:：]?\s*(백만원|천원|억원|원)")
+UNIT_MUL = {"원": 1, "천원": 1000, "백만원": 1000000, "억원": 100000000}
+USE_COLS = ("시설", "영업양수", "운영", "채무상환", "타법인", "기타", "연구개발")
+
+
+def _clean_label(t):
+    return re.sub(r"&cr|\s+", "", t or "")
+
+
+def fund_blocks(xml_text):
+    """'자금의 사용목적' 장을 [('text', 문자열) | ('table', 격자)] 순서대로"""
+    titles = list(re.finditer(r"<TITLE[^>]*>([^<]*)</TITLE>", xml_text, re.I))
+    hit = next((m for m in titles if re.search(r"자금의\s*사용\s*목적", m.group(1))), None)
+    if not hit:
+        return []
+    st = hit.start()
+    nxt = next((m for m in titles if m.start() > st + 50 and not re.search(r"자금|조달|사용|발행제비용", m.group(1))
+                and re.match(r"\s*(Ⅵ|VI|Ⅶ|제\s*\d\s*부|[가-힣A-Z]{0,2}\s*\d?\s*\.?\s*(그\s*밖|투자자\s*보호|기타))", m.group(1))), None)
+    sec = xml_text[st: nxt.start() if nxt else st + 400000]
+    blocks, pos = [], 0
+    for m in re.finditer(r"<TABLE\b.*?</TABLE>", sec, re.S | re.I):
+        blocks.append(("text", strip_tags(sec[pos:m.start()])))
+        tb = BeautifulSoup(m.group(0), "html.parser").find("table")
+        if tb is not None and len(m.group(0)) < 300000:
+            blocks.append(("table", valuation._grid(valuation._rows(tb))))
+        pos = m.end()
+        if len(blocks) > 80:
+            break
+    blocks.append(("text", strip_tags(sec[pos:pos + 20000])))
+    return blocks
+
+
+def fund_from_blocks(blocks, gross_hint=None):
+    """조달 내역(총공모금액·의무인수·구주매출·발행제비용·순수입금)과 사용 계획(시설·운영…)을 읽는다.
+    단위는 표 바로 앞의 '(단위: …)', 없으면 순수입금과 맞는 단위로 정한다."""
+    unit, raise_, uses, basis = None, None, None, None
+    for kind, b in blocks:
+        txt = b if kind == "text" else " ".join(" ".join(r) for r in b)
+        if basis is None:
+            m = re.search(r"(확정\s*공모\s*가\s*액?[인은]?\s*[\d,]+\s*원|희망\s*공모\s*가\s*액?[^.]{0,30}하단[^.]{0,20}?[\d,]+\s*원|"
+                          r"(?:예상|희망)[^.]{0,40}하단[^.]{0,10}[\d,]+\s*원)", re.sub(r"\s+", " ", txt))
+            basis = re.sub(r"\s+", " ", m.group(0)) if m else None
+        if kind == "text":
+            us = UNIT_RE.findall(b)
+            if us:
+                unit = us[-1]
+            continue
+        g = b
+        us = UNIT_RE.findall(txt)
+        if us and len(g) <= 2 and not any(_amt(c) for r in g for c in r if re.fullmatch(r"[\d,\s]+", c or "")):
+            unit = us[-1]                      # '(단위: 백만원)'만 있는 작은 표
+            continue
+        if raise_ is None and any(re.search(r"순\s*(수\s*입|조\s*달)\s*금", r[0] if r else "") for r in g):
+            rows = {}
+            for r in g:
+                if len(r) < 2:
+                    continue
+                lab = _clean_label(r[0])
+                val = next((_amt(c) for c in r[1:] if re.fullmatch(r"-?[\d,\s]+(\.\d+)?", (c or "").strip()) and _amt(c)), None)
+                if val is None:
+                    continue
+                if re.search(r"순(수입|조달)", lab):
+                    rows["net"] = val
+                elif "의무" in lab and ("인수" in lab or "취득" in lab):
+                    rows["sponsor"] = val
+                elif "발행제비용" in lab or "발행비용" in lab:
+                    rows["cost"] = val
+                elif re.search(r"매출(대금|금액)|구주", lab) and not re.search(r"모집|총", lab):
+                    rows["sell"] = val
+                elif "신주" in lab and "모집" in lab:
+                    rows["newGross"] = val
+                elif "gross" not in rows and re.search(r"총|공모|모집", lab):
+                    rows["gross"] = val
+            if "net" in rows:
+                raise_ = {"unit": unit, **rows}
+            continue
+        if uses is None:
+            for i, r in enumerate(g[:-1]):
+                heads = [_clean_label(c) for c in r]
+                if sum(1 for h in heads if any(h.startswith(k) for k in USE_COLS)) >= 3 and any(h in ("계", "합계") for h in heads):
+                    vals = g[i + 1]
+                    items, total = [], None
+                    for h, v in zip(heads, vals):
+                        n = _amt(v) if re.fullmatch(r"-?[\d,\s]+(\.\d+)?", (v or "").strip() or "x") else 0
+                        if h in ("계", "합계"):
+                            total = n
+                        elif n:
+                            items.append({"k": re.sub(r"(자금)?$", "자금", h) if h in ("시설", "운영", "기타") else h, "v": n})
+                    if items:
+                        uses = {"unit": unit, "items": items, "total": total}
+                    break
+    if not raise_ and not uses:
+        return None
+
+    def scale(x, u, ref):
+        """단위 배수: 적힌 단위를 우선, 기준 금액과 동떨어지면 맞는 배수로"""
+        cands = ([UNIT_MUL[u]] if u else []) + [1, 1000, 1000000]
+        if ref:
+            ok = [m for m in cands if 0.2 <= x * m / ref <= 5]
+            return ok[0] if ok else cands[0]
+        return cands[0] if u else (1 if x >= 1e8 else 1000000 if x < 1e6 else 1000)
+
+    out = {"basis": basis}
+    if raise_:
+        ref = gross_hint
+        key = raise_.get("gross") or raise_.get("net")
+        mul = scale(key, raise_.get("unit"), ref)
+        for k in ("gross", "newGross", "sponsor", "sell", "cost", "net"):
+            if raise_.get(k):
+                out[k] = raise_[k] * mul
+    if uses:
+        ref = out.get("net") or gross_hint
+        tot = uses["total"] or sum(x["v"] for x in uses["items"])
+        mul = scale(tot, uses.get("unit"), ref)
+        out["uses"] = [{"k": x["k"], "v": x["v"] * mul} for x in uses["items"]]
+        out["usesTotal"] = tot * mul
+    # 검산: 사용 계획 합계 = 순수입금(반올림 차이 0.5% 이내)
+    if out.get("net") and out.get("usesTotal"):
+        out["tie"] = abs(out["usesTotal"] / out["net"] - 1) <= 0.005
+    return out
+
+
+def fund_from_doc(xml_text, gross_hint=None):
+    try:
+        return fund_from_blocks(fund_blocks(xml_text), gross_hint)
+    except Exception:
+        return None
+
+
 class Dart:
     def __init__(self, key, log=print):
         self.key = key
@@ -783,6 +913,7 @@ def analyze_document(xml_text):
         if not out["lockup"]:
             out["lockupTables"] = [table_rows(t)[:80] for t in find_lockup_tables(soup)[:1]]
     out["bizText"] = business_text_raw(xml_text)
+    out["fundDoc"] = fund_from_doc(xml_text)          # 'Ⅴ. 자금의 사용목적' 원문 표(조달 내역·사용 계획)
     plain = strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml_text[:4000000], flags=re.I))
     out["track"], out["trackEvidence"] = listing_track(plain)
     out["discountRate"] = discount_rate(plain)
