@@ -19,7 +19,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -29,7 +29,8 @@ jobs:
       - name: 원문 읽기
         env:
           DART_API_KEY: ${{ secrets.DART_API_KEY }}
-        run: python scripts/fund_check.py
+        run: python -u scripts/fund_check.py
+        timeout-minutes: 25
       - name: 결과 저장
         if: ${{ !cancelled() }}
         run: |

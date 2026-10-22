@@ -7,7 +7,9 @@ GitHub Actions(.github/workflows/fund-check.yml)에서 DART_API_KEY 로 실행.
 import json
 import os
 import re
+import signal
 import sys
+import time
 from datetime import date
 from pathlib import Path
 
@@ -68,9 +70,17 @@ def main():
     dt = dartlib.Dart(key)
     items = {it["code"]: it for it in json.loads((DATA / "ipos.json").read_text("utf-8"))["items"]}
     out = []
-    targets = [("code", c) for c in CODES] + [("name", n) for n in NAMES]
+    targets = [("name", n) for n in NAMES] + [("code", c) for c in CODES]
+    dest = DATA / "debug" / "fund_check.json"
+    dest.parent.mkdir(exist_ok=True)
+
+    def alarm(*_):
+        raise TimeoutError("120초 초과")
+    signal.signal(signal.SIGALRM, alarm)
     for kind, v in targets:
         row = {"key": v}
+        t0 = time.time()
+        signal.alarm(120)                                   # 한 종목이 오래 걸리면 건너뜀
         try:
             if kind == "code":
                 it = items.get(v, {})
@@ -92,10 +102,12 @@ def main():
             row["section"] = sec or {"error": "자금의 사용목적 장을 못 찾음"}
         except Exception as e:
             row["error"] = str(e)[:300]
+        finally:
+            signal.alarm(0)
         out.append(row)
-        print(row.get("name"), row.get("rcpNo"), "ok" if row.get("section") else row.get("error"))
-    (DATA / "debug").mkdir(exist_ok=True)
-    (DATA / "debug" / "fund_check.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), "utf-8")
+        print(row.get("name"), row.get("rcpNo"), "ok" if row.get("section") else row.get("error"),
+              f"{time.time() - t0:.0f}s", flush=True)
+        dest.write_text(json.dumps(out, ensure_ascii=False, indent=1), "utf-8")   # 중간에 끊겨도 남도록 매번 저장
 
 
 if __name__ == "__main__":
