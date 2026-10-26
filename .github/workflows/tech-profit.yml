@@ -1,0 +1,34 @@
+# 일회성 조회(임시 브랜치 전용) — main 에는 올리지 않음
+name: 기술특례 상장 직전 실적 조회
+
+on:
+  push:
+    branches: [tmp-tech-profit]
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -r scripts/requirements.txt
+      - name: 조회
+        env:
+          DART_API_KEY: ${{ secrets.DART_API_KEY }}
+        run: python -u scripts/tech_profit.py
+        timeout-minutes: 80
+      - name: 결과 저장(임시 브랜치)
+        if: ${{ !cancelled() }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f data/debug/tech_profit.json
+          git diff --cached --quiet && exit 0
+          git commit -m "기술특례 실적 조회 결과"
+          git push origin HEAD:tmp-tech-profit
