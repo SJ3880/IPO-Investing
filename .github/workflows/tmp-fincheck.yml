@@ -1,4 +1,4 @@
-name: 임시 - 기술특례 상장 직전 실적
+name: 임시 - 매출인 조회
 on:
   push:
     branches: [tmp-fincheck]
@@ -14,9 +14,9 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install -r scripts/requirements.txt
       - env: { DART_API_KEY: "${{ secrets.DART_API_KEY }}" }
-        run: python -u tmpcheck/fincheck.py
+        run: python -u tmpcheck/sellers.py
         timeout-minutes: 25
       - if: ${{ !cancelled() }}
         run: |
           git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tmpcheck/result.json && git commit -m "result" && git push origin HEAD:tmp-fincheck || true
+          git add tmpcheck/sellers.json && git commit -m "sellers" && git push origin HEAD:tmp-fincheck || true
