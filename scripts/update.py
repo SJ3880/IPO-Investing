@@ -818,6 +818,7 @@ def upcoming_detail(dt, name, filed):
     if cache.exists():
         c = json.loads(cache.read_text("utf-8"))
         if (c.get("rcpNo") == f["rcept_no"] and c.get("ver") == PARSE_VER
+                and c["data"].get("totalShares")
                 and sane_total(c["data"].get("totalShares"), c["data"].get("shares")) == c["data"].get("totalShares")):
             c["data"]["valuation"] = valuation.sanitize(c["data"].get("valuation"))
             return c["data"]
