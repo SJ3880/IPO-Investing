@@ -190,6 +190,8 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
                 row.setdefault("fundUseRaw", row["fundUse"])
                 row["fundUse"], row["fundChk"] = fund_fix(row["fundUseRaw"], base, row.get("oldShareRatio"))
             price = row["offer"] or (row["band"][1] if row.get("band") else None)
+            if row.get("totalShares") and row.get("shares") and not (0.02 <= row["shares"] / row["totalShares"] <= 0.9):
+                row["totalShares"] = None              # 상장예정주식수를 잘못 읽은 경우 시총을 비워 둔다
             if price and row.get("totalShares"):
                 row["marcapAtOffer"] = int(price * row["totalShares"])
             offering.append(row)

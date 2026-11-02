@@ -1028,7 +1028,9 @@ def total_shares(tables):
     for rows in tables:
         for r in expand(rows):
             if r and any(k in " ".join(r[:2]).replace(" ", "") for k in ("합계", "총계", "계", "Total")):
-                nums = [int(re.sub(r"[^\d]", "", c)) for c in r if re.fullmatch(r"[\d,]{7,}", c.replace(" ", ""))]
+                # 천 단위 쉼표가 제대로 찍힌 숫자만(예: '14,462,018 40' 처럼 두 숫자가 붙은 칸은 버림)
+                nums = [int(c.strip().replace(",", "")) for c in r
+                        if re.fullmatch(r"\d{1,3}(?:,\d{3}){2,}|\d{7,}", c.strip())]
                 if nums:
                     best = max(best or 0, max(nums))
     return best

@@ -644,6 +644,15 @@ def horizon_returns(bars, listed, base):
 SNAP = (1.5, 2, 2.5, 3, 4, 5, 6, 10, 20)
 
 
+def sane_total(ts, shares):
+    """상장예정주식수가 공모주식수와 말이 되는지(공모주식 = 상장예정주식의 2%~90%). 아니면 잘못 읽은 값 → None"""
+    if not ts:
+        return None
+    if shares and not (0.02 <= shares / ts <= 0.9):
+        return None
+    return ts
+
+
 def first_close(bars, m38, adj):
     """상장일 종가(원래 가격). 시세가 배당 등으로 수정되지 않았으면(첫날 시가가 38 시가와 같음) 거래소 시세를,
     수정된 시세면 38의 종가를 쓴다. 첫날 수익률도 이 값으로 계산해 표의 종가·수익률이 서로 맞게 한다."""
@@ -806,7 +815,8 @@ def upcoming_detail(dt, name, filed):
     cache = DATA / "upcoming" / f"{corp}.json"
     if cache.exists():
         c = json.loads(cache.read_text("utf-8"))
-        if c.get("rcpNo") == f["rcept_no"] and c.get("ver") == PARSE_VER:
+        if (c.get("rcpNo") == f["rcept_no"] and c.get("ver") == PARSE_VER
+                and sane_total(c["data"].get("totalShares"), c["data"].get("shares")) == c["data"].get("totalShares")):
             c["data"]["valuation"] = valuation.sanitize(c["data"].get("valuation"))
             return c["data"]
     info = dartlib.analyze_document(dt.document_text(f["rcept_no"]))
@@ -814,7 +824,7 @@ def upcoming_detail(dt, name, filed):
     data = {"rcpNo": f["rcept_no"], "market": info["market"], "track": info["track"],
             "trackSrc": "증권신고서(할인율)" if str(info["trackEvidence"]).startswith("할인율") else "증권신고서",
             "trackEvidence": info["trackEvidence"], "floatAtListing": info["floatAtListing"],
-            "totalShares": info["totalShares"], "lockup": info["lockup"], "discountRate": info.get("discountRate"),
+            "totalShares": sane_total(info["totalShares"], est.get("shares")), "lockup": info["lockup"], "discountRate": info.get("discountRate"),
             "valuation": valuation.sanitize(info.get("valuation")), "fundDoc": info.get("fundDoc"),
             "shares": est.get("shares"), "underwriters": est.get("underwriters"),
             "oldShareRatio": est.get("oldShareRatio"), "putback": est.get("putback"),
@@ -1125,6 +1135,9 @@ def main():
         for key, m in (("float1m", 1), ("float3m", 3), ("float6m", 6), ("float1y", 12)):
             pts = [x["pct"] for x in tl if x["m"] <= m]
             it[key] = pts[-1] if pts else None
+        if det.get("totalShares") and not sane_total(det["totalShares"], det.get("shares")):
+            det["totalShares"] = None                      # 잘못 읽은 상장예정주식수 → 다음에 신고서 다시 읽게
+            det["parseVer"] = 0
         it["totalShares"] = det.get("totalShares")
         it["offerShares"] = det.get("shares")
         # 공모금액 = 공모주식수 × 확정 공모가. (DART 주요정보의 금액은 희망가 하단 기준이라 확정가와 다를 수 있음)
