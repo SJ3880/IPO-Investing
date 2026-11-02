@@ -892,5 +892,570 @@
   "baseTried": "2026-10-02",
   "base": 2361,
   "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "258790": {
+  "mergeDate": "2019-12-30",
+  "adj": 5,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20191008000426",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "307180": {
+  "mergeDate": "2019-12-27",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20190930000294",
+  "baseTried": "2026-11-02",
+  "base": 2146,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "264850": {
+  "mergeDate": "2019-12-20",
+  "adj": 1,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20190917000675",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "256840": {
+  "mergeDate": "2019-12-03",
+  "adj": 1,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20190822000109",
+  "baseTried": "2026-11-02",
+  "base": 2020,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "254120": {
+  "mergeDate": "2019-11-15",
+  "adj": 5,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20190809000348",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "297570": {
+  "mergeDate": "2019-10-01",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20190624000220",
+  "baseTried": "2026-11-02",
+  "base": 2350,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "250930": {
+  "mergeDate": "2019-09-11",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20190611000222",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "303030": {
+  "mergeDate": "2019-07-26",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "256630": {
+  "mergeDate": "2019-07-16",
+  "adj": 5,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20190415000868",
+  "baseTried": "2026-11-02",
+  "base": 2047,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "239340": {
+  "mergeDate": "2019-06-10",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20190304000457",
+  "baseTried": "2026-11-02",
+  "base": 2068,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "253590": {
+  "mergeDate": "2019-01-31",
+  "adj": 1,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20181108000453",
+  "baseTried": "2026-11-02",
+  "base": 2100,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "242040": {
+  "mergeDate": "2018-12-11",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20180829000093",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "230240": {
+  "mergeDate": "2018-11-15",
+  "adj": 5,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20180813000273",
+  "baseTried": "2026-11-02",
+  "base": 2040,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "227950": {
+  "mergeDate": "2018-11-08",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20180810000630",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "226340": {
+  "mergeDate": "2018-10-29",
+  "adj": 5,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20180731000091",
+  "baseTried": "2026-11-02",
+  "base": 2653,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "225430": {
+  "mergeDate": "2018-09-28",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "277410": {
+  "mergeDate": "2018-09-11",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20180612000530",
+  "baseTried": "2026-11-02",
+  "base": 2400,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "217500": {
+  "mergeDate": "2018-05-18",
+  "adj": 1,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20180222000084",
+  "baseTried": "2026-11-02",
+  "base": 2038,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "215090": {
+  "mergeDate": "2018-03-23",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20171218000106",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "263770": {
+  "mergeDate": "2018-03-23",
+  "adj": 1,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20171220000177",
+  "baseTried": "2026-11-02",
+  "base": 2078,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "225590": {
+  "mergeDate": "2018-02-13",
+  "adj": 5,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20171103000519",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "214150": {
+  "mergeDate": "2017-12-28",
+  "adj": 2,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "218150": {
+  "mergeDate": "2017-12-28",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20170913000300",
+  "baseTried": "2026-11-02",
+  "base": 2100,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "215100": {
+  "mergeDate": "2017-12-19",
+  "adj": 2,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20170911000286",
+  "baseTried": "2026-11-02",
+  "base": 2200,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "205470": {
+  "mergeDate": "2017-10-17",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20170713000369",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "220260": {
+  "mergeDate": "2017-10-11",
+  "adj": 2.5,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20170627000038",
+  "baseTried": "2026-11-02",
+  "base": 2339,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "204620": {
+  "mergeDate": "2017-09-19",
+  "adj": 2,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20170616000426",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "252500": {
+  "mergeDate": "2017-09-19",
+  "adj": 2.5,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20170619000122",
+  "baseTried": "2026-11-02",
+  "base": 2012,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "218410": {
+  "mergeDate": "2017-09-01",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20170526000360",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "225570": {
+  "mergeDate": "2017-06-12",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20170315000323",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "198440": {
+  "mergeDate": "2017-05-15",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20170209000483",
+  "baseTried": "2026-11-02",
+  "base": 2402,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "215790": {
+  "mergeDate": "2017-05-08",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20170116000505",
+  "baseTried": "2026-11-02",
+  "base": 1985,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "215380": {
+  "mergeDate": "2017-04-28",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "215480": {
+  "mergeDate": "2017-04-28",
+  "adj": 4,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20170116000507",
+  "baseTried": "2026-11-02",
+  "base": 2151,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "232140": {
+  "mergeDate": "2017-04-05",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20161223000463",
+  "baseTried": "2026-11-02",
+  "base": 2010,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "250060": {
+  "mergeDate": "2017-03-21",
+  "adj": 1,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20161216000258",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "219550": {
+  "mergeDate": "2017-02-08",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20161104000282",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "203650": {
+  "mergeDate": "2017-01-20",
+  "adj": 0.5,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "222080": {
+  "mergeDate": "2017-01-20",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "217270": {
+  "mergeDate": "2016-12-14",
+  "adj": 5,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "214680": {
+  "mergeDate": "2016-12-05",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "204840": {
+  "mergeDate": "2016-10-05",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20160616000161",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "214270": {
+  "mergeDate": "2016-10-05",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20160628000911",
+  "baseTried": "2026-11-02",
+  "base": 2035,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "208370": {
+  "mergeDate": "2016-09-13",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "208350": {
+  "mergeDate": "2016-09-09",
+  "adj": 5,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20160524000117",
+  "baseTried": "2026-11-02",
+  "base": 2007,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "222420": {
+  "mergeDate": "2016-07-25",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "208140": {
+  "mergeDate": "2016-06-29",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20160331001253",
+  "baseTried": "2026-11-02",
+  "base": 1999,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "208640": {
+  "mergeDate": "2016-05-13",
+  "adj": 10,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "206400": {
+  "mergeDate": "2015-12-30",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20150922000244",
+  "baseTried": "2026-11-02",
+  "base": 2200,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "208710": {
+  "mergeDate": "2015-12-08",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20150903000337",
+  "baseTried": "2026-11-02",
+  "base": 2438,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "207760": {
+  "mergeDate": "2015-11-23",
+  "adj": 2,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20150820000308",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "205500": {
+  "mergeDate": "2015-10-05",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "206640": {
+  "mergeDate": "2015-09-11",
+  "adj": 20,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20150612000399",
+  "baseTried": "2026-11-02",
+  "base": 2400,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "205100": {
+  "mergeDate": "2015-06-26",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20150326000854",
+  "baseTried": "2026-11-02",
+  "base": 2440,
+  "baseSrc": "증권신고서(합병) 합병가액"
+ },
+ "184230": {
+  "mergeDate": "2015-06-16",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "187790": {
+  "mergeDate": "2015-04-30",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "182360": {
+  "mergeDate": "2015-04-09",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "baseTried": "2026-11-02",
+  "base": 2000,
+  "baseSrc": "스팩 합병가액 2,000원"
+ },
+ "200130": {
+  "mergeDate": "2015-02-03",
+  "adj": 1.0,
+  "mdVer": 2,
+  "mdSrc": "KIND",
+  "rcpNo": "20141113000408",
+  "baseTried": "2026-11-02",
+  "base": 2697,
+  "baseSrc": "증권신고서(합병) 합병가액"
  }
 }
