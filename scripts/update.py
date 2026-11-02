@@ -40,7 +40,7 @@ DATA = ROOT / "data"
 PRICES = DATA / "prices"
 DETAIL = DATA / "detail"
 KST = ZoneInfo("Asia/Seoul")
-SINCE = date(2020, 1, 1)   # 이 날짜 이후 상장(코스피·코스닥, 스팩 제외)
+SINCE = date(2015, 1, 1)   # 이 날짜 이후 상장(코스피·코스닥 직상장·스팩합병)
 HEAVY_DAYS = 730           # 증권신고서까지 읽는 기간(최근 2년 상장 + 공모 진행 중)
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"}
@@ -277,6 +277,8 @@ def spac_info(sp, dt, cache):
     if c.get("mdVer") == 2 and c.get("mergeDate") and (c.get("base") or "존속" in sp["listType"]
                                or (tried and (date.today() - date.fromisoformat(tried)).days < 7)):
         return c
+    if mins() > 18:                                  # 처음 넣는 스팩합병이 많을 때: 시간 초과 방지, 남은 건 다음 실행 때
+        return c if c.get("mergeDate") else {}
     bars = fetch_daily(sp["code"])
     md, adj = merge_point(bars, sp)
     doc_md = None
@@ -1086,7 +1088,7 @@ def main():
                 det["market"], det["marketAt"] = fm, None      # 새로 받았으면 주식수 다시 계산
                 det["marketFetched"] = today.isoformat()
             det.setdefault("market", {})
-        if dt and mins() < LIGHT_UNTIL_MIN:   # 2020년 이후 전 종목 증권신고서(PER·Peer group·공모할인율). 최근 상장부터
+        if dt and mins() < LIGHT_UNTIL_MIN:   # 2015년 이후 전 종목 증권신고서(PER·Peer group·공모할인율). 최근 상장부터
             try:
                 heavy = mins() < DOC_UNTIL_MIN
                 if not heavy and (not det.get("dartDone") or det.get("parseVer", 1) < PARSE_VER):

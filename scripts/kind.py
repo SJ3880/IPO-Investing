@@ -76,7 +76,7 @@ def list_table(html, columns=None, code_col="회사코드"):
 
 
 # ------------------------------------------------------------------ 공모기업 진행현황
-def pubofr(from_date="2020-01-01", to_date=None, debug_dir=None):
+def pubofr(from_date="2015-01-01", to_date=None, debug_dir=None):
     to_date = to_date or date.today().isoformat()
     form = {"method": "searchPubofrProgComSub", "forward": "pubofrprogcom_sub", "searchMode": "1",
             "searchCodeType": "", "currentPageSize": "3000", "pageIndex": "1", "orderMode": "1",
@@ -111,7 +111,7 @@ def standardize(df, spec):
 
 
 # ------------------------------------------------------------------ 신규상장기업
-def listing_companies(market, from_date="2020-01-01", to_date=None):
+def listing_companies(market, from_date="2015-01-01", to_date=None):
     """market: '1'=코스피, '2'=코스닥"""
     to_date = to_date or date.today().isoformat()
     form = {"method": "searchListingTypeSub", "forward": "listingtype_sub", "currentPageSize": "3000",
@@ -124,7 +124,7 @@ def listing_companies(market, from_date="2020-01-01", to_date=None):
 
 
 # ------------------------------------------------------------------ 합병상장기업(스팩합병)
-def merge_listings(from_date="2020-01-01", to_date=None, debug_dir=None, log=print):
+def merge_listings(from_date="2015-01-01", to_date=None, debug_dir=None, log=print):
     """KIND > 신규상장기업 > 합병상장기업현황 (SPAC 존속합병 06 · 소멸합병 07)
        → 회사명, 합병상장일, 상장유형, 상장주선인, 회사코드 (스팩합병의 '진짜' 상장일)"""
     to_date = to_date or date.today().isoformat()
@@ -151,7 +151,7 @@ def merge_listings(from_date="2020-01-01", to_date=None, debug_dir=None, log=pri
 INVSTG_MAIN = "listinvstg/listinvstgcom.do"
 
 
-def invstg(from_date="2020-01-01", to_date=None, debug_dir=None, log=print):
+def invstg(from_date="2015-01-01", to_date=None, debug_dir=None, log=print):
     """상장예비심사 기업 목록(KIND > IPO현황 > 예비심사기업). 시장 구분은 코스피·코스닥을 따로 조회해 붙인다."""
     to_date = to_date or date.today().isoformat()
 

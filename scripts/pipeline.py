@@ -259,7 +259,7 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
     # ---------- 월별 추이
     months = {}
     def bump(dt, key):
-        if dt and dt >= date(2020, 1, 1):
+        if dt and dt >= date(2015, 1, 1):
             k = f"{dt.year}-{dt.month:02d}"
             months.setdefault(k, {"applied": 0, "approved": 0, "withdrawn": 0, "listed": 0})[key] += 1
     for x in inv_rows:
@@ -274,7 +274,7 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
     for it in listed_items:
         if not no_ipo(it):                   # 공모 없이 들어온 이전상장·합병 등은 제외
             bump(date.fromisoformat(it["listed"]), "listed")
-    cur = date(2020, 1, 1)
+    cur = date(2015, 1, 1)
     monthly = []
     while cur <= today:
         k = f"{cur.year}-{cur.month:02d}"

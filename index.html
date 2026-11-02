@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<meta name="description" content="2020년 이후 코스피·코스닥 IPO를 예비심사 청구부터 승인, 수요예측·청약, 상장까지 단계별로 정리">
+<meta name="description" content="2015년 이후 코스피·코스닥 IPO를 예비심사 청구부터 승인, 수요예측·청약, 상장까지 단계별로 정리">
 <title>IPO 동향 분석</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1E3A6E">
@@ -194,7 +194,7 @@ footer details{margin-bottom:12px}
     </div>
   </div>
   <header>
-    <div class="kicker">코스피·코스닥 · 2020년~ · 직상장·스팩합병 · 매일 업데이트</div>
+    <div class="kicker">코스피·코스닥 · 2015년~ · 직상장·스팩합병 · 매일 업데이트</div>
     <div class="hrow"><h1>IPO 동향 분석</h1><button class="install" id="installBtn" hidden>📲 앱으로 설치</button></div>
     <div class="installTip" id="installTip" hidden></div>
     <p class="sub" id="meta">데이터를 불러오는 중…</p>
@@ -217,7 +217,7 @@ footer details{margin-bottom:12px}
       <div class="card viz">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
           <h4 style="margin:0">월별 건수 <span class="mu" style="font-weight:400;font-size:12px">· 코스피+코스닥</span></h4>
-          <div class="seg" id="rangeSeg"><button data-r="24" class="on">최근 2년</button><button data-r="999">2020년~</button></div>
+          <div class="seg" id="rangeSeg"><button data-r="24" class="on">최근 2년</button><button data-r="999">2015년~</button></div>
         </div>
         <div class="lgd"><span><i style="background:var(--s1)"></i>예비심사 청구</span><span><i style="background:var(--s2)"></i>심사 승인</span><span><i style="background:var(--s3)"></i>상장</span></div>
         <div class="chartbox" id="monthly"></div>
@@ -621,7 +621,7 @@ function setView(v){
 }
 function fillYears(){
   const cur = $('#yr').dataset.init ? $('#yr').value : '', ys = [];
-  for (let y = new Date().getFullYear(); y >= 2020; y--) ys.push(y);
+  for (let y = new Date().getFullYear(); y >= 2015; y--) ys.push(y);
   $('#yr').innerHTML = '<option value="">연도 전체</option><option value="last12">최근 1년</option>' + ys.map(y => `<option value="${y}">${y}년</option>`).join('');
   $('#yr').value = cur; $('#yr').dataset.init = '1';
 }
@@ -630,7 +630,7 @@ function modelInfo(){
   const m = META.model; if (!m) { $('#modelInfo').textContent = '아직 계산 전입니다.'; return; }
   const cal = (m.calibration || []).map(r => `<tr><td>${r.range}</td><td>${r.n}</td><td>${r.predicted}%</td><td>${r.actual}%</td></tr>`).join('');
   $('#modelInfo').innerHTML = `
-    <p style="margin:0 0 6px">2020년 이후 공모주 ${fmt(m.stocks)}개의 상장 후 흐름에서, 지금 종목과 상장 후 경과일·시초가/공모가 대비 위치·최근 20일 수익률·고점 대비 낙폭이 비슷했던 사례들이
+    <p style="margin:0 0 6px">2015년 이후 공모주 ${fmt(m.stocks)}개의 상장 후 흐름에서, 지금 종목과 상장 후 경과일·시초가/공모가 대비 위치·최근 20일 수익률·고점 대비 낙폭이 비슷했던 사례들이
     그 뒤 ${m.horizonDays}거래일 동안 오른 비율입니다. 기준선 <b>${m.base ?? '–'}%</b>. 주가 흐름만 쓰므로 설명력이 약한 참고 통계입니다.</p>
     ${cal ? `<table class="calib"><tr><th>예측 구간</th><th>건수</th><th>평균 예측</th><th>실제 상승</th></tr>${cal}</table>` : ''}`;
 }
