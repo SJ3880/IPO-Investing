@@ -164,7 +164,8 @@ table.raw td{border:1px solid var(--line);padding:4px 6px;text-align:center;whit
 .list th .rz:hover,.list th .rz.on{background:var(--accent);opacity:.45}
 table.list.sz-s th,table.list.sz-s td{padding:5px 6px;font-size:12px}
 table.list.sz-l th,table.list.sz-l td{padding:12px 14px;font-size:15px}
-.pulseLine{margin:4px 0 10px;font-size:15px;line-height:1.55}
+.pulseLine{margin:4px 0 2px;font-size:15px;line-height:1.7;max-width:880px}
+.pulseLine p{margin:0 0 6px}
 .pulseLine b{font-weight:700}
 .kw{display:flex;flex-wrap:wrap;gap:8px}
 @media (max-width:640px){.kw{display:grid;grid-template-columns:1fr 1fr}.kw .k{min-width:0}.kw .k .v{white-space:normal}}
@@ -172,7 +173,7 @@ table.list.sz-l th,table.list.sz-l td{padding:12px 14px;font-size:15px}
 .kw .k .t{font-size:11.5px;color:var(--muted)}
 .kw .k .v{font-size:15px;font-weight:700;margin-top:2px;white-space:nowrap}
 .kw .k .d{font-size:11.5px;color:var(--muted);margin-top:1px}
-.temp{display:inline-block;border-radius:999px;padding:1px 9px;font-size:13px;font-weight:700;margin-right:4px}
+.temp{display:inline-block;border-radius:999px;padding:0 8px;font-size:14px;font-weight:700;margin:0 1px}
 .temp.hot{background:rgba(229,72,77,.15);color:#d23c42}.temp.warm{background:rgba(245,158,11,.16);color:#b26a00}
 .temp.mild{background:rgba(120,130,145,.16);color:var(--muted)}.temp.cold{background:rgba(59,130,246,.15);color:#2f6fd6}
 .qt{width:100%;border-collapse:collapse;font-size:13px}
@@ -236,7 +237,7 @@ footer details{margin-bottom:12px}
     </div>
     <div class="card pulse" style="margin-top:12px">
       <h4>지금 IPO 시장 <span class="mu" style="font-weight:400;font-size:12px" id="pulseAsOf"></span></h4>
-      <p class="pulseLine" id="pulseLine"></p>
+      <div class="pulseLine" id="pulseLine"></div>
       <div class="kw" id="pulseKw"></div>
     </div>
     <div class="card" style="margin-top:12px">
@@ -613,22 +614,21 @@ function renderPulse(rv, ap, of, wd){
   const chg = (a, b) => a == null || b == null || !b ? '' : `${a >= b ? '+' : ''}${Math.round((a / b - 1) * 100)}%`;
   const p0 = v => v == null ? '–' : (v > 0 ? '+' : '') + Math.round(v) + '%';
   $('#pulseAsOf').textContent = '· 최근 3개월 상장 기준, 매일 자동 갱신';
-  $('#pulseLine').innerHTML = `<span class="temp ${temp[0]}">${temp[1]}</span>` +
-    `상장 <b>${now3.length}건</b>, 첫날 <b>${p0(fd)}</b>(중앙값)` +
-    (top != null ? ` · 공모가 <b>${top}%</b>가 밴드 상단 이상` : '') +
-    ` · 대기 물량 <b>심사 ${rv.length} · 승인 ${ap.length} · 공모 ${of.length}</b>`;
-  const k = (t, v, d = '') => `<div class="k"><div class="t">${t}</div><div class="v">${v}</div>${d ? `<div class="d">${d}</div>` : ''}</div>`;
-  $('#pulseKw').innerHTML = [
-    k('상장 건수 (3개월)', `${now3.length}건 ${arrow(now3.length, prev3.length)}`, `직전 3개월 ${prev3.length} · 전년 ${ly3.length}`),
-    k('첫날 수익률', `${p0(fd)} ${arrow(fd, fdPrev)}`, `직전 3개월 ${p0(fdPrev)}`),
-    k('수요예측 열기', ic ? `${fmt(Math.round(ic))}:1 ${arrow(ic, icPrev)}` : '–', `기관경쟁률 중앙값${icPrev ? ' · 직전 ' + fmt(Math.round(icPrev)) + ':1' : ''}`),
-    k('공모가 결정', top != null ? `밴드 상단↑ ${top}%` : '–', '확정공모가 ≥ 희망밴드 상단'),
-    k('지금 공모가 아래', underOffer != null ? `${underOffer}%` : '–', '최근 3개월 상장 중'),
-    k('청구 흐름', `${ap3}건 ${arrow(ap3, apPrev)}`, `예비심사 청구 3개월 · 직전 ${apPrev}건 (${chg(ap3, apPrev) || '–'})`),
-    k('기술특례 비중', `${Math.round(tech / now3.length * 100)}%`, `최근 3개월 상장 ${tech}건`),
-    k('철회·미승인', `${wd3}건`, '최근 3개월'),
-    big ? k('대기 중 최대 딜', esc(big.n), `공모 시총 ${eok(big.v)}${big.v && !(of.find(x => x.name.includes(big.n)) || {}).offer ? '(밴드 상단)' : ''}`) : '',
-  ].join('');
+  const cmp = (a, b, up, down, same) => a == null || b == null ? '' : a > b * 1.05 ? up : a < b * 0.95 ? down : same;
+  const tw = { hot: '뜨거운 편', warm: '따뜻한 편', mild: '미지근한 편', cold: '차가운 편' }[temp[0]];
+  const s1 = `최근 3개월 공모주 시장은 <span class="temp ${temp[0]}">${tw}</span>이에요. ` +
+    `상장은 <b>${now3.length}건</b>으로 직전 3개월(${prev3.length}건)보다 ${cmp(now3.length, prev3.length, '늘었고', '줄었고', '비슷하고')}, ` +
+    `첫날 수익률 중앙값은 <b>${p0(fd)}</b>${fdPrev != null ? `로 직전(${p0(fdPrev)})보다 ${cmp(fd + 100, fdPrev + 100, '좋아졌어요', '나빠졌어요', '비슷해요')}` : '예요'}.`;
+  const s2 = (ic ? `기관 수요예측 경쟁률은 <b>${fmt(Math.round(ic))}:1</b>${icPrev ? `로 직전(${fmt(Math.round(icPrev))}:1)보다 ${cmp(ic, icPrev, '뜨거워졌고', '식었고', '비슷하고')}` : '이고'}, ` : '') +
+    (top != null ? `공모가는 <b>${top}%</b>가 희망밴드 상단 이상에서 정해졌어요. ` : '') +
+    (underOffer != null ? `다만 지금 공모가 아래에 있는 종목이 <b>${underOffer}%</b>라 ${underOffer >= 60 ? '상장 이후 주가는 약한 흐름이에요' : underOffer >= 40 ? '상장 이후 주가는 엇갈리고 있어요' : '상장 이후에도 대체로 공모가 위를 지키고 있어요'}.` : '');
+  const s3 = `예비심사 청구는 <b>${ap3}건</b>으로 직전 3개월보다 ${cmp(ap3, apPrev, `${chg(ap3, apPrev)} 늘었고`, `${chg(ap3, apPrev).replace('-', '')} 줄었고`, '비슷하고')}, ` +
+    `기술특례 상장 비중은 <b>${Math.round(tech / now3.length * 100)}%</b>예요. ` +
+    `지금 심사 ${rv.length}곳 · 승인 ${ap.length}곳 · 공모 ${of.length}곳이 대기 중이고` +
+    (big ? `, 가장 큰 딜은 <b>${esc(big.n)}</b>(공모 시총 ${eok(big.v)}${!(of.find(x => x.name.includes(big.n)) || {}).offer ? ', 밴드 상단 기준' : ''})이에요.` : '이에요.') +
+    (wd3 ? ` 최근 3개월 철회·미승인은 ${wd3}건이에요.` : '');
+  $('#pulseLine').innerHTML = `<p>${s1}</p><p>${s2}</p><p>${s3}</p>`;
+  $('#pulseKw').innerHTML = '';
 }
 
 let RANGE = 24;
