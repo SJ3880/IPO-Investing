@@ -164,6 +164,17 @@ table.raw td{border:1px solid var(--line);padding:4px 6px;text-align:center;whit
 .list th .rz:hover,.list th .rz.on{background:var(--accent);opacity:.45}
 table.list.sz-s th,table.list.sz-s td{padding:5px 6px;font-size:12px}
 table.list.sz-l th,table.list.sz-l td{padding:12px 14px;font-size:15px}
+.pulseLine{margin:4px 0 10px;font-size:15px;line-height:1.55}
+.pulseLine b{font-weight:700}
+.kw{display:flex;flex-wrap:wrap;gap:8px}
+@media (max-width:640px){.kw{display:grid;grid-template-columns:1fr 1fr}.kw .k{min-width:0}.kw .k .v{white-space:normal}}
+.kw .k{border:1px solid var(--line);border-radius:10px;padding:7px 11px;background:var(--panel);min-width:120px}
+.kw .k .t{font-size:11.5px;color:var(--muted)}
+.kw .k .v{font-size:15px;font-weight:700;margin-top:2px;white-space:nowrap}
+.kw .k .d{font-size:11.5px;color:var(--muted);margin-top:1px}
+.temp{display:inline-block;border-radius:999px;padding:1px 9px;font-size:13px;font-weight:700;margin-right:4px}
+.temp.hot{background:rgba(229,72,77,.15);color:#d23c42}.temp.warm{background:rgba(245,158,11,.16);color:#b26a00}
+.temp.mild{background:rgba(120,130,145,.16);color:var(--muted)}.temp.cold{background:rgba(59,130,246,.15);color:#2f6fd6}
 .qt{width:100%;border-collapse:collapse;font-size:13px}
 .qt th,.qt td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
 .qt th:first-child,.qt td:first-child{text-align:left}.qt th{color:var(--muted);font-weight:600;font-size:12px}
@@ -223,6 +234,11 @@ footer details{margin-bottom:12px}
         <div class="chartbox" id="monthly"></div>
       </div>
     </div>
+    <div class="card pulse" style="margin-top:12px">
+      <h4>지금 IPO 시장 <span class="mu" style="font-weight:400;font-size:12px" id="pulseAsOf"></span></h4>
+      <p class="pulseLine" id="pulseLine"></p>
+      <div class="kw" id="pulseKw"></div>
+    </div>
     <div class="card" style="margin-top:12px">
       <h4>분기별 공모주 시장 온도</h4>
       <div class="scroll"><table class="qt" id="qtable"></table></div>
@@ -269,10 +285,6 @@ footer details{margin-bottom:12px}
   </section>
 
   <footer>
-    <details id="howProb">
-      <summary>상장완료 종목 상세의 ‘3개월 수익 확률’은 어떻게 계산하나요?</summary>
-      <div id="modelInfo" style="margin-top:8px"></div>
-    </details>
     출처: 예비심사·신규상장·기술성장기업 = KIND(한국거래소) · 수요예측·청약 일정 = 38커뮤니케이션(+KIND 공모기업) · 증권신고서·공시·실적 = DART · 공모가·수요예측 = KIND·38커뮤니케이션 · 시세 = 네이버 금융.
     평일 장 마감 후 자동 업데이트. 개인 참고용이며 투자 권유가 아닙니다.
   </footer>
@@ -286,8 +298,7 @@ footer details{margin-bottom:12px}
 
   <div id="dUp" hidden></div>
   <div id="dListed">
-  <div id="probWrap"><h3>3개월 뒤 수익 확률 <span class="chip">과거 유사 사례</span></h3>
-  <div class="card" id="dProb"></div></div>
+
 
   <div id="chart"></div>
   <div class="legend" id="legend">빨간 점선 = 공모가 · 회색 점선 = 시초가 · 캔들은 일봉(빨강 상승/파랑 하락)</div>
@@ -570,7 +581,54 @@ function renderOverview(){
   $('#qtable').innerHTML = '<tr><th>분기</th><th>상장</th><th>첫날 수익률 중앙값</th><th>밴드 상단 이상</th><th>기관경쟁률 중앙값</th></tr>' +
     (qs.length ? qs.map(q => `<tr><td>${q.q}</td><td>${q.n}곳</td><td>${pct(q.firstMed)}</td><td>${q.topBand != null ? q.topBand + '%' : '–'}</td><td>${q.instCompMed ? fmt(q.instCompMed) + ':1' : '–'}</td></tr>`).join('')
       : '<tr><td colspan="5" class="mu">다음 업데이트 후 표시됩니다.</td></tr>');
+  renderPulse(rv, ap, of, wd);
   drawMonthly();
+}
+
+/* ---------- 지금 IPO 시장: 키워드 요약(데이터로 자동 계산) ---------- */
+function renderPulse(rv, ap, of, wd){
+  const med = a => { a = a.filter(v => v != null && isFinite(v)).sort((x, y) => x - y); if (!a.length) return null;
+    const m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+  const ipo = DATA.filter(x => !x.spac && x.offer);
+  const inDays = (x, a, b) => { const d = -daysTo(x.listed); return d >= a && d < b; };
+  const now3 = ipo.filter(x => inDays(x, 0, 91)), prev3 = ipo.filter(x => inDays(x, 91, 182)), ly3 = ipo.filter(x => inDays(x, 365, 456));
+  if (!now3.length) { $('#pulseLine').textContent = '최근 3개월 상장 종목이 없어 요약할 수 없습니다.'; $('#pulseKw').innerHTML = ''; return; }
+  const fd = med(now3.map(x => x.firstDayRet)), fdPrev = med(prev3.map(x => x.firstDayRet));
+  const withBand = now3.filter(x => x.band && x.offer);
+  const top = withBand.length ? Math.round(withBand.filter(x => x.offer >= x.band[1]).length / withBand.length * 100) : null;
+  const ic = med(now3.map(x => x.instComp)), icPrev = med(prev3.map(x => x.instComp));
+  const below = ipo.filter(x => inDays(x, 0, 91) && x.retVsOffer != null);
+  const underOffer = below.length ? Math.round(below.filter(x => x.retVsOffer < 0).length / below.length * 100) : null;
+  const tech = now3.filter(x => /특례/.test(x.track || '')).length;
+  const mon = PIPE.monthly || [];
+  const sum = (arr, k) => arr.reduce((a, m) => a + (m[k] || 0), 0);
+  const ap3 = sum(mon.slice(-3), 'applied'), apPrev = sum(mon.slice(-6, -3), 'applied');
+  const wd3 = (wd || []).filter(x => x.resultDate && daysTo(x.resultDate) >= -91).length;
+  const big = [...(of || [])].map(x => ({ n: x.name.replace(/\(유가\)/, ''), v: x.marcapAtOffer || (x.band && x.totalShares ? x.band[1] * x.totalShares : null) }))
+    .filter(x => x.v).sort((a, b) => b.v - a.v)[0];
+  // 온도: 첫날 수익률 중앙값 + 밴드 상단 이상 비율
+  const score = (fd ?? 0) + (top != null ? (top - 50) * 0.6 : 0);
+  const temp = score >= 80 ? ['hot', '뜨거움'] : score >= 35 ? ['warm', '따뜻함'] : score >= 5 ? ['mild', '미지근'] : ['cold', '차가움'];
+  const arrow = (a, b, unit = '') => a == null || b == null ? '' : a > b * 1.05 + (unit === '%p' ? 3 : 0) ? '↑' : a < b * 0.95 - (unit === '%p' ? 3 : 0) ? '↓' : '→';
+  const chg = (a, b) => a == null || b == null || !b ? '' : `${a >= b ? '+' : ''}${Math.round((a / b - 1) * 100)}%`;
+  const p0 = v => v == null ? '–' : (v > 0 ? '+' : '') + Math.round(v) + '%';
+  $('#pulseAsOf').textContent = '· 최근 3개월 상장 기준, 매일 자동 갱신';
+  $('#pulseLine').innerHTML = `<span class="temp ${temp[0]}">${temp[1]}</span>` +
+    `상장 <b>${now3.length}건</b>, 첫날 <b>${p0(fd)}</b>(중앙값)` +
+    (top != null ? ` · 공모가 <b>${top}%</b>가 밴드 상단 이상` : '') +
+    ` · 대기 물량 <b>심사 ${rv.length} · 승인 ${ap.length} · 공모 ${of.length}</b>`;
+  const k = (t, v, d = '') => `<div class="k"><div class="t">${t}</div><div class="v">${v}</div>${d ? `<div class="d">${d}</div>` : ''}</div>`;
+  $('#pulseKw').innerHTML = [
+    k('상장 건수 (3개월)', `${now3.length}건 ${arrow(now3.length, prev3.length)}`, `직전 3개월 ${prev3.length} · 전년 ${ly3.length}`),
+    k('첫날 수익률', `${p0(fd)} ${arrow(fd, fdPrev)}`, `직전 3개월 ${p0(fdPrev)}`),
+    k('수요예측 열기', ic ? `${fmt(Math.round(ic))}:1 ${arrow(ic, icPrev)}` : '–', `기관경쟁률 중앙값${icPrev ? ' · 직전 ' + fmt(Math.round(icPrev)) + ':1' : ''}`),
+    k('공모가 결정', top != null ? `밴드 상단↑ ${top}%` : '–', '확정공모가 ≥ 희망밴드 상단'),
+    k('지금 공모가 아래', underOffer != null ? `${underOffer}%` : '–', '최근 3개월 상장 중'),
+    k('청구 흐름', `${ap3}건 ${arrow(ap3, apPrev)}`, `예비심사 청구 3개월 · 직전 ${apPrev}건 (${chg(ap3, apPrev) || '–'})`),
+    k('기술특례 비중', `${Math.round(tech / now3.length * 100)}%`, `최근 3개월 상장 ${tech}건`),
+    k('철회·미승인', `${wd3}건`, '최근 3개월'),
+    big ? k('대기 중 최대 딜', esc(big.n), `공모 시총 ${eok(big.v)}${big.v && !(of.find(x => x.name.includes(big.n)) || {}).offer ? '(밴드 상단)' : ''}`) : '',
+  ].join('');
 }
 
 let RANGE = 24;
@@ -856,7 +914,7 @@ async function openDetail(code){
     s('초일 (상장일 종가)', pct(r.firstDayRet)) + s('1개월', hz(r, 'ret1m')) + s('3개월', hz(r, 'ret3m')) +
     s('6개월', hz(r, 'ret6m')) + s('1년', hz(r, 'ret1y')) + s('고점 대비', pct(r.fromPeak));
   if (r.adj && r.adj !== 1) $('#dStats').insertAdjacentHTML('afterend', `<p class="note" id="adjNote">무상증자·액면분할이 있었던 종목입니다. 차트와 수익률은 수정주가 기준(공모가 ${fmt(r.offer)} → ${fmt(r.offerAdj)})으로 맞춰 계산했습니다.</p>`);
-  renderProb(r); $('#probWrap').hidden = !!r.spac;
+
   $('#legend').textContent = `빨간 점선 = ${r.spac ? '합병 기준가' : '공모가'} · 회색 점선 = 시초가 · 캔들은 일봉(빨강 상승/파랑 하락)`;
   $('#dim').classList.add('on'); $('#drawer').classList.add('on'); $('#drawer').scrollTop = 0;
 
@@ -1048,7 +1106,7 @@ Promise.all([
   $('#n-withdrawn').textContent = (PIPE.withdrawn || []).length;
   const tracks = [...new Set([...DATA, ...(PIPE.offering || [])].map(x => x.track).filter(Boolean))].sort();
   $('#track').innerHTML = '<option value="">상장트랙 전체</option>' + tracks.map(t => `<option>${esc(t)}</option>`).join('');
-  modelInfo();
+
   setView(location.hash.slice(1) || 'overview');
 });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});   // 앱 설치용
