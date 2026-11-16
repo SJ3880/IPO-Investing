@@ -735,12 +735,12 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
     retry = not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
     reparse = det.get("dartDone") and det.get("rcpNo") and (det.get("parseVer", 1) < PARSE_VER or peers_bad(det))
     need_doc = heavy and (retry or reparse)
-    if (mins() < LIGHT_UNTIL_MIN and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 3):
+    if (mins() < LIGHT_UNTIL_MIN and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 4):
         try:                                       # 기술평가 등급만 새로 읽기(신고서 전체를 다시 분석하지 않음)
             xml = dt.document_text(det["rcpNo"])
             plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
             det["techGrades"] = dartlib.tech_grades(plain) or None
-            det["techVer"] = 3
+            det["techVer"] = 4
         except Exception as e:
             log(f"  - {name} 기술평가 등급 실패: {e}")
     if need_doc:
@@ -755,7 +755,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
                 det["lockupTables"] = info["lockupTables"]
                 det["track"] = info["track"]
                 det["techGrades"] = info.get("techGrades") or None
-                det["techVer"] = 3
+                det["techVer"] = 4
                 det["floatAtListing"] = info["floatAtListing"]
                 det["discountRate"] = info.get("discountRate")
                 det["valuation"] = info.get("valuation")
@@ -1086,6 +1086,34 @@ def main():
                 return "공모 없음(스팩합병·이전상장)", "KIND 상장유형"
             return "일반", "KIND 기술성장기업 목록에 없음"
         return doc_track, "증권신고서"
+
+    # ---- 기술평가 등급 먼저(빠름): 기술평가 특례인데 등급을 아직 못 읽은 종목만 신고서 한 번씩
+    if dt:
+        n_tg = 0
+        for it in items:
+            if mins() > 30:
+                break
+            if it.get("spac"):
+                continue
+            p = DETAIL / f"{it['code']}.json"
+            try:
+                det = json.loads(p.read_text("utf-8")) if p.exists() else {}
+            except Exception:
+                continue
+            if det.get("techVer") == 4 or not det.get("rcpNo"):
+                continue
+            if "기술평가" not in str(resolve_track(it, det.get("track"))[0] or ""):
+                continue
+            try:
+                xml = dt.document_text(det["rcpNo"])
+                plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
+                det["techGrades"] = dartlib.tech_grades(plain)
+                det["techVer"] = 4
+                p.write_text(json.dumps(det, ensure_ascii=False), "utf-8")
+                n_tg += 1
+            except Exception as e:
+                log(f"  - {it['name']} 기술평가 등급 실패: {e}")
+        log(f"[기술평가 등급] 이번에 {n_tg}개 읽음 (시작 후 {mins():.0f}분)")
     for it in items:
         p = DETAIL / f"{it['code']}.json"
         try:

@@ -360,21 +360,28 @@ const rng = a => a && a[0] ? `${md(a[0])}~${md(a[1])}` : '–';
 const daysTo = iso => iso ? Math.ceil((new Date(iso + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5) : null;
 const spacChip = r => r.spac ? `<span class="chip spac" title="${esc(r.listType || '스팩합병')}">스팩합병</span>` : '';
 const nm = (r, extra='') => `<span class="nm">${esc(r.name)}</span>${spacChip(r)}${extra}<span class="sc">${esc(r.sector || '')}</span>`;
-const gradeText = g => g && g.length ? g.map(x => x.grade).join(', ') : '';
+// 기술평가 등급 {grades:[...], agencies:[...], paired, ev} (예전 형식 [{agency,grade}]도 읽음)
+const TG = g => !g ? null : Array.isArray(g) ? (g.length ? { grades: g.map(x => x.grade), agencies: g.map(x => x.agency), paired: true, ev: g[0].ev } : null)
+  : (g.grades && g.grades.length ? g : null);
+const gradeText = g => { g = TG(g); return g ? g.grades.join(', ') : ''; };
+const agText = (g, short) => { g = TG(g); if (!g || !g.agencies || !g.agencies.length) return '';
+  const nm = a => short ? (AG_SHORT[a] || a) : a;
+  return g.paired && g.agencies.length === g.grades.length ? g.agencies.map((a, i) => nm(a) + ' ' + g.grades[i]).join(' · ') : g.agencies.map(nm).join(' · '); };
 const AG_SHORT = {한국기업데이터:'KED', 한국평가데이터:'KoDATA', 나이스평가정보:'NICE평가', NICE평가정보:'NICE평가', 나이스디앤비:'NICE D&B',
   NICE디앤비:'NICE D&B', 이크레더블:'이크레더블', 기술보증기금:'기보', 한국과학기술정보연구원:'KISTI', KISTI:'KISTI', 한국발명진흥회:'발명진흥회',
   한국보건산업진흥원:'보건산업진흥원', 한국생명공학연구원:'생명연', 한국전자통신연구원:'ETRI', SCI평가정보:'SCI', 에스씨아이평가정보:'SCI'};
-const gradeKey = g => g && g.length ? g.map(y => ({AAA:1, AA:2, A:3, BBB:4, BB:5, B:6})[y.grade] || 9).reduce((a, b) => a + b, 0) : null;
+const gradeKey = g => { g = TG(g); return g ? g.grades.map(y => ({AA:2, A:3, BBB:4, BB:5})[y] || 9).reduce((a, b) => a + b, 0) : null; };
 const techCell = x => {
   if (!/기술평가/.test(x.track || '')) return '<span class="mu">–</span>';
-  const g = x.techGrades;
-  if (!g || !g.length) return '<span class="mu" title="증권신고서에서 등급을 읽는 중(다음 업데이트 때 채워짐)">확인 중</span>';
-  return `<b title="${esc(g.map(y => y.agency + ' ' + y.grade).join(' · '))}">${esc(gradeText(g))}</b><div class="mu" style="font-size:11.5px">${esc(g.map(y => AG_SHORT[y.agency] || y.agency).join(' · '))}</div>`;
+  const g = TG(x.techGrades);
+  if (!g) return '<span class="mu" title="증권신고서에서 등급을 읽는 중(다음 업데이트 때 채워짐)">확인 중</span>';
+  const full = agText(g, false);
+  return `<b title="${esc((full ? '평가기관: ' + full : '') + (g.paired ? '' : (full ? ' (기관별 등급은 신고서에 구분 안 됨)' : '')))}">${esc(gradeText(g))}</b>${full ? `<div class="mu" style="font-size:11.5px">${esc(agText(g, true))}</div>` : ''}`;
 };
 const trackChip = (t, g) => {
   if (!t || t === '일반') return '';
   const gt = /기술/.test(t) ? gradeText(g) : '';
-  return `<span class="chip"${gt ? ` title="${esc(g.map(x => x.agency + ' ' + x.grade).join(' · '))}"` : ''}>${esc(t)}${gt ? ` <b>${gt}</b>` : ''}</span>`;
+  return `<span class="chip"${gt && agText(g) ? ` title="${esc(agText(g))}"` : ''}>${esc(t)}${gt ? ` <b>${gt}</b>` : ''}</span>`;
 };
 
 /* ---------- 공모가 산정 근거(증권신고서 '공모가격 결정방법') ---------- */
@@ -793,8 +800,8 @@ function renderTrack(r, d){
   if (!t) { $('#dTrack').innerHTML = `<span class="mu">${META.dart ? '아직 판별 전입니다(다음 업데이트 때 채워짐).' : 'DART API 키를 등록하면 표시됩니다.'}</span>`; return; }
   const tg = r.techGrades || d.techGrades;
   $('#dTrack').innerHTML = `<b>${esc(t)}</b>${r.trackManual ? ' <span class="chip">직접 입력</span>' : ''}
-    ${tg && tg.length ? `<div style="margin-top:4px">기술평가 등급: <b>${esc(gradeText(tg))}</b> <span class="mu">(${esc(tg.map(x => x.agency + ' ' + x.grade).join(' · '))})</span></div>` : ''}
-    ${tg && tg.length && tg[0].ev ? `<div class="evi">기술평가 근거(증권신고서): “${esc([...new Set(tg.map(x => x.ev))].join(' … '))}”</div>` : ''}
+    ${TG(tg) ? `<div style="margin-top:4px">기술평가 등급: <b>${esc(gradeText(tg))}</b>${agText(tg) ? ` <span class="mu">(${esc(agText(tg))}${TG(tg).paired ? '' : ' · 기관별 등급 구분 없음'})</span>` : ''}</div>` : ''}
+    ${TG(tg) && TG(tg).ev ? `<div class="evi">기술평가 근거(증권신고서): “${esc(TG(tg).ev)}”</div>` : ''}
     <div class="note" style="margin-top:4px">${esc(TRACK_NOTE[t] || '')}</div>
     ${d.trackEvidence && !r.trackManual ? `<div class="evi">근거(증권신고서): “${esc(d.trackEvidence)}”</div>` : ''}
     <div class="note">판별 근거: ${esc(r.trackSrc || '증권신고서')}. 틀리면 data/listing_track.csv에 직접 적으면 그 값이 우선합니다.</div>`;
@@ -1021,7 +1028,7 @@ function openUp(name){
     <h3>공모가 산정 근거 <span class="chip">증권신고서</span></h3>
     <div class="card">${valHtml(x.valuation, x.discountRate, x.offer, x.band || (x.valuation || {}).bandDoc)}</div>
     <h3>상장트랙</h3>
-    <div class="card"><b>${esc(x.track || '–')}</b>${x.techGrades && x.techGrades.length ? ` · 기술평가 <b>${esc(gradeText(x.techGrades))}</b> <span class="mu">(${esc(x.techGrades.map(g => g.agency + ' ' + g.grade).join(' · '))})</span>` : ''} <span class="mu" style="font-size:12px">· 판별 근거: ${esc(x.trackSrc || '증권신고서')} (상장 후 KIND 기술성장기업 목록으로 재확인)</span><div class="note" style="margin-top:4px">${esc(TRACK_NOTE[x.track] || '')}</div>
+    <div class="card"><b>${esc(x.track || '–')}</b>${TG(x.techGrades) ? ` · 기술평가 <b>${esc(gradeText(x.techGrades))}</b>${agText(x.techGrades) ? ` <span class="mu">(${esc(agText(x.techGrades))})</span>` : ''}` : ''} <span class="mu" style="font-size:12px">· 판별 근거: ${esc(x.trackSrc || '증권신고서')} (상장 후 KIND 기술성장기업 목록으로 재확인)</span><div class="note" style="margin-top:4px">${esc(TRACK_NOTE[x.track] || '')}</div>
       ${x.trackEvidence ? `<div class="evi">근거(증권신고서): “${esc(x.trackEvidence)}”</div>` : ''}</div>
     <h3>유통가능물량 · 기간별</h3><div class="card">${lock}</div>
     ${(x.fundUse || []).length || (x.fundDoc && x.fundDoc.net) ? `<h3>공모자금 사용 목적</h3><div class="card">${fundHtml(x.fundUse, x.fundChk, x.amount, x.oldShareRatio, x.offer, x.fundDoc)}</div>` : ''}

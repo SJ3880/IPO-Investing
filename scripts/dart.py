@@ -925,45 +925,66 @@ def fee_rate(plain):
 TECH_AGENCIES = ["한국기업데이터", "한국평가데이터", "나이스평가정보", "NICE평가정보", "나이스디앤비", "NICE디앤비", "이크레더블",
                  "기술보증기금", "한국과학기술정보연구원", "KISTI", "한국발명진흥회", "한국보건산업진흥원", "한국생명공학연구원",
                  "정보통신산업진흥원", "한국산업기술평가관리원", "한국전자통신연구원", "한국기술신용평가", "SCI평가정보", "에스씨아이평가정보",
-                 "한국환경산업기술원", "한국농업기술진흥원", "한국에너지기술평가원", "한국방송통신전파진흥원", "한국콘텐츠진흥원"]
+                 "서울평가정보", "한국환경산업기술원", "한국농업기술진흥원", "한국에너지기술평가원", "한국방송통신전파진흥원",
+                 "한국콘텐츠진흥원", "한국산업기술진흥원", "한국식품연구원", "한국해양과학기술진흥원", "한국원자력연구원"]
 AG_RE = re.compile("|".join(sorted(map(re.escape, TECH_AGENCIES), key=len, reverse=True)))
-GRADE_RE = re.compile(r"(?<![A-Za-z가-힣])(AA|A|BBB|BB)(?![A-Za-z])(?=\s*(?:등급|,|\)|/|·|및|와|과|\||$|\s))")
-
-
+# 등급 글자: 'A등급', 'A, BBB 등급', 'A 및 BBB' — 'A사'·'Series A' 같은 건 제외
+GRADE_RE = re.compile(r"(?<![A-Za-z가-힣0-9])(AA|A|BBB|BB)(?![A-Za-z0-9])(?!\s*사)(?=\s*(?:등급|,|및|과|와|/|·|\)|$|\s))")
 TECH_MISS = []   # 등급을 못 읽은 신고서의 '기술평가' 주변 문장(확인용)
 
 
+def _ag_key(a):
+    return a.replace("NICE", "나이스").replace("에스씨아이", "SCI")
+
+
 def tech_grades(plain):
-    """기술평가 특례: 전문평가기관 2곳의 등급(예: [('한국기업데이터','A'),('나이스디앤비','A')])"""
+    """기술평가 특례: 전문평가기관 2곳과 등급.
+       → {"grades": ["A","BBB"], "agencies": ["이크레더블","나이스디앤비"], "paired": 기관별로 짝지어진 근거가 있으면 True, "ev": 근거 문장}
+       신고서 문장 예: '전문평가기관 2개 기관(X, Y)으로부터 … 2개 기관으로부터 A, BBB 등급을 통보받았습니다'
+                      'X와 Y로부터 각각 A 등급, A 등급' · '2개 기관으로부터 모두 A등급' · '1개 기관으로부터 A등급, 다른 1개 기관으로부터 BBB등급'"""
     f = re.sub(r"\s+", " ", plain.replace("\n", " | "))
-    best = []
-    for m in re.finditer(r"기술\s*평가|전문\s*평가\s*기관|평가\s*등급", f):
-        w = f[max(0, m.start() - 300): m.start() + 1500]
-        if "등급" not in w:
+    sents = re.split(r"(?<=다)\.\s*|\s\|\s", f)
+    pos = 0
+    first = None
+    for k, sn in enumerate(sents):
+        st = f.find(sn[:40], pos)
+        pos = max(pos, st)
+        if "등급" not in sn or re.search(r"신용등급|회사채|기업어음|100분의|상위\s*\d", sn):
             continue
-        ags = [(a.start(), a.group(0)) for a in AG_RE.finditer(w)]
-        grs = [(g.start(), g.group(1)) for g in GRADE_RE.finditer(w)]
-        if len(ags) < 2 or len(grs) < 2:
+        if not re.search(r"전문\s*평가|기술\s*평가|평가\s*기관|기술성\s*평가|" + AG_RE.pattern, sn):
             continue
-        used, pairs, seen = set(), [], set()
-        for pos, ag in ags:
-            key = ag.replace("NICE", "나이스")
-            if key in seen:
-                continue
-            g = next(((gp, gv) for gp, gv in grs if gp > pos and gp - pos < 260 and gp not in used
-                      and not re.search(r"신용|회사채|기업어음", w[pos:gp])), None)   # 신용등급과 섞이지 않게
-            if g:
-                used.add(g[0])
-                seen.add(key)
-                pairs.append((ag, g[1], w[max(0, pos - 40): g[0] + 30]))
-        if len(pairs) >= 2 and len(pairs) > len(best):
-            best = pairs[:2]                       # 기술평가 특례는 전문평가기관 2곳
-            if len(best) >= 2:
-                break
-    if not best and len(TECH_MISS) < 8:
-        snips = [f[max(0, m.start() - 200): m.start() + 600] for m in re.finditer(r"전문\s*평가\s*기관|기술\s*평가\s*결과|평가\s*등급", f)][:4]
-        TECH_MISS.append(snips)
-    return [{"agency": a, "grade": g, "ev": re.sub(r"\s*\|\s*", " | ", ev).strip()[:260]} for a, g, ev in best]
+        gr = [g.group(1) for g in GRADE_RE.finditer(sn)]
+        if not gr:
+            continue
+        both = re.search(r"모두|2개\s*(?:기관|사)(?:에게|로부터|에서)?\s*(?:모두\s*)?(?:각각\s*)?" + r"(?:AA|A|BBB|BB)\s*등급", sn)
+        if len(gr) == 1 and both:
+            gr = gr * 2
+        if len(gr) < 2:
+            continue
+        gr = gr[:2]
+        # 기관: 같은 문장 → 없으면 바로 앞 400자 안의 '2개 기관(X, Y)'
+        ags = []
+        for a in AG_RE.findall(sn):
+            if _ag_key(a) not in {_ag_key(x) for x in ags}:
+                ags.append(a)
+        if len(ags) < 2:
+            back = f[max(0, st - 500): st]
+            for a in AG_RE.findall(back):
+                if _ag_key(a) not in {_ag_key(x) for x in ags}:
+                    ags.append(a)
+        ags = ags[:2]
+        explicit = re.search(r"각각", sn) or re.search("(?:" + AG_RE.pattern + r")\s*\(\s*(?:AA|A|BBB|BB)\s*등급", sn)
+        paired = bool(len(ags) == 2 and (gr[0] == gr[1] or explicit))
+        cand = {"grades": gr, "agencies": ags, "paired": paired, "ev": sn.strip()[:300]}
+        if len(ags) == 2:
+            return cand
+        first = first or cand                    # 기관 이름이 없는 문장이면 더 찾아보고, 없으면 이걸 씀
+    if first:
+        return first
+    if len(TECH_MISS) < 10:
+        TECH_MISS.append([f[max(0, m.start() - 150): m.start() + 450]
+                          for m in re.finditer(r"전문\s*평가\s*기관|기술\s*평가\s*결과|평가\s*등급", f)][:3])
+    return None
 
 
 def discount_rate(plain):
