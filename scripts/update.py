@@ -841,11 +841,13 @@ def upcoming_detail(dt, name, filed):
         if (c.get("rcpNo") == f["rcept_no"] and c.get("ver") == PARSE_VER
                 and c["data"].get("totalShares")
                 and sane_total(c["data"].get("totalShares"), c["data"].get("shares")) == c["data"].get("totalShares")):
-            if has_tech_eval(c["data"].get("track")) and c.get("techVer") != 9:
+            if has_tech_eval(c["data"].get("track")) and (c.get("techVer") != 9 or not c["data"].get("techGrades")):
                 try:                                # 기술평가 등급만 최신 방식으로 다시 읽기
                     xml = dt.document_text(f["rcept_no"])
                     plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
                     c["data"]["techGrades"] = dartlib.tech_grades(plain) or None
+                    if not c["data"]["techGrades"] and len(dartlib.TECH_MISS) < 120:
+                        dartlib.TECH_MISS.append({"name": name, "listed": "공모중", "snips": dartlib.tech_snips(plain)})
                     c["techVer"] = 9
                     cache.write_text(json.dumps(c, ensure_ascii=False), "utf-8")
                 except Exception as e:
