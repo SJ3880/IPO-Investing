@@ -372,7 +372,7 @@ const AG_SHORT = {한국기업데이터:'KED', 한국평가데이터:'KoDATA', �
   한국보건산업진흥원:'보건산업진흥원', 한국생명공학연구원:'생명연', 한국전자통신연구원:'ETRI', SCI평가정보:'SCI', 에스씨아이평가정보:'SCI'};
 const gradeKey = g => { g = TG(g); return g && g.grades.length ? g.grades.map(y => ({AA:2, A:3, BBB:4, BB:5})[y] || 9).reduce((a, b) => a + b, 0) * 2 / g.grades.length : null; };
 const techCell = x => {
-  if (!/기술평가/.test(x.track || '')) return '<span class="mu">–</span>';
+  if (!/기술평가|소부장|사업모델/.test(x.track || '')) return '<span class="mu">–</span>';
   const g = TG(x.techGrades);
   if (!g) return '<span class="mu" title="증권신고서에서 등급을 읽는 중(다음 업데이트 때 채워짐)">확인 중</span>';
   const full = agText(g, false);

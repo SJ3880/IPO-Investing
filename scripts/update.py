@@ -262,6 +262,11 @@ def listing_date_doc(text, after):
     return None
 
 
+def has_tech_eval(track):
+    """전문평가기관 기술평가를 받는 상장 유형(기술평가 2곳, 소부장 1곳, 사업모델)"""
+    return bool(re.search(r"기술평가|소부장|사업모델", str(track or "")))
+
+
 def spac_info(sp, dt, cache):
     """합병상장일·기준가(합병가액). 한 번 찾으면 data/spac_merge.json 에 저장"""
     c = cache.get(sp["code"]) or {}
@@ -834,7 +839,7 @@ def upcoming_detail(dt, name, filed):
     if cache.exists():
         c = json.loads(cache.read_text("utf-8"))
         if (c.get("rcpNo") == f["rcept_no"] and c.get("ver") == PARSE_VER
-                and ("techGrades" in c.get("data", {}) or "기술평가" not in str(c.get("data", {}).get("track")))
+                and ("techGrades" in c.get("data", {}) or not has_tech_eval(c.get("data", {}).get("track")))
                 and c["data"].get("totalShares")
                 and sane_total(c["data"].get("totalShares"), c["data"].get("shares")) == c["data"].get("totalShares")):
             c["data"]["valuation"] = valuation.sanitize(c["data"].get("valuation"))
@@ -1105,16 +1110,14 @@ def main():
         for it in items:
             if mins() > 45:
                 break
-            if it.get("spac"):
-                continue
-            p = DETAIL / f"{it['code']}.json"
+            p = DETAIL / f"{it['code']}.json"     # 스팩합병사도 합병 증권신고서에서 등급을 읽는다
             try:
                 det = json.loads(p.read_text("utf-8")) if p.exists() else {}
             except Exception:
                 continue
             if det.get("techVer") == 9 or not det.get("rcpNo"):
                 continue
-            if "기술평가" not in str(resolve_track(it, det.get("track"))[0] or ""):
+            if not has_tech_eval(resolve_track(it, det.get("track"))[0]):
                 continue
             try:
                 xml = dt.document_text(det["rcpNo"])
@@ -1152,7 +1155,7 @@ def main():
                 light = recent2y or not disc_at or (today - date.fromisoformat(disc_at)).days >= 7   # 오래된 종목 공시는 주 1회
                 ai_budget = dart_detail(dt, it["code"], it["name"], date.fromisoformat(it["listed"]), det, ai_budget, heavy,
                                        spac=bool(it.get("spac")), light=light,
-                                       tech="기술평가" in str(resolve_track(it, det.get("track"))[0] or ""))
+                                       tech=has_tech_eval(resolve_track(it, det.get("track"))[0]))
             except Exception as e:
                 log(f"  - {it['name']} DART 전체 실패: {e}")
         # 목록 화면용 요약 필드
