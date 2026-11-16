@@ -926,7 +926,7 @@ TECH_AGENCIES = ["한국기업데이터", "한국평가데이터", "나이스평
                  "기술보증기금", "한국과학기술정보연구원", "KISTI", "한국발명진흥회", "한국보건산업진흥원", "한국생명공학연구원",
                  "정보통신산업진흥원", "한국산업기술평가관리원", "한국전자통신연구원", "한국기술신용평가", "SCI평가정보", "에스씨아이평가정보",
                  "서울평가정보", "한국환경산업기술원", "한국농업기술진흥원", "한국에너지기술평가원", "한국방송통신전파진흥원",
-                 "한국콘텐츠진흥원", "한국산업기술진흥원", "한국식품연구원", "한국해양과학기술진흥원", "한국원자력연구원"]
+                 "한국콘텐츠진흥원", "한국산업기술진흥원", "한국산업기술기획평가원", "나이스디엔비", "NICE디엔비", "한국식품연구원", "한국해양과학기술진흥원", "한국원자력연구원"]
 AG_RE = re.compile("|".join(sorted(map(re.escape, TECH_AGENCIES), key=len, reverse=True)))
 # 등급 글자: 'A등급', 'A, BBB 등급', 'A 및 BBB' — 'A사'·'Series A' 같은 건 제외
 GRADE_RE = re.compile(r"(?<![A-Za-z가-힣0-9])(AA|A|BBB|BB)(?![A-Za-z0-9])(?!\s*사)(?=\s*(?:등급|,|및|과|와|/|·|\)|$|\s))")
@@ -934,7 +934,7 @@ TECH_MISS = []   # 등급을 못 읽은 신고서의 '기술평가' 주변 문�
 
 
 def _ag_key(a):
-    return a.replace("NICE", "나이스").replace("에스씨아이", "SCI")
+    return a.replace("NICE", "나이스").replace("에스씨아이", "SCI").replace("디엔비", "디앤비")
 
 
 def tech_grades(plain):
@@ -949,7 +949,7 @@ def tech_grades(plain):
     for k, sn in enumerate(sents):
         st = f.find(sn[:40], pos)
         pos = max(pos, st)
-        if "등급" not in sn or re.search(r"신용등급|회사채|기업어음|100분의|상위\s*\d", sn):
+        if "등급" not in sn or re.search(r"신용등급|회사채|기업어음|100분의|상위\s*\d|이상일\s*것|이상이어야|이상인\s*(?:기업|경우)|기준으로\s*한다", sn):
             continue
         if not re.search(r"전문\s*평가|기술\s*평가|평가\s*기관|기술성\s*평가|" + AG_RE.pattern, sn):
             continue

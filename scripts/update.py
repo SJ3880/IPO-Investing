@@ -600,7 +600,9 @@ def load_or_fetch(code, listed):
             old = json.loads(p.read_text("utf-8"))
         except Exception:
             old = []
-        if old and old[0][0] > (listed + timedelta(days=10)).isoformat():
+        mark = PRICES / f"{code}.start"                # 이미 전체를 받아봤는데도 상장일보다 늦게 시작하는 종목(네이버 자료 한계)
+        if (old and old[0][0] > (listed + timedelta(days=10)).isoformat()
+                and not (mark.exists() and mark.read_text().strip() == since)):
             old = []                                   # 상장일이 앞당겨진 경우(스팩합병 상장일 수정 등) → 전체 새로 받기
         if old:
             recent = fetch_daily(code, count=15)
@@ -613,7 +615,10 @@ def load_or_fetch(code, listed):
                     merged.update({b[0]: b for b in recent})
                     return [merged[d] for d in sorted(merged) if d >= since], "recent"
     time.sleep(0.1)
-    return [b for b in fetch_daily(code) if b[0] >= since], "full"
+    bars = [b for b in fetch_daily(code) if b[0] >= since]
+    if bars and bars[0][0] > (listed + timedelta(days=10)).isoformat():
+        (PRICES / f"{code}.start").write_text(since)   # 다음부터는 매번 전체를 다시 받지 않음
+    return bars, "full"
 
 
 def fetch_market(code):
@@ -735,12 +740,12 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
     retry = not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
     reparse = det.get("dartDone") and det.get("rcpNo") and (det.get("parseVer", 1) < PARSE_VER or peers_bad(det))
     need_doc = heavy and (retry or reparse)
-    if (mins() < LIGHT_UNTIL_MIN and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 4):
+    if (mins() < LIGHT_UNTIL_MIN and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 5):
         try:                                       # 기술평가 등급만 새로 읽기(신고서 전체를 다시 분석하지 않음)
             xml = dt.document_text(det["rcpNo"])
             plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
             det["techGrades"] = dartlib.tech_grades(plain) or None
-            det["techVer"] = 4
+            det["techVer"] = 5
         except Exception as e:
             log(f"  - {name} 기술평가 등급 실패: {e}")
     if need_doc:
@@ -755,7 +760,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
                 det["lockupTables"] = info["lockupTables"]
                 det["track"] = info["track"]
                 det["techGrades"] = info.get("techGrades") or None
-                det["techVer"] = 4
+                det["techVer"] = 5
                 det["floatAtListing"] = info["floatAtListing"]
                 det["discountRate"] = info.get("discountRate")
                 det["valuation"] = info.get("valuation")
@@ -1091,7 +1096,7 @@ def main():
     if dt:
         n_tg = 0
         for it in items:
-            if mins() > 30:
+            if mins() > 45:
                 break
             if it.get("spac"):
                 continue
@@ -1100,7 +1105,7 @@ def main():
                 det = json.loads(p.read_text("utf-8")) if p.exists() else {}
             except Exception:
                 continue
-            if det.get("techVer") == 4 or not det.get("rcpNo"):
+            if det.get("techVer") == 5 or not det.get("rcpNo"):
                 continue
             if "기술평가" not in str(resolve_track(it, det.get("track"))[0] or ""):
                 continue
@@ -1108,7 +1113,7 @@ def main():
                 xml = dt.document_text(det["rcpNo"])
                 plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
                 det["techGrades"] = dartlib.tech_grades(plain)
-                det["techVer"] = 4
+                det["techVer"] = 5
                 p.write_text(json.dumps(det, ensure_ascii=False), "utf-8")
                 n_tg += 1
             except Exception as e:
