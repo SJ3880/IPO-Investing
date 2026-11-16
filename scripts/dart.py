@@ -927,7 +927,10 @@ TECH_AGENCIES = ["한국기업데이터", "한국평가데이터", "나이스평
                  "정보통신산업진흥원", "한국산업기술평가관리원", "한국전자통신연구원", "한국기술신용평가", "SCI평가정보", "에스씨아이평가정보",
                  "한국환경산업기술원", "한국농업기술진흥원", "한국에너지기술평가원", "한국방송통신전파진흥원", "한국콘텐츠진흥원"]
 AG_RE = re.compile("|".join(sorted(map(re.escape, TECH_AGENCIES), key=len, reverse=True)))
-GRADE_RE = re.compile(r"(?<![A-Za-z가-힣])(AAA|AA|A|BBB|BB|B|CCC)(?![A-Za-z])(?=\s*(?:등급|,|\)|/|·|및|와|과|\||$|\s))")
+GRADE_RE = re.compile(r"(?<![A-Za-z가-힣])(AA|A|BBB|BB)(?![A-Za-z])(?=\s*(?:등급|,|\)|/|·|및|와|과|\||$|\s))")
+
+
+TECH_MISS = []   # 등급을 못 읽은 신고서의 '기술평가' 주변 문장(확인용)
 
 
 def tech_grades(plain):
@@ -947,15 +950,19 @@ def tech_grades(plain):
             key = ag.replace("NICE", "나이스")
             if key in seen:
                 continue
-            g = next(((gp, gv) for gp, gv in grs if gp > pos and gp - pos < 260 and gp not in used), None)
+            g = next(((gp, gv) for gp, gv in grs if gp > pos and gp - pos < 260 and gp not in used
+                      and not re.search(r"신용|회사채|기업어음", w[pos:gp])), None)   # 신용등급과 섞이지 않게
             if g:
                 used.add(g[0])
                 seen.add(key)
                 pairs.append((ag, g[1]))
         if len(pairs) >= 2 and len(pairs) > len(best):
-            best = pairs[:3]
+            best = pairs[:2]                       # 기술평가 특례는 전문평가기관 2곳
             if len(best) >= 2:
                 break
+    if not best and len(TECH_MISS) < 8:
+        snips = [f[max(0, m.start() - 200): m.start() + 600] for m in re.finditer(r"전문\s*평가\s*기관|기술\s*평가\s*결과|평가\s*등급", f)][:4]
+        TECH_MISS.append(snips)
     return [{"agency": a, "grade": g} for a, g in best]
 
 
