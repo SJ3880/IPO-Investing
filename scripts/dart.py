@@ -922,6 +922,43 @@ def fee_rate(plain):
     return fee_info(plain)[0]
 
 
+TECH_AGENCIES = ["한국기업데이터", "한국평가데이터", "나이스평가정보", "NICE평가정보", "나이스디앤비", "NICE디앤비", "이크레더블",
+                 "기술보증기금", "한국과학기술정보연구원", "KISTI", "한국발명진흥회", "한국보건산업진흥원", "한국생명공학연구원",
+                 "정보통신산업진흥원", "한국산업기술평가관리원", "한국전자통신연구원", "한국기술신용평가", "SCI평가정보", "에스씨아이평가정보",
+                 "한국환경산업기술원", "한국농업기술진흥원", "한국에너지기술평가원", "한국방송통신전파진흥원", "한국콘텐츠진흥원"]
+AG_RE = re.compile("|".join(sorted(map(re.escape, TECH_AGENCIES), key=len, reverse=True)))
+GRADE_RE = re.compile(r"(?<![A-Za-z가-힣])(AAA|AA|A|BBB|BB|B|CCC)(?![A-Za-z])(?=\s*(?:등급|,|\)|/|·|및|와|과|\||$|\s))")
+
+
+def tech_grades(plain):
+    """기술평가 특례: 전문평가기관 2곳의 등급(예: [('한국기업데이터','A'),('나이스디앤비','A')])"""
+    f = re.sub(r"\s+", " ", plain.replace("\n", " | "))
+    best = []
+    for m in re.finditer(r"기술\s*평가|전문\s*평가\s*기관|평가\s*등급", f):
+        w = f[max(0, m.start() - 300): m.start() + 1500]
+        if "등급" not in w:
+            continue
+        ags = [(a.start(), a.group(0)) for a in AG_RE.finditer(w)]
+        grs = [(g.start(), g.group(1)) for g in GRADE_RE.finditer(w)]
+        if len(ags) < 2 or len(grs) < 2:
+            continue
+        used, pairs, seen = set(), [], set()
+        for pos, ag in ags:
+            key = ag.replace("NICE", "나이스")
+            if key in seen:
+                continue
+            g = next(((gp, gv) for gp, gv in grs if gp > pos and gp - pos < 260 and gp not in used), None)
+            if g:
+                used.add(g[0])
+                seen.add(key)
+                pairs.append((ag, g[1]))
+        if len(pairs) >= 2 and len(pairs) > len(best):
+            best = pairs[:3]
+            if len(best) >= 2:
+                break
+    return [{"agency": a, "grade": g} for a, g in best]
+
+
 def discount_rate(plain):
     """미래 추정이익에 적용한 현가할인율(%)"""
     pats = [r"(\d{1,2}(?:\.\d+)?)\s*%\s*의\s*현가\s*할인율",
@@ -965,6 +1002,7 @@ def analyze_document(xml_text):
     plain = strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml_text[:4000000], flags=re.I))
     out["track"], out["trackEvidence"] = listing_track(plain)
     out["discountRate"] = discount_rate(plain)
+    out["techGrades"] = tech_grades(plain)
     out.update(uw_fee(xml_text, plain))
     try:                                         # 공모가 산정 근거(PER·비교회사·할인율)
         out["valuation"] = valuation.valuation_info(xml_text) or None

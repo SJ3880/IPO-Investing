@@ -360,7 +360,12 @@ const rng = a => a && a[0] ? `${md(a[0])}~${md(a[1])}` : '–';
 const daysTo = iso => iso ? Math.ceil((new Date(iso + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5) : null;
 const spacChip = r => r.spac ? `<span class="chip spac" title="${esc(r.listType || '스팩합병')}">스팩합병</span>` : '';
 const nm = (r, extra='') => `<span class="nm">${esc(r.name)}</span>${spacChip(r)}${extra}<span class="sc">${esc(r.sector || '')}</span>`;
-const trackChip = t => t && t !== '일반' ? `<span class="chip">${esc(t)}</span>` : '';
+const gradeText = g => g && g.length ? g.map(x => x.grade).join(', ') : '';
+const trackChip = (t, g) => {
+  if (!t || t === '일반') return '';
+  const gt = /기술/.test(t) ? gradeText(g) : '';
+  return `<span class="chip"${gt ? ` title="${esc(g.map(x => x.agency + ' ' + x.grade).join(' · '))}"` : ''}>${esc(t)}${gt ? ` <b>${gt}</b>` : ''}</span>`;
+};
 
 /* ---------- 공모가 산정 근거(증권신고서 '공모가격 결정방법') ---------- */
 const f2 = v => v == null ? '–' : (+v).toLocaleString('ko-KR', { maximumFractionDigits: 2 });
@@ -443,7 +448,7 @@ const TABS = {
   offering: { src: () => PIPE.offering || [], sort: null, yr: true, track: true,
     cols: [
       {k:'stage', t:'단계', l:1, r: x => `<span class="tag t-${x.stage.replace(/\s/g,'').replace('중','중')}${/청약/.test(x.stage) ? ' t-청약' : /수요예측/.test(x.stage) ? ' t-수요예측' : /상장/.test(x.stage) ? ' t-상장' : ''}">${esc(x.stage)}</span>`},
-      {k:'name', t:'회사', l:1, r: x => nm({...x, sector: [x.market, x.underwriters ? '' : ''].filter(Boolean).join(' ')}, trackChip(x.track))},
+      {k:'name', t:'회사', l:1, r: x => nm({...x, sector: [x.market, x.underwriters ? '' : ''].filter(Boolean).join(' ')}, trackChip(x.track, x.techGrades))},
       {k:'demandS', t:'수요예측', l:1, r: x => rng(x.demand)},
       {k:'subS', t:'청약', l:1, r: x => rng(x.sub)},
       {k:'listDate', t:'상장예정', l:1, r: x => x.listDate ? `${md(x.listDate)}` : '<span class="mu">미정</span>'},
@@ -459,7 +464,7 @@ const TABS = {
     note: () => '단계는 오늘 날짜 기준 자동 분류. 공모가는 확정 전이면 희망밴드. 공모 시총 = 상장예정주식수 × 확정공모가(확정 전이면 희망밴드 하단~상단).' },
   listed: { src: () => DATA, sort: 'listed', yr: true, track: true, screen: true,
     cols: [
-      {k:'name', t:'회사', l:1, r: x => nm(x, trackChip(x.track) + (x.listType && !x.spac && /이전|합병/.test(x.listType) ? `<span class="chip">${esc(x.listType)}</span>` : ''))},
+      {k:'name', t:'회사', l:1, r: x => nm(x, trackChip(x.track, x.techGrades) + (x.listType && !x.spac && /이전|합병/.test(x.listType) ? `<span class="chip">${esc(x.listType)}</span>` : ''))},
       {k:'market', t:'시장', l:1},
       {k:'listed', t:'상장일', l:1, r: x => `${x.listed}<div class="mu" style="font-size:12px">D+${x.days}</div>`},
       {k:'offer', t:'공모가', r: x => x.offer ? fmt(x.offer) + (x.spac ? '<div class="mu" style="font-size:12px">합병 기준가</div>' : '') : '–'},
@@ -774,7 +779,9 @@ const TRACK_NOTE = {
 function renderTrack(r, d){
   const t = r.track;
   if (!t) { $('#dTrack').innerHTML = `<span class="mu">${META.dart ? '아직 판별 전입니다(다음 업데이트 때 채워짐).' : 'DART API 키를 등록하면 표시됩니다.'}</span>`; return; }
+  const tg = r.techGrades || d.techGrades;
   $('#dTrack').innerHTML = `<b>${esc(t)}</b>${r.trackManual ? ' <span class="chip">직접 입력</span>' : ''}
+    ${tg && tg.length ? `<div style="margin-top:4px">기술평가 등급: <b>${esc(gradeText(tg))}</b> <span class="mu">(${esc(tg.map(x => x.agency + ' ' + x.grade).join(' · '))})</span></div>` : ''}
     <div class="note" style="margin-top:4px">${esc(TRACK_NOTE[t] || '')}</div>
     ${d.trackEvidence && !r.trackManual ? `<div class="evi">근거(증권신고서): “${esc(d.trackEvidence)}”</div>` : ''}
     <div class="note">판별 근거: ${esc(r.trackSrc || '증권신고서')}. 틀리면 data/listing_track.csv에 직접 적으면 그 값이 우선합니다.</div>`;
@@ -1001,7 +1008,7 @@ function openUp(name){
     <h3>공모가 산정 근거 <span class="chip">증권신고서</span></h3>
     <div class="card">${valHtml(x.valuation, x.discountRate, x.offer, x.band || (x.valuation || {}).bandDoc)}</div>
     <h3>상장트랙</h3>
-    <div class="card"><b>${esc(x.track || '–')}</b> <span class="mu" style="font-size:12px">· 판별 근거: ${esc(x.trackSrc || '증권신고서')} (상장 후 KIND 기술성장기업 목록으로 재확인)</span><div class="note" style="margin-top:4px">${esc(TRACK_NOTE[x.track] || '')}</div>
+    <div class="card"><b>${esc(x.track || '–')}</b>${x.techGrades && x.techGrades.length ? ` · 기술평가 <b>${esc(gradeText(x.techGrades))}</b> <span class="mu">(${esc(x.techGrades.map(g => g.agency + ' ' + g.grade).join(' · '))})</span>` : ''} <span class="mu" style="font-size:12px">· 판별 근거: ${esc(x.trackSrc || '증권신고서')} (상장 후 KIND 기술성장기업 목록으로 재확인)</span><div class="note" style="margin-top:4px">${esc(TRACK_NOTE[x.track] || '')}</div>
       ${x.trackEvidence ? `<div class="evi">근거(증권신고서): “${esc(x.trackEvidence)}”</div>` : ''}</div>
     <h3>유통가능물량 · 기간별</h3><div class="card">${lock}</div>
     ${(x.fundUse || []).length || (x.fundDoc && x.fundDoc.net) ? `<h3>공모자금 사용 목적</h3><div class="card">${fundHtml(x.fundUse, x.fundChk, x.amount, x.oldShareRatio, x.offer, x.fundDoc)}</div>` : ''}

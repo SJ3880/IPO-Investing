@@ -725,7 +725,7 @@ def peers_bad(det):
     return not valuation.mean_ok(ps, am)
 
 
-def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, light=True):
+def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, light=True, tech=False):
     """det(기존 상세)를 갱신. 무거운 작업(문서 파싱·요약)은 한 번만."""
     corp = dt.corp_code(code)
     if not corp:
@@ -735,6 +735,14 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
     retry = not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
     reparse = det.get("dartDone") and det.get("rcpNo") and (det.get("parseVer", 1) < PARSE_VER or peers_bad(det))
     need_doc = heavy and (retry or reparse)
+    if (heavy and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 1):
+        try:                                       # 기술평가 등급만 새로 읽기(신고서 전체를 다시 분석하지 않음)
+            xml = dt.document_text(det["rcpNo"])
+            plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
+            det["techGrades"] = dartlib.tech_grades(plain) or None
+            det["techVer"] = 1
+        except Exception as e:
+            log(f"  - {name} 기술평가 등급 실패: {e}")
     if need_doc:
         det["dartTried"] = date.today().isoformat()
         try:
@@ -746,6 +754,8 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
                 det["lockup"] = info["lockup"]
                 det["lockupTables"] = info["lockupTables"]
                 det["track"] = info["track"]
+                det["techGrades"] = info.get("techGrades") or None
+                det["techVer"] = 1
                 det["floatAtListing"] = info["floatAtListing"]
                 det["discountRate"] = info.get("discountRate")
                 det["valuation"] = info.get("valuation")
@@ -817,7 +827,7 @@ def upcoming_detail(dt, name, filed):
     cache = DATA / "upcoming" / f"{corp}.json"
     if cache.exists():
         c = json.loads(cache.read_text("utf-8"))
-        if (c.get("rcpNo") == f["rcept_no"] and c.get("ver") == PARSE_VER
+        if (c.get("rcpNo") == f["rcept_no"] and c.get("ver") == PARSE_VER and "techGrades" in c.get("data", {})
                 and c["data"].get("totalShares")
                 and sane_total(c["data"].get("totalShares"), c["data"].get("shares")) == c["data"].get("totalShares")):
             c["data"]["valuation"] = valuation.sanitize(c["data"].get("valuation"))
@@ -827,7 +837,7 @@ def upcoming_detail(dt, name, filed):
     data = {"rcpNo": f["rcept_no"], "market": info["market"], "track": info["track"],
             "trackSrc": "증권신고서(할인율)" if str(info["trackEvidence"]).startswith("할인율") else "증권신고서",
             "trackEvidence": info["trackEvidence"], "floatAtListing": info["floatAtListing"],
-            "totalShares": sane_total(info["totalShares"], est.get("shares")), "lockup": info["lockup"], "discountRate": info.get("discountRate"),
+            "totalShares": sane_total(info["totalShares"], est.get("shares")), "lockup": info["lockup"], "discountRate": info.get("discountRate"), "techGrades": info.get("techGrades") or None,
             "valuation": valuation.sanitize(info.get("valuation")), "fundDoc": info.get("fundDoc"),
             "shares": est.get("shares"), "underwriters": est.get("underwriters"),
             "oldShareRatio": est.get("oldShareRatio"), "putback": est.get("putback"),
@@ -1098,7 +1108,8 @@ def main():
                 recent2y = (today - date.fromisoformat(it["listed"])).days <= HEAVY_DAYS
                 light = recent2y or not disc_at or (today - date.fromisoformat(disc_at)).days >= 7   # 오래된 종목 공시는 주 1회
                 ai_budget = dart_detail(dt, it["code"], it["name"], date.fromisoformat(it["listed"]), det, ai_budget, heavy,
-                                       spac=bool(it.get("spac")), light=light)
+                                       spac=bool(it.get("spac")), light=light,
+                                       tech="기술" in str(it.get("track") or ""))
             except Exception as e:
                 log(f"  - {it['name']} DART 전체 실패: {e}")
         # 목록 화면용 요약 필드
@@ -1142,6 +1153,7 @@ def main():
             det["totalShares"] = None                      # 잘못 읽은 상장예정주식수 → 다음에 신고서 다시 읽게
             det["parseVer"] = 0
         it["totalShares"] = det.get("totalShares")
+        it["techGrades"] = det.get("techGrades") or None
         it["offerShares"] = det.get("shares")
         # 공모금액 = 공모주식수 × 확정 공모가. (DART 주요정보의 금액은 희망가 하단 기준이라 확정가와 다를 수 있음)
         it["offerAmount"] = (round(det["shares"] * it["offer"]) if det.get("shares") and it.get("offer") and not it.get("spac")
@@ -1207,7 +1219,7 @@ def main():
         prev_off = {x["name"]: x for x in json.loads((DATA / "pipeline.json").read_text("utf-8")).get("offering", [])}
     except Exception:
         pass
-    KEEP = ("rcpNo", "market", "track", "trackSrc", "trackEvidence", "floatAtListing", "totalShares", "lockup",
+    KEEP = ("rcpNo", "market", "track", "techGrades", "trackSrc", "trackEvidence", "floatAtListing", "totalShares", "lockup",
             "discountRate", "valuation", "shares", "underwriters", "oldShareRatio", "putback", "fundUse", "fundUseRaw", "fundChk", "fundBase", "fundDoc", "summary")
 
     enrich_dbg = []
