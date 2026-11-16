@@ -361,6 +361,16 @@ const daysTo = iso => iso ? Math.ceil((new Date(iso + 'T00:00:00') - new Date(ne
 const spacChip = r => r.spac ? `<span class="chip spac" title="${esc(r.listType || '스팩합병')}">스팩합병</span>` : '';
 const nm = (r, extra='') => `<span class="nm">${esc(r.name)}</span>${spacChip(r)}${extra}<span class="sc">${esc(r.sector || '')}</span>`;
 const gradeText = g => g && g.length ? g.map(x => x.grade).join(', ') : '';
+const AG_SHORT = {한국기업데이터:'KED', 한국평가데이터:'KoDATA', 나이스평가정보:'NICE평가', NICE평가정보:'NICE평가', 나이스디앤비:'NICE D&B',
+  NICE디앤비:'NICE D&B', 이크레더블:'이크레더블', 기술보증기금:'기보', 한국과학기술정보연구원:'KISTI', KISTI:'KISTI', 한국발명진흥회:'발명진흥회',
+  한국보건산업진흥원:'보건산업진흥원', 한국생명공학연구원:'생명연', 한국전자통신연구원:'ETRI', SCI평가정보:'SCI', 에스씨아이평가정보:'SCI'};
+const gradeKey = g => g && g.length ? g.map(y => ({AAA:1, AA:2, A:3, BBB:4, BB:5, B:6})[y.grade] || 9).reduce((a, b) => a + b, 0) : null;
+const techCell = x => {
+  if (!/기술평가/.test(x.track || '')) return '<span class="mu">–</span>';
+  const g = x.techGrades;
+  if (!g || !g.length) return '<span class="mu" title="증권신고서에서 등급을 읽는 중(다음 업데이트 때 채워짐)">확인 중</span>';
+  return `<b title="${esc(g.map(y => y.agency + ' ' + y.grade).join(' · '))}">${esc(gradeText(g))}</b><div class="mu" style="font-size:11.5px">${esc(g.map(y => AG_SHORT[y.agency] || y.agency).join(' · '))}</div>`;
+};
 const trackChip = (t, g) => {
   if (!t || t === '일반') return '';
   const gt = /기술/.test(t) ? gradeText(g) : '';
@@ -455,6 +465,7 @@ const TABS = {
       {k:'offer', t:'공모가(밴드)', r: x => x.offer ? `<b>${fmt(x.offer)}</b>${x.band ? `<div class="mu" style="font-size:12px">${fmt(x.band[0])}~${fmt(x.band[1])}</div>` : ''}` : (x.band ? `${fmt(x.band[0])}~${fmt(x.band[1])}` : '–')},
       {k:'amount', t:'공모금액', r: x => eok(x.amount)},
       {k:'marcapAtOffer', t:'공모 시총', r: x => mcapUp(x)},
+      {k:'techG', t:'기술평가', r: x => techCell(x)},
       {k:'valMult', t:'적용 PER·공모할인율', r: x => valCell(x.valuation)},
       {k:'floatAtListing', t:'상장일 유통', r: x => x.floatAtListing != null ? x.floatAtListing.toFixed(1) + '%' : '–'},
       {k:'instComp', t:'경쟁률(기관·일반)', r: x => (x.instComp ? `기관 ${fmt(x.instComp)}:1<div class="mu" style="font-size:12px">확약 ${x.commit ?? '–'}%</div>` : '') + (x.subComp ? `<div class="mu" style="font-size:12px">일반 ${fmt(x.subComp)}:1</div>` : '') || '–'},
@@ -467,6 +478,7 @@ const TABS = {
       {k:'name', t:'회사', l:1, r: x => nm(x, trackChip(x.track, x.techGrades) + (x.listType && !x.spac && /이전|합병/.test(x.listType) ? `<span class="chip">${esc(x.listType)}</span>` : ''))},
       {k:'market', t:'시장', l:1},
       {k:'listed', t:'상장일', l:1, r: x => `${x.listed}<div class="mu" style="font-size:12px">D+${x.days}</div>`},
+      {k:'techG', t:'기술평가', r: x => techCell(x)},
       {k:'offer', t:'공모가', r: x => x.offer ? fmt(x.offer) + (x.spac ? '<div class="mu" style="font-size:12px">합병 기준가</div>' : '') : '–'},
       {k:'marcapAtOffer', t:'공모 시총', r: x => eok(x.marcapAtOffer)},
       {k:'newRatio', t:'신주 : 구주', r: x => x.newRatio == null ? '<span class="mu">–</span>'
@@ -1098,11 +1110,12 @@ Promise.all([
   fetch('data/ipos.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => ({})),
   fetch('data/pipeline.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
 ]).then(([d, p]) => {
-  META = d; PIPE = p || {}; (PIPE.offering || []).forEach(x => x.valMult = x.valuation ? x.valuation.appliedMult : null);
+  META = d; PIPE = p || {}; (PIPE.offering || []).forEach(x => { x.valMult = x.valuation ? x.valuation.appliedMult : null; x.techG = gradeKey(x.techGrades); });
   DATA = (d.items || []).map(x => ({ ...x, market: x.market || '코스닥' }));
   DATA.forEach(x => {
     x.peerCount = (x.peers || []).length || null;
     x.feeRate = x.uwFeeRateDoc ?? x.uwFeeRate ?? null;
+    x.techG = gradeKey(x.techGrades);
     x.newRatio = x.spac || x.oldShareRatio == null ? null : 100 - x.oldShareRatio;   // 신고서 '인수수수료' 표의 수수료율 우선
     x.bandHi = x.band ? x.band[1] : null;
     x.uwMain = uwText(x) || null;

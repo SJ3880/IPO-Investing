@@ -1142,7 +1142,7 @@ def main():
         it["fairValue"] = fair
         it["discBand"] = disc_b
         it["discOffer"] = round((1 - it["offer"] / fair) * 100, 1) if fair and it.get("offer") and not it.get("spac") else None
-        it["peers"] = [{"n": x["name"], "v": x["v"]} for x in (v.get("peers") or [])]
+        it["peers"] = [{"n": x["name"], "v": x["v"]} for x in (v.get("peers") or []) if valuation._is_name(x["name"])]
         it["peerChecked"] = bool(v.get("peerChecked"))
         it["trackManual"] = it["code"] in manual_tracks
         # 공모 데이터 시트용(증권신고서·주요정보)

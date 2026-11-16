@@ -58,6 +58,8 @@ def _is_name(s):
         return False
     if _num(s) is not None and re.fullmatch(r"[-\d,.\s배%원()]+", s):
         return False
+    if re.search(r"\d", s) and re.search(r"(백만|천만|억|조|만|EUR|USD|JPY|CNY|원|달러|유로|엔|%)", s):
+        return False                                   # '117 백만 EUR' 같은 금액 칸은 회사 이름이 아님
     if MULT_RE.search(s) or re.search(r"(순이익|시가총액|주식수|EBITDA|매출|자본|평균|합계|적용|단위|기준일)", s):
         return False
     if NOT_PEER.search(_name(s)) or not _name(s) or UNIT_ONLY.match(s.replace(" ", "")):
