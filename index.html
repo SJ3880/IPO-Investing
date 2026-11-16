@@ -370,7 +370,7 @@ const agText = (g, short) => { g = TG(g); if (!g || !g.agencies || !g.agencies.l
 const AG_SHORT = {한국기업데이터:'KED', 한국평가데이터:'KoDATA', 나이스평가정보:'NICE평가', NICE평가정보:'NICE평가', 나이스디앤비:'NICE D&B',
   NICE디앤비:'NICE D&B', 이크레더블:'이크레더블', 기술보증기금:'기보', 한국과학기술정보연구원:'KISTI', KISTI:'KISTI', 한국발명진흥회:'발명진흥회',
   한국보건산업진흥원:'보건산업진흥원', 한국생명공학연구원:'생명연', 한국전자통신연구원:'ETRI', SCI평가정보:'SCI', 에스씨아이평가정보:'SCI'};
-const gradeKey = g => { g = TG(g); return g ? g.grades.map(y => ({AA:2, A:3, BBB:4, BB:5})[y] || 9).reduce((a, b) => a + b, 0) : null; };
+const gradeKey = g => { g = TG(g); return g && g.grades.length ? g.grades.map(y => ({AA:2, A:3, BBB:4, BB:5})[y] || 9).reduce((a, b) => a + b, 0) * 2 / g.grades.length : null; };
 const techCell = x => {
   if (!/기술평가/.test(x.track || '')) return '<span class="mu">–</span>';
   const g = TG(x.techGrades);

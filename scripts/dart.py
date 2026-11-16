@@ -927,10 +927,10 @@ TECH_AGENCIES = ["한국기업데이터", "한국기업데이타", "한국평가
                  "정보통신산업진흥원", "한국산업기술평가관리원", "한국전자통신연구원", "한국기술신용평가", "SCI평가정보", "에스씨아이평가정보",
                  "서울평가정보", "한국환경산업기술원", "한국농업기술진흥원", "한국에너지기술평가원", "한국방송통신전파진흥원",
                  "한국콘텐츠진흥원", "한국산업기술진흥원", "한국산업기술기획평가원", "나이스디엔비", "NICE디엔비",
-                 "농업기술실용화재단", "해양수산과학기술진흥원", "한국해양수산과학기술진흥원", "한국농촌경제연구원", "한국식품연구원", "한국해양과학기술진흥원", "한국원자력연구원"]
+                 "농업기술실용화재단", "해양수산과학기술진흥원", "한국해양수산과학기술진흥원", "한국농촌경제연구원", "한국식품연구원", "한국해양과학기술진흥원", "한국원자력연구원", "정보통신기술진흥센터", "정보통신기획평가원", "정보통신산업진흥원"]
 AG_RE = re.compile("|".join(sorted(map(re.escape, TECH_AGENCIES), key=len, reverse=True)))
 # 등급 글자: 'A등급', 'A, BBB 등급', 'A 및 BBB' — 'A사'·'Series A' 같은 건 제외
-GRADE_RE = re.compile(r"(?<![A-Za-z가-힣0-9])(AA|A|BBB|BB)(?![A-Za-z0-9])(?!\s*사)(?=\s*(?:등급|,|및|과|와|/|·|\)|$|\s))")
+GRADE_RE = re.compile(r"(?<![A-Za-z가-힣0-9])(AA|A|BBB|BB)(?![A-Za-z0-9])(?!\s*사)(?=\s*(?:등급|,|및|과|와|/|·|\)|$|\s|['\u2019\u201d\x22]|를|을|로|의))")
 TECH_MISS = []   # 등급을 못 읽은 신고서의 '기술평가' 주변 문장(확인용)
 
 
@@ -947,12 +947,13 @@ def tech_grades(plain):
     sents = re.split(r"(?<=다)\.\s*|\s\|\s", f)
     pos = 0
     first = None
+    singles = []                                   # (등급, 기관, 문장) — 한 문장에 등급이 하나만 있는 경우
     for k, sn in enumerate(sents):
         st = f.find(sn[:40], pos)
         pos = max(pos, st)
-        if "등급" not in sn or re.search(r"신용등급|회사채|기업어음|100분의|상위\s*\d|이상일\s*것|이상이어야|이상인\s*(?:기업|경우)|기준으로\s*한다", sn):
+        if "등급" not in sn or re.search(r"신용등급|(?<!기술)신용평가(?!정보)|한국기업평가|단기금융|회사채|기업어음|100분의|상위\s*\d|이상일\s*것|이상이어야|이상인\s*(?:기업|경우)|기준으로\s*한다", sn):
             continue
-        if not re.search(r"전문\s*평가|기술\s*평가|평가\s*기관|기술성\s*평가|재\s*평가|평가\s*결과|기관\s*(?:으로부터|로부터|에서)|" + AG_RE.pattern, sn):
+        if not re.search(r"전문\s*평가|기술\s*평가|평가\s*기관|기술성\s*평가|재\s*평가|평가\s*결과|평가\s*등급|으로부터|로부터|" + AG_RE.pattern, sn):
             continue
         if re.search(r"우선\s*심사|평가기관\s*Pool|전문평가기관\s*확대|제도\s*개선", sn):
             continue                                   # 거래소 제도 설명 문장
@@ -965,7 +966,10 @@ def tech_grades(plain):
         both = re.search(r"(?:2개|두)\s*(?:개\s*)?(?:기관|사|전문평가기관)[^.]{0,40}?모두\s*(?:AA|A|BBB|BB)\s*등급|모두\s*(?:로부터|에서|에게)?\s*(?:AA|A|BBB|BB)\s*등급|2개\s*(?:기관|사)(?:에게|로부터|에서)\s*(?:AA|A|BBB|BB)\s*등급", sg)
         if len(gr) == 1 and both:
             gr = gr * 2
-        if len(gr) < 2:
+        if len(gr) == 1:
+            if re.search(r"통보|득하|득을|취득|획득|받았|받은\s*바|받아|수령|부여", sg) and not re.search(r"최초|1차", sn):
+                a1 = AG_RE.findall(sn) or AG_RE.findall(f[max(0, st - 120): st])
+                singles.append((gr[0], a1[0] if len(set(map(_ag_key, a1))) == 1 else None, sn.strip()[:300]))
             continue
         gr_all = gr
         gr = gr[:2]
@@ -1011,6 +1015,19 @@ def tech_grades(plain):
         first = first or cand                    # 기관 이름이 없는 문장이면 더 찾아보고, 없으면 이걸 씀
     if first:
         return first
+    if singles:
+        byag = {}
+        for g, a, ev in singles:
+            if a and _ag_key(a) not in byag:
+                byag[_ag_key(a)] = (g, a, ev)
+        if len(byag) >= 2:                          # '기관 X 기술평가 A등급 획득' · '기관 Y … A등급 획득' 처럼 따로 적은 경우
+            (g1, a1, e1), (g2, a2, e2) = list(byag.values())[:2]
+            return {"grades": [g1, g2], "agencies": [a1, a2], "paired": True, "ev": e1[:150] + " … " + e2[:150]}
+        one = bool(re.search(r"(?:1개|한\s*개|1곳|한\s*곳)\s*(?:의\s*)?(?:전문\s*)?(?:평가\s*)?(?:기관|사)|소재\s*[·ㆍ,]?\s*부품|단일", f))
+        two = bool(re.search(r"(?:2개|두\s*개|2곳)\s*(?:의\s*)?(?:전문\s*)?(?:평가\s*)?기관\s*(?:으로부터|로부터|에서|에게|\()", f))
+        if one or not two:                          # 소재·부품 특례 등 1개 기관만 평가받은 경우 → 등급 1개
+            g, a, ev = next(((g, a, ev) for g, a, ev in singles if a), singles[0])
+            return {"grades": [g], "agencies": [a] if a else [], "paired": bool(a), "ev": ev}
     return None
 
 
