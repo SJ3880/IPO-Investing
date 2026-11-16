@@ -854,7 +854,28 @@ def upcoming_detail(dt, name, filed):
                     log(f"  - {name} 기술평가 등급 실패: {e}")
             c["data"]["valuation"] = valuation.sanitize(c["data"].get("valuation"))
             return c["data"]
-    info = dartlib.analyze_document(dt.document_text(f["rcept_no"]))
+    try:
+        xml_new = dt.document_text(f["rcept_no"])
+    except RuntimeError as e:
+        # 새 정정신고서 원문이 아직 안 올라온 경우 → 지난번에 읽은 신고서 값 유지, 등급만 그 신고서에서 다시 읽기
+        if not cache.exists():
+            raise
+        c = json.loads(cache.read_text("utf-8"))
+        if has_tech_eval(c["data"].get("track")) and not c["data"].get("techGrades") and c.get("rcpNo"):
+            try:
+                xml = dt.document_text(c["rcpNo"])
+                plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
+                c["data"]["techGrades"] = dartlib.tech_grades(plain) or None
+                if not c["data"]["techGrades"] and len(dartlib.TECH_MISS) < 120:
+                    dartlib.TECH_MISS.append({"name": name, "listed": "공모중", "snips": dartlib.tech_snips(plain)})
+                c["techVer"] = 9
+                cache.write_text(json.dumps(c, ensure_ascii=False), "utf-8")
+            except Exception as e2:
+                log(f"  - {name} 기술평가 등급(이전 신고서) 실패: {e2}")
+        log(f"  - {name}: 새 신고서 원문 없음({e}) → 이전 신고서 값 사용")
+        c["data"]["valuation"] = valuation.sanitize(c["data"].get("valuation"))
+        return c["data"]
+    info = dartlib.analyze_document(xml_new)
     est = dt.estk(corp, date.today())
     data = {"rcpNo": f["rcept_no"], "market": info["market"], "track": info["track"],
             "trackSrc": "증권신고서(할인율)" if str(info["trackEvidence"]).startswith("할인율") else "증권신고서",
