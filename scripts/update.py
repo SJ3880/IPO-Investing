@@ -741,12 +741,12 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
     retry = not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
     reparse = det.get("dartDone") and det.get("rcpNo") and (det.get("parseVer", 1) < PARSE_VER or peers_bad(det))
     need_doc = heavy and (retry or reparse)
-    if (mins() < LIGHT_UNTIL_MIN and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 5):
+    if (mins() < LIGHT_UNTIL_MIN and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 6):
         try:                                       # 기술평가 등급만 새로 읽기(신고서 전체를 다시 분석하지 않음)
             xml = dt.document_text(det["rcpNo"])
             plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
             det["techGrades"] = dartlib.tech_grades(plain) or None
-            det["techVer"] = 5
+            det["techVer"] = 6
         except Exception as e:
             log(f"  - {name} 기술평가 등급 실패: {e}")
     if need_doc:
@@ -761,7 +761,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
                 det["lockupTables"] = info["lockupTables"]
                 det["track"] = info["track"]
                 det["techGrades"] = info.get("techGrades") or None
-                det["techVer"] = 5
+                det["techVer"] = 6
                 det["floatAtListing"] = info["floatAtListing"]
                 det["discountRate"] = info.get("discountRate")
                 det["valuation"] = info.get("valuation")
@@ -1112,7 +1112,7 @@ def main():
                 det = json.loads(p.read_text("utf-8")) if p.exists() else {}
             except Exception:
                 continue
-            if det.get("techVer") == 5 or not det.get("rcpNo"):
+            if det.get("techVer") == 6 or not det.get("rcpNo"):
                 continue
             if "기술평가" not in str(resolve_track(it, det.get("track"))[0] or ""):
                 continue
@@ -1120,7 +1120,7 @@ def main():
                 xml = dt.document_text(det["rcpNo"])
                 plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
                 det["techGrades"] = dartlib.tech_grades(plain)
-                det["techVer"] = 5
+                det["techVer"] = 6
                 p.write_text(json.dumps(det, ensure_ascii=False), "utf-8")
                 n_tg += 1
             except Exception as e:

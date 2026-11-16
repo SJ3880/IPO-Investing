@@ -922,11 +922,12 @@ def fee_rate(plain):
     return fee_info(plain)[0]
 
 
-TECH_AGENCIES = ["한국기업데이터", "한국평가데이터", "나이스평가정보", "NICE평가정보", "나이스디앤비", "NICE디앤비", "이크레더블",
+TECH_AGENCIES = ["한국기업데이터", "한국기업데이타", "한국평가데이터", "나이스평가정보", "NICE평가정보", "나이스디앤비", "NICE디앤비", "이크레더블",
                  "기술보증기금", "한국과학기술정보연구원", "KISTI", "한국발명진흥회", "한국보건산업진흥원", "한국생명공학연구원",
                  "정보통신산업진흥원", "한국산업기술평가관리원", "한국전자통신연구원", "한국기술신용평가", "SCI평가정보", "에스씨아이평가정보",
                  "서울평가정보", "한국환경산업기술원", "한국농업기술진흥원", "한국에너지기술평가원", "한국방송통신전파진흥원",
-                 "한국콘텐츠진흥원", "한국산업기술진흥원", "한국산업기술기획평가원", "나이스디엔비", "NICE디엔비", "한국식품연구원", "한국해양과학기술진흥원", "한국원자력연구원"]
+                 "한국콘텐츠진흥원", "한국산업기술진흥원", "한국산업기술기획평가원", "나이스디엔비", "NICE디엔비",
+                 "농업기술실용화재단", "해양수산과학기술진흥원", "한국해양수산과학기술진흥원", "한국농촌경제연구원", "한국식품연구원", "한국해양과학기술진흥원", "한국원자력연구원"]
 AG_RE = re.compile("|".join(sorted(map(re.escape, TECH_AGENCIES), key=len, reverse=True)))
 # 등급 글자: 'A등급', 'A, BBB 등급', 'A 및 BBB' — 'A사'·'Series A' 같은 건 제외
 GRADE_RE = re.compile(r"(?<![A-Za-z가-힣0-9])(AA|A|BBB|BB)(?![A-Za-z0-9])(?!\s*사)(?=\s*(?:등급|,|및|과|와|/|·|\)|$|\s))")
@@ -934,7 +935,7 @@ TECH_MISS = []   # 등급을 못 읽은 신고서의 '기술평가' 주변 문�
 
 
 def _ag_key(a):
-    return a.replace("NICE", "나이스").replace("에스씨아이", "SCI").replace("디엔비", "디앤비")
+    return a.replace("NICE", "나이스").replace("에스씨아이", "SCI").replace("디엔비", "디앤비").replace("데이타", "데이터")
 
 
 def tech_grades(plain):
@@ -953,10 +954,15 @@ def tech_grades(plain):
             continue
         if not re.search(r"전문\s*평가|기술\s*평가|평가\s*기관|기술성\s*평가|" + AG_RE.pattern, sn):
             continue
-        gr = [g.group(1) for g in GRADE_RE.finditer(sn)]
+        if re.search(r"우선\s*심사|평가기관\s*Pool|전문평가기관\s*확대|제도\s*개선", sn):
+            continue                                   # 거래소 제도 설명 문장
+        # 'A등급 & BBB등급 이상', '(2개 기관으로부터 A등급 & BBB등급 이상)' 같은 요건 설명은 지우고 읽는다
+        sg = re.sub(r"\([^()]*이상[^()]*\)", " ", sn)
+        sg = re.sub(r"(?:AA|A|BBB|BB)\s*등급\s*(?:&|및|,)?\s*(?:(?:AA|A|BBB|BB)\s*등급\s*)?이상", " ", sg)
+        gr = [g.group(1) for g in GRADE_RE.finditer(sg)]
         if not gr:
             continue
-        both = re.search(r"모두|2개\s*(?:기관|사)(?:에게|로부터|에서)?\s*(?:모두\s*)?(?:각각\s*)?" + r"(?:AA|A|BBB|BB)\s*등급", sn)
+        both = re.search(r"(?:2개|두)\s*(?:개\s*)?(?:기관|사|전문평가기관)[^.]{0,40}?모두\s*(?:AA|A|BBB|BB)\s*등급|모두\s*(?:로부터|에서|에게)?\s*(?:AA|A|BBB|BB)\s*등급|2개\s*(?:기관|사)(?:에게|로부터|에서)\s*(?:AA|A|BBB|BB)\s*등급", sg)
         if len(gr) == 1 and both:
             gr = gr * 2
         if len(gr) < 2:
@@ -976,6 +982,9 @@ def tech_grades(plain):
         explicit = re.search(r"각각", sn) or re.search("(?:" + AG_RE.pattern + r")\s*\(\s*(?:AA|A|BBB|BB)\s*등급", sn)
         paired = bool(len(ags) == 2 and (gr[0] == gr[1] or explicit))
         cand = {"grades": gr, "agencies": ags, "paired": paired, "ev": sn.strip()[:300]}
+        if re.search(r"최초|1차|재평가\s*전", sn):           # 처음 평가에서 떨어지고 다시 받은 경우 → 뒤쪽 문장 우선
+            first = first or cand
+            continue
         if len(ags) == 2:
             return cand
         first = first or cand                    # 기관 이름이 없는 문장이면 더 찾아보고, 없으면 이걸 씀
