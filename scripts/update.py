@@ -827,7 +827,8 @@ def upcoming_detail(dt, name, filed):
     cache = DATA / "upcoming" / f"{corp}.json"
     if cache.exists():
         c = json.loads(cache.read_text("utf-8"))
-        if (c.get("rcpNo") == f["rcept_no"] and c.get("ver") == PARSE_VER and "techGrades" in c.get("data", {})
+        if (c.get("rcpNo") == f["rcept_no"] and c.get("ver") == PARSE_VER
+                and ("techGrades" in c.get("data", {}) or "기술평가" not in str(c.get("data", {}).get("track")))
                 and c["data"].get("totalShares")
                 and sane_total(c["data"].get("totalShares"), c["data"].get("shares")) == c["data"].get("totalShares")):
             c["data"]["valuation"] = valuation.sanitize(c["data"].get("valuation"))
@@ -1109,7 +1110,7 @@ def main():
                 light = recent2y or not disc_at or (today - date.fromisoformat(disc_at)).days >= 7   # 오래된 종목 공시는 주 1회
                 ai_budget = dart_detail(dt, it["code"], it["name"], date.fromisoformat(it["listed"]), det, ai_budget, heavy,
                                        spac=bool(it.get("spac")), light=light,
-                                       tech="기술" in str(it.get("track") or ""))
+                                       tech="기술평가" in str(resolve_track(it, det.get("track"))[0] or ""))
             except Exception as e:
                 log(f"  - {it['name']} DART 전체 실패: {e}")
         # 목록 화면용 요약 필드
