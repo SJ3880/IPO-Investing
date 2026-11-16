@@ -839,9 +839,17 @@ def upcoming_detail(dt, name, filed):
     if cache.exists():
         c = json.loads(cache.read_text("utf-8"))
         if (c.get("rcpNo") == f["rcept_no"] and c.get("ver") == PARSE_VER
-                and ("techGrades" in c.get("data", {}) or not has_tech_eval(c.get("data", {}).get("track")))
                 and c["data"].get("totalShares")
                 and sane_total(c["data"].get("totalShares"), c["data"].get("shares")) == c["data"].get("totalShares")):
+            if has_tech_eval(c["data"].get("track")) and c.get("techVer") != 9:
+                try:                                # 기술평가 등급만 최신 방식으로 다시 읽기
+                    xml = dt.document_text(f["rcept_no"])
+                    plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
+                    c["data"]["techGrades"] = dartlib.tech_grades(plain) or None
+                    c["techVer"] = 9
+                    cache.write_text(json.dumps(c, ensure_ascii=False), "utf-8")
+                except Exception as e:
+                    log(f"  - {name} 기술평가 등급 실패: {e}")
             c["data"]["valuation"] = valuation.sanitize(c["data"].get("valuation"))
             return c["data"]
     info = dartlib.analyze_document(dt.document_text(f["rcept_no"]))
@@ -854,7 +862,7 @@ def upcoming_detail(dt, name, filed):
             "shares": est.get("shares"), "underwriters": est.get("underwriters"),
             "oldShareRatio": est.get("oldShareRatio"), "putback": est.get("putback"),
             "fundUse": est.get("fundUse"), "fundUseRaw": est.get("fundUseRaw"), "fundChk": est.get("fundChk"), "fundBase": est.get("amount"), "summary": excerpt(info["bizText"], 300) if info["bizText"] else None}
-    cache.write_text(json.dumps({"rcpNo": f["rcept_no"], "ver": PARSE_VER, "data": data}, ensure_ascii=False), "utf-8")
+    cache.write_text(json.dumps({"rcpNo": f["rcept_no"], "ver": PARSE_VER, "techVer": 9, "data": data}, ensure_ascii=False), "utf-8")
     return data
 
 
