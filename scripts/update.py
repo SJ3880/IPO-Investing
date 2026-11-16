@@ -608,7 +608,8 @@ def load_or_fetch(code, listed):
             recent = fetch_daily(code, count=15)
             if recent:
                 have = {b[0]: b for b in old}
-                overlap = [b for b in recent if b[0] in have]
+                settled = {b[0] for b in old[:-2]}            # 마지막 2일은 장중에 받았을 수 있어 비교에서 뺌
+                overlap = [b for b in recent if b[0] in have and b[0] in settled]
                 same = all(have[b[0]][4] == b[4] for b in overlap)
                 if overlap and same:
                     merged = {b[0]: b for b in old}
@@ -1040,7 +1041,13 @@ def main():
     add_peer_stats(items, universe, today)
 
     # ---- 1차 저장 (아래 DART 단계가 오래 걸려도 목록·차트는 먼저 확보)
-    save(items, model_meta, missing, dart_on=bool(DART_KEY))
+    #      상세 단계에서 채우는 값(트랙·PER·유통물량 등)은 지난번 값을 그대로 옮겨 둔다
+    #      → 실행이 중간에 끊겨도 사이트에서 그 칸들이 비지 않게
+    early = []
+    for it in items:
+        old = prev.get(it["code"]) or {}
+        early.append({**{k: v for k, v in old.items() if k not in it}, **it})
+    save(early, model_meta, missing, dart_on=bool(DART_KEY))
 
     # ---- 상세(DART·시장지표)
     t0 = time.time()

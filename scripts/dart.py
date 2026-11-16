@@ -340,7 +340,7 @@ class Dart:
                 while True:
                     try:
                         j = self._get("list.json", bgn_de=bgn.strftime("%Y%m%d"), end_de=end.strftime("%Y%m%d"),
-                                      pblntf_ty="C", page_no=page, page_count=100).json()
+                                      pblntf_ty="C", pblntf_detail_ty="C001", page_no=page, page_count=100).json()
                     except Exception:
                         break
                     if j.get("status") != "000":
