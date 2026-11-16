@@ -964,6 +964,8 @@ def tech_grades(plain):
         if not gr:
             continue
         both = re.search(r"(?:2개|두)\s*(?:개\s*)?(?:기관|사|전문평가기관)[^.]{0,40}?모두\s*(?:AA|A|BBB|BB)\s*등급|모두\s*(?:로부터|에서|에게)?\s*(?:AA|A|BBB|BB)\s*등급|2개\s*(?:기관|사)(?:에게|로부터|에서)\s*(?:AA|A|BBB|BB)\s*등급", sg)
+        if len(gr) == 1 and not both and re.search(r"(?:2개|두)\s*(?:개\s*)?(?:전문\s*)?(?:평가\s*)?기관|,\s*(?:" + AG_RE.pattern + r")\s*\)", sn) and re.search(r"각\s*각", sn):
+            both = True                            # '(X, Y)을 통해 각 각 종합등급 A를 받아' → A, A
         if len(gr) == 1 and both:
             gr = gr * 2
         if len(gr) == 1:
