@@ -952,7 +952,7 @@ def tech_grades(plain):
         pos = max(pos, st)
         if "등급" not in sn or re.search(r"신용등급|회사채|기업어음|100분의|상위\s*\d|이상일\s*것|이상이어야|이상인\s*(?:기업|경우)|기준으로\s*한다", sn):
             continue
-        if not re.search(r"전문\s*평가|기술\s*평가|평가\s*기관|기술성\s*평가|" + AG_RE.pattern, sn):
+        if not re.search(r"전문\s*평가|기술\s*평가|평가\s*기관|기술성\s*평가|재\s*평가|평가\s*결과|기관\s*(?:으로부터|로부터|에서)|" + AG_RE.pattern, sn):
             continue
         if re.search(r"우선\s*심사|평가기관\s*Pool|전문평가기관\s*확대|제도\s*개선", sn):
             continue                                   # 거래소 제도 설명 문장
@@ -967,6 +967,7 @@ def tech_grades(plain):
             gr = gr * 2
         if len(gr) < 2:
             continue
+        gr_all = gr
         gr = gr[:2]
         # 기관: 같은 문장 → 없으면 바로 앞 400자 안의 '2개 기관(X, Y)'
         ags = []
@@ -983,17 +984,46 @@ def tech_grades(plain):
         paired = bool(len(ags) == 2 and (gr[0] == gr[1] or explicit))
         cand = {"grades": gr, "agencies": ags, "paired": paired, "ev": sn.strip()[:300]}
         if re.search(r"최초|1차|재평가\s*전", sn):           # 처음 평가에서 떨어지고 다시 받은 경우 → 뒤쪽 문장 우선
-            first = first or cand
+            # 같은 문장 뒤쪽이나 바로 다음 문장들에 '재평가/2차/이후 … A, A등급'이 있으면 그것이 최종 등급
+            tail = re.split(r"최초|1차|재평가\s*전", sg, maxsplit=1)[-1]
+            nxt = [tail] + sents[k + 1: k + 5]
+            for s2 in nxt:
+                if not re.search(r"재\s*평가|2차|두\s*번째|이후|다시|재신청|최종", s2):
+                    continue
+                if re.search(r"신용등급|회사채|100분의|이상일\s*것|이상이어야|요건", s2):
+                    continue
+                s2g = re.sub(r"\([^()]*이상[^()]*\)", " ", s2)
+                km = list(re.finditer(r"재\s*평가|2차|두\s*번째|이후|다시|재신청|최종", s2g))
+                s2g = s2g[km[-1].start():] if km else s2g      # 재평가 말 뒤쪽의 등급만
+                g2 = [g.group(1) for g in GRADE_RE.finditer(s2g)]
+                if len(g2) == 1 and re.search(r"모두", s2g):
+                    g2 = g2 * 2
+                if len(g2) >= 2 and s2 is not tail or (s2 is tail and len(g2) >= 2):
+                    a2 = [a for a in AG_RE.findall(s2)][:2] or ags
+                    return {"grades": g2[:2], "agencies": a2, "paired": bool(len(a2) == 2 and g2[0] == g2[1]),
+                            "ev": (sn.strip()[:150] + " … " + s2.strip()[:200])}
+            # 첫 평가 결과만 있고 그게 탈락 등급(BB 포함/A 없음)이면 최종 등급이 아니므로 쓰지 않는다
+            if not ("BB" in gr or "A" not in gr and "AA" not in gr):
+                first = first or cand
             continue
         if len(ags) == 2:
             return cand
         first = first or cand                    # 기관 이름이 없는 문장이면 더 찾아보고, 없으면 이걸 씀
     if first:
         return first
-    if len(TECH_MISS) < 10:
-        TECH_MISS.append([f[max(0, m.start() - 150): m.start() + 450]
-                          for m in re.finditer(r"전문\s*평가\s*기관|기술\s*평가\s*결과|평가\s*등급", f)][:3])
     return None
+
+
+def tech_snips(plain, n=8):
+    """등급을 못 읽었을 때 확인용: '등급' 글자와 A/BBB 같은 등급이 같이 나오는 문장들"""
+    f = re.sub(r"\s+", " ", plain.replace("\n", " | "))
+    out = []
+    for sn in re.split(r"(?<=다)\.\s*|\s\|\s", f):
+        if "등급" in sn and GRADE_RE.search(sn) and not re.search(r"신용등급|회사채|기업어음", sn) and sn.strip()[:250] not in out:
+            out.append(sn.strip()[:250])
+            if len(out) >= n:
+                break
+    return out
 
 
 def discount_rate(plain):
