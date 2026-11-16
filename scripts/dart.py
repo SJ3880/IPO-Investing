@@ -955,7 +955,7 @@ def tech_grades(plain):
             if g:
                 used.add(g[0])
                 seen.add(key)
-                pairs.append((ag, g[1]))
+                pairs.append((ag, g[1], w[max(0, pos - 40): g[0] + 30]))
         if len(pairs) >= 2 and len(pairs) > len(best):
             best = pairs[:2]                       # 기술평가 특례는 전문평가기관 2곳
             if len(best) >= 2:
@@ -963,7 +963,7 @@ def tech_grades(plain):
     if not best and len(TECH_MISS) < 8:
         snips = [f[max(0, m.start() - 200): m.start() + 600] for m in re.finditer(r"전문\s*평가\s*기관|기술\s*평가\s*결과|평가\s*등급", f)][:4]
         TECH_MISS.append(snips)
-    return [{"agency": a, "grade": g} for a, g in best]
+    return [{"agency": a, "grade": g, "ev": re.sub(r"\s*\|\s*", " | ", ev).strip()[:260]} for a, g, ev in best]
 
 
 def discount_rate(plain):

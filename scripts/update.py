@@ -735,12 +735,12 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
     retry = not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
     reparse = det.get("dartDone") and det.get("rcpNo") and (det.get("parseVer", 1) < PARSE_VER or peers_bad(det))
     need_doc = heavy and (retry or reparse)
-    if (mins() < LIGHT_UNTIL_MIN and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 2):
+    if (mins() < LIGHT_UNTIL_MIN and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 3):
         try:                                       # 기술평가 등급만 새로 읽기(신고서 전체를 다시 분석하지 않음)
             xml = dt.document_text(det["rcpNo"])
             plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
             det["techGrades"] = dartlib.tech_grades(plain) or None
-            det["techVer"] = 2
+            det["techVer"] = 3
         except Exception as e:
             log(f"  - {name} 기술평가 등급 실패: {e}")
     if need_doc:
@@ -755,7 +755,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
                 det["lockupTables"] = info["lockupTables"]
                 det["track"] = info["track"]
                 det["techGrades"] = info.get("techGrades") or None
-                det["techVer"] = 2
+                det["techVer"] = 3
                 det["floatAtListing"] = info["floatAtListing"]
                 det["discountRate"] = info.get("discountRate")
                 det["valuation"] = info.get("valuation")
@@ -1303,6 +1303,10 @@ def save(items, model_meta, missing, dart_on):
         w = csv.writer(f)
         w.writerow(["종목코드", "회사명"])
         w.writerows(missing)
+    ev = [{"name": it["name"], "listed": it["listed"], "g": it["techGrades"]} for it in items if it.get("techGrades")]
+    if ev:                                          # 읽은 등급과 그 근거 문장(검증용)
+        (DATA / "debug").mkdir(exist_ok=True)
+        (DATA / "debug" / "tech_evidence.json").write_text(json.dumps(ev, ensure_ascii=False, indent=1), "utf-8")
     if dartlib.TECH_MISS:
         (DATA / "debug").mkdir(exist_ok=True)
         (DATA / "debug" / "tech_miss.json").write_text(json.dumps(dartlib.TECH_MISS, ensure_ascii=False, indent=1), "utf-8")

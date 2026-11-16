@@ -794,6 +794,7 @@ function renderTrack(r, d){
   const tg = r.techGrades || d.techGrades;
   $('#dTrack').innerHTML = `<b>${esc(t)}</b>${r.trackManual ? ' <span class="chip">직접 입력</span>' : ''}
     ${tg && tg.length ? `<div style="margin-top:4px">기술평가 등급: <b>${esc(gradeText(tg))}</b> <span class="mu">(${esc(tg.map(x => x.agency + ' ' + x.grade).join(' · '))})</span></div>` : ''}
+    ${tg && tg.length && tg[0].ev ? `<div class="evi">기술평가 근거(증권신고서): “${esc([...new Set(tg.map(x => x.ev))].join(' … '))}”</div>` : ''}
     <div class="note" style="margin-top:4px">${esc(TRACK_NOTE[t] || '')}</div>
     ${d.trackEvidence && !r.trackManual ? `<div class="evi">근거(증권신고서): “${esc(d.trackEvidence)}”</div>` : ''}
     <div class="note">판별 근거: ${esc(r.trackSrc || '증권신고서')}. 틀리면 data/listing_track.csv에 직접 적으면 그 값이 우선합니다.</div>`;
