@@ -1116,6 +1116,11 @@ def main():
 
     # 막 상장한 회사는 KIND 기술성장기업 목록에 늦게 올라오므로, 공모 진행 시트에서 읽었던 트랙·등급을 이어 씀
     recent_off = {}
+    try:                                            # 공모 진행 중에 읽어 둔 트랙·등급(상장 후 사라지지 않게 따로 보관한 것)
+        for nm_, x in json.loads((DATA / "offer_memory.json").read_text("utf-8")).items():
+            recent_off[pipelib.norm(nm_)] = x
+    except Exception:
+        pass
     try:
         for x in json.loads((DATA / "pipeline.json").read_text("utf-8")).get("offering", []):
             if x.get("name"):
@@ -1162,12 +1167,13 @@ def main():
                 det = json.loads(p.read_text("utf-8")) if p.exists() else {}
             except Exception:
                 continue
-            if det.get("techVer") == 10 or not det.get("rcpNo"):
+            rc = det.get("rcpNo") or (recent_off.get(pipelib.norm(it["name"])) or {}).get("rcpNo")   # 막 상장: 공모 때 신고서
+            if det.get("techVer") == 10 or not rc:
                 continue
             if not has_tech_eval(resolve_track(it, det.get("track"))[0]):
                 continue
             try:
-                xml = dt.document_text(det["rcpNo"])
+                xml = dt.document_text(rc)
                 plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
                 det["techGrades"] = dartlib.tech_grades(plain)
                 if not det["techGrades"] and len(dartlib.TECH_MISS) < 120:
@@ -1349,6 +1355,17 @@ def main():
         (DATA / "debug").mkdir(exist_ok=True)
         (DATA / "debug" / "offering_enrich.json").write_text(json.dumps(enrich_dbg, ensure_ascii=False, indent=1), "utf-8")
         (DATA / "pipeline.json").write_text(json.dumps(pipe, ensure_ascii=False, separators=(",", ":")), "utf-8")
+        try:                                        # 공모 진행 회사의 트랙·등급 보관(상장 직후 KIND 목록 반영 전까지 사용)
+            mp_ = DATA / "offer_memory.json"
+            mem = json.loads(mp_.read_text("utf-8")) if mp_.exists() else {}
+            for x in pipe.get("offering", []):
+                if x.get("name") and (x.get("track") or x.get("techGrades")):
+                    mem[x["name"]] = {k: x.get(k) for k in ("track", "techGrades", "listDate", "rcpNo")}
+            cut = (today - timedelta(days=200)).isoformat()
+            mem = {k: v for k, v in mem.items() if not v.get("listDate") or v["listDate"] >= cut}
+            mp_.write_text(json.dumps(mem, ensure_ascii=False, indent=1), "utf-8")
+        except Exception as e:
+            log(f"[공모 보관] 실패: {e}")
         log(f"[단계] 심사중 {len(pipe['review'])} · 승인 {len(pipe['approved'])} · 공모진행 {len(pipe['offering'])} · 철회·미승인 {len(pipe['withdrawn'])}")
     except Exception as e:
         import traceback
