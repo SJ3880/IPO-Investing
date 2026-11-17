@@ -1333,6 +1333,8 @@ def main():
         it["uwPerfFee"] = det.get("uwPerfFeeDoc")
         it["perfFeeRate"] = det.get("perfFeeRate")
         it["uwFeeAmtDoc"] = det.get("uwFeeAmtDoc")
+        if not it["uwFee"] and not it["uwFeeAmtDoc"] and it["uwFeeRateDoc"] and it.get("offerAmount"):
+            it["uwFee"] = round(it["offerAmount"] * it["uwFeeRateDoc"] / 100)   # 금액이 표에 없으면 공모금액 × 수수료율
         it["uwMethod"] = det.get("uwMethod")
         it["underwriters"] = det.get("underwriters") or None
         it["putback"] = det.get("putback")
@@ -1354,6 +1356,11 @@ def main():
         if so and it.get("price"):
             it["marcapNum"] = round(so * it["price"])
         ts = it.get("totalShares") or det.get("totalShares")
+        if not ts and so and not it.get("spac") and it.get("days", 9999) <= 400:
+            # 신고서에서 상장예정주식수를 못 읽었으면 상장 후 주식수(무상증자 등은 되돌림)로 대신
+            ts = round(so * (det.get("sharesAdj") or 1.0))
+            it["totalShares"] = ts
+            it["totalSharesSrc"] = "상장주식수"
         if it.get("offer"):                                   # 공모 시총 = 상장 당시 주식수 × 공모가(없으면 지금 주식수 × 수정 공모가)
             it["marcapAtOffer"] = round(ts * it["offer"]) if ts and not it.get("spac") else (
                 round(so * (it.get("offerAdj") or it["offer"])) if so else None)
