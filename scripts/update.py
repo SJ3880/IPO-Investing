@@ -310,6 +310,83 @@ def add_products(pipe, inv_df, limit=250):
     log(f"[주요제품] 새로 읽음 {n_new}개 · 보관 {len(cache)}개")
 
 
+def quality_pass(items, log=print):
+    """매 실행 끝에 숫자 점검: 말이 안 되는 값은 고치거나 비우고 data/debug/quality.json 에 기록"""
+    fixes, flags = [], []
+    fx = lambda it, what, old, new: fixes.append({"name": it["name"], "listed": it["listed"], "what": what, "old": old, "new": new})
+    for it in items:
+        spac = bool(it.get("spac"))
+        o, oa = it.get("offer"), it.get("offerAmount")
+        os_, ts = it.get("offerShares"), it.get("totalShares")
+        # 1) 공모주식수가 상장예정주식수보다 크거나 80% 넘으면 잘못 읽은 것
+        if os_ and ts and (os_ > ts or os_ / ts > 0.8):
+            fx(it, "공모주식수", os_, None); it["offerShares"] = os_ = None
+            if o and oa and oa > o * ts:
+                fx(it, "공모금액", oa, None); it["offerAmount"] = oa = None
+        # 2) 공모금액 ≠ 공모가 × 공모주식수(15% 넘게 차이) → 곱으로
+        if o and os_ and oa and abs(oa / (o * os_) - 1) > 0.15 and not spac:
+            new = round(o * os_); fx(it, "공모금액", oa, new); it["offerAmount"] = oa = new
+        if not spac and o and ts and it.get("marcapAtOffer") and oa and it["marcapAtOffer"] < oa:
+            new = round(o * ts); fx(it, "공모시총", it["marcapAtOffer"], new); it["marcapAtOffer"] = new
+        # 3) 인수수수료: 스팩합병·공모 없는 이전상장은 표시 안 함. 금액은 공모금액 대비 비율이 말이 되는 값만
+        fee_keys = ("uwFee", "uwFeeAmtDoc", "uwFeeRate", "uwFeeRateDoc", "perfFeeRate", "uwPerfFee")
+        if spac or not oa:
+            if any(it.get(k) for k in fee_keys):
+                fx(it, "인수수수료(공모 없음)", it.get("uwFeeAmtDoc") or it.get("uwFee"), None)
+            for k in fee_keys:
+                it[k] = None
+            continue
+        rd = it.get("uwFeeRateDoc")
+        if rd is not None and not (0.2 <= rd <= 10):
+            fx(it, "수수료율(신고서)", rd, None); it["uwFeeRateDoc"] = rd = None
+        cands = []
+        for src in ("uwFee", "uwFeeAmtDoc"):
+            v = it.get(src)
+            if v:
+                cands += [(v * m, f"{src}×{m}") for m in (1, 1000, 0.001)]
+        target = rd or it.get("uwFeeRate")
+        def score(v):
+            r = v / oa * 100
+            if not (0.2 <= r <= 15):
+                return None
+            return abs(r - target) / target if target else abs(r - 3) / 30
+        good = [(score(v), v, tag) for v, tag in cands if score(v) is not None]
+        good = [g for g in good if not target or g[0] <= 0.6]
+        cur = it.get("uwFeeAmtDoc") or it.get("uwFee")
+        if good:
+            _, v, tag = min(good)
+            v = round(v)
+            if v != cur:
+                fx(it, "인수수수료 금액", cur, v)
+        elif target:
+            v = round(oa * target / 100)
+            fx(it, "인수수수료 금액(공모금액×수수료율)", cur, v)
+        else:
+            v = None
+            if cur:
+                fx(it, "인수수수료 금액", cur, None)
+        it["uwFeeAmtDoc"] = v
+        it["uwFee"] = v
+        if v and not rd:
+            it["uwFeeRate"] = round(v / oa * 100, 2)
+        # 4) 그 밖에 이상해 보이는 값(자동 수정은 안 하고 기록만)
+        b = it.get("band")
+        if o and b and (o < b[0] * 0.6 or o > b[1] * 1.5):
+            flags.append({"name": it["name"], "listed": it["listed"], "what": "공모가가 밴드와 동떨어짐", "v": [o, b]})
+        fl = it.get("floatAtListing")
+        if fl is not None and not (3 <= fl <= 100):
+            fx(it, "유통가능물량", fl, None); it["floatAtListing"] = None
+        vm = it.get("valMult")
+        if vm and not (0.3 <= vm <= 300):
+            fx(it, "적용 배수", vm, None); it["valMult"] = None
+        d = it.get("discOffer")
+        if d is not None and not (-30 <= d <= 80):
+            fx(it, "공모할인율", d, None); it["discOffer"] = None
+    (DATA / "debug").mkdir(exist_ok=True)
+    (DATA / "debug" / "quality.json").write_text(json.dumps({"fixes": fixes, "flags": flags}, ensure_ascii=False, indent=1), "utf-8")
+    log(f"[점검] 자동 수정 {len(fixes)}건 · 확인 필요 {len(flags)}건 (data/debug/quality.json)")
+
+
 def has_tech_eval(track):
     """전문평가기관 기술평가를 받는 상장 유형(기술평가 2곳, 소부장 1곳, 사업모델)"""
     return bool(re.search(r"기술평가|소부장|사업모델", str(track or "")))
@@ -1451,6 +1528,10 @@ def main():
                 it[k] = None
             it["peerChecked"] = False
             it["hasLockup"] = False
+    try:
+        quality_pass(items, log)
+    except Exception as e:
+        log(f"[점검] 실패: {e}")
     if mix_dbg:
         log(f"[점검] 신고서 없는 종목에 섞여 든 공모 수치 비움: {[x['name'] for x in mix_dbg]}")
         (DATA / "debug").mkdir(exist_ok=True)
