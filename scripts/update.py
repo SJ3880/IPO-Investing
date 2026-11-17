@@ -746,12 +746,12 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
     retry = not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
     reparse = det.get("dartDone") and det.get("rcpNo") and (det.get("parseVer", 1) < PARSE_VER or peers_bad(det))
     need_doc = heavy and (retry or reparse)
-    if (mins() < LIGHT_UNTIL_MIN and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 9):
+    if (mins() < LIGHT_UNTIL_MIN and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 10):
         try:                                       # 기술평가 등급만 새로 읽기(신고서 전체를 다시 분석하지 않음)
             xml = dt.document_text(det["rcpNo"])
             plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
             det["techGrades"] = dartlib.tech_grades(plain) or None
-            det["techVer"] = 9
+            det["techVer"] = 10
         except Exception as e:
             log(f"  - {name} 기술평가 등급 실패: {e}")
     if need_doc:
@@ -766,7 +766,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
                 det["lockupTables"] = info["lockupTables"]
                 det["track"] = info["track"]
                 det["techGrades"] = info.get("techGrades") or None
-                det["techVer"] = 9
+                det["techVer"] = 10
                 det["floatAtListing"] = info["floatAtListing"]
                 det["discountRate"] = info.get("discountRate")
                 det["valuation"] = info.get("valuation")
@@ -841,14 +841,14 @@ def upcoming_detail(dt, name, filed):
         if (c.get("rcpNo") == f["rcept_no"] and c.get("ver") == PARSE_VER
                 and c["data"].get("totalShares")
                 and sane_total(c["data"].get("totalShares"), c["data"].get("shares")) == c["data"].get("totalShares")):
-            if has_tech_eval(c["data"].get("track")) and (c.get("techVer") != 9 or not c["data"].get("techGrades")):
+            if has_tech_eval(c["data"].get("track")) and (c.get("techVer") != 10 or not c["data"].get("techGrades")):
                 try:                                # 기술평가 등급만 최신 방식으로 다시 읽기
                     xml = dt.document_text(f["rcept_no"])
                     plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
                     c["data"]["techGrades"] = dartlib.tech_grades(plain) or None
                     if not c["data"]["techGrades"] and len(dartlib.TECH_MISS) < 120:
                         dartlib.TECH_MISS.append({"name": name, "listed": "공모중", "snips": dartlib.tech_snips(plain)})
-                    c["techVer"] = 9
+                    c["techVer"] = 10
                     cache.write_text(json.dumps(c, ensure_ascii=False), "utf-8")
                 except Exception as e:
                     log(f"  - {name} 기술평가 등급 실패: {e}")
@@ -868,7 +868,7 @@ def upcoming_detail(dt, name, filed):
                 c["data"]["techGrades"] = dartlib.tech_grades(plain) or None
                 if not c["data"]["techGrades"] and len(dartlib.TECH_MISS) < 120:
                     dartlib.TECH_MISS.append({"name": name, "listed": "공모중", "snips": dartlib.tech_snips(plain)})
-                c["techVer"] = 9
+                c["techVer"] = 10
                 cache.write_text(json.dumps(c, ensure_ascii=False), "utf-8")
             except Exception as e2:
                 log(f"  - {name} 기술평가 등급(이전 신고서) 실패: {e2}")
@@ -885,7 +885,7 @@ def upcoming_detail(dt, name, filed):
             "shares": est.get("shares"), "underwriters": est.get("underwriters"),
             "oldShareRatio": est.get("oldShareRatio"), "putback": est.get("putback"),
             "fundUse": est.get("fundUse"), "fundUseRaw": est.get("fundUseRaw"), "fundChk": est.get("fundChk"), "fundBase": est.get("amount"), "summary": excerpt(info["bizText"], 300) if info["bizText"] else None}
-    cache.write_text(json.dumps({"rcpNo": f["rcept_no"], "ver": PARSE_VER, "techVer": 9, "data": data}, ensure_ascii=False), "utf-8")
+    cache.write_text(json.dumps({"rcpNo": f["rcept_no"], "ver": PARSE_VER, "techVer": 10, "data": data}, ensure_ascii=False), "utf-8")
     return data
 
 
@@ -1114,6 +1114,15 @@ def main():
     special_n = {(k if k.startswith("#") else pipelib.norm(k)): v for k, v in special.items()}
     growth_n = {(k if k.startswith("#") else pipelib.norm(k)) for k in growth}
 
+    # 막 상장한 회사는 KIND 기술성장기업 목록에 늦게 올라오므로, 공모 진행 시트에서 읽었던 트랙·등급을 이어 씀
+    recent_off = {}
+    try:
+        for x in json.loads((DATA / "pipeline.json").read_text("utf-8")).get("offering", []):
+            if x.get("name"):
+                recent_off[pipelib.norm(x["name"])] = x
+    except Exception:
+        pass
+
     def resolve_track(it, doc_track):
         if it["code"] in manual_tracks:
             return manual_tracks[it["code"]], "직접 입력"
@@ -1132,6 +1141,13 @@ def main():
             lt = str(it.get("listType") or "")
             if not it.get("offer") and any(k in lt for k in ("이전", "합병")):
                 return "공모 없음(스팩합병·이전상장)", "KIND 상장유형"
+            try:
+                fresh = (today - date.fromisoformat(str(it.get("listed"))[:10])).days <= 120
+            except Exception:
+                fresh = False
+            t2 = doc_track or (recent_off.get(n) or {}).get("track")
+            if fresh and t2 and (str(t2).startswith("기술특례") or t2 == "성장성 추천"):
+                return t2, "증권신고서(KIND 목록 반영 전)"
             return "일반", "KIND 기술성장기업 목록에 없음"
         return doc_track, "증권신고서"
 
@@ -1146,7 +1162,7 @@ def main():
                 det = json.loads(p.read_text("utf-8")) if p.exists() else {}
             except Exception:
                 continue
-            if det.get("techVer") == 9 or not det.get("rcpNo"):
+            if det.get("techVer") == 10 or not det.get("rcpNo"):
                 continue
             if not has_tech_eval(resolve_track(it, det.get("track"))[0]):
                 continue
@@ -1156,7 +1172,7 @@ def main():
                 det["techGrades"] = dartlib.tech_grades(plain)
                 if not det["techGrades"] and len(dartlib.TECH_MISS) < 120:
                     dartlib.TECH_MISS.append({"name": it["name"], "listed": it.get("listed"), "snips": dartlib.tech_snips(plain)})
-                det["techVer"] = 9
+                det["techVer"] = 10
                 p.write_text(json.dumps(det, ensure_ascii=False), "utf-8")
                 n_tg += 1
             except Exception as e:
@@ -1230,7 +1246,7 @@ def main():
             det["totalShares"] = None                      # 잘못 읽은 상장예정주식수 → 다음에 신고서 다시 읽게
             det["parseVer"] = 0
         it["totalShares"] = det.get("totalShares")
-        it["techGrades"] = det.get("techGrades") or None
+        it["techGrades"] = det.get("techGrades") or (recent_off.get(pipelib.norm(it["name"])) or {}).get("techGrades") or None
         it["offerShares"] = det.get("shares")
         # 공모금액 = 공모주식수 × 확정 공모가. (DART 주요정보의 금액은 희망가 하단 기준이라 확정가와 다를 수 있음)
         it["offerAmount"] = (round(det["shares"] * it["offer"]) if det.get("shares") and it.get("offer") and not it.get("spac")
