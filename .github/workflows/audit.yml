@@ -1,0 +1,45 @@
+# 기존 데이터 원문 대조 — 매일 새벽 03:00(한국시간), 상장 회사 100개씩 돌아가며 증권신고서를 다시 읽어 비교·수정
+name: 기존 데이터 원문 대조
+
+on:
+  schedule:
+    - cron: "0 18 * * *"     # UTC 18:00 = KST 03:00, 매일
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages               # 낮 업데이트와 겹치지 않게 같은 줄에 세움
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: 패키지 설치
+        run: pip install -r scripts/requirements.txt
+
+      - name: 원문 대조(100개)
+        env:
+          DART_API_KEY: ${{ secrets.DART_API_KEY }}
+        run: python scripts/audit.py
+        timeout-minutes: 95
+
+      - name: 결과 저장(커밋)
+        if: ${{ !cancelled() }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet && exit 0
+          git commit -m "원문 대조 $(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M')"
+          git pull --rebase -X theirs origin main || true
+          git push
