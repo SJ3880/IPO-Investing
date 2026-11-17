@@ -74,7 +74,9 @@ def norm(name: str) -> str:
 
 
 def is_spac(name: str) -> bool:
-    return "스팩" in name or "기업인수목적" in name
+    """스팩 이름: '…스팩25호', '…제12호스팩', '…기업인수목적…'. '아인스팩씨엔에스'처럼 회사명 속 글자는 제외"""
+    n = re.sub(r"\s+", "", str(name))
+    return "기업인수목적" in n or bool(re.search(r"스팩(?:\d+호)?$|스팩\d+호|스팩제?\d+호", n))
 
 
 def first_date(s):
@@ -310,6 +312,19 @@ def add_products(pipe, inv_df, limit=250):
     log(f"[주요제품] 새로 읽음 {n_new}개 · 보관 {len(cache)}개")
 
 
+def fixed_fee(it, oa, rate):
+    """'인수금액의 X%와 Y원 중 큰 금액' 같은 정액(최저) 수수료: 신고서 금액이 1천만원 단위로 딱 떨어지고,
+    공모금액×수수료율보다 크며(15% 이내), 희망밴드 기준 공모금액×수수료율로도 설명되지 않으면 그 금액이 맞다."""
+    b, os_ = it.get("band"), it.get("offerShares")
+    for v in (it.get("uwFeeAmtDoc"), it.get("uwFee")):
+        if not v or v % 10_000_000 or v <= oa * rate / 100 or v / oa > 0.15:
+            continue
+        if b and os_ and any(abs(v / (p * os_ * rate / 100) - 1) < 0.05 for p in b if p):
+            continue                                                    # 밴드 가격 기준 금액일 뿐
+        return v
+    return None
+
+
 def quality_pass(items, log=print):
     """매 실행 끝에 숫자 점검: 말이 안 되는 값은 고치거나 비우고 data/debug/quality.json 에 기록"""
     fixes, flags = [], []
@@ -320,9 +335,19 @@ def quality_pass(items, log=print):
         os_, ts = it.get("offerShares"), it.get("totalShares")
         # 1) 공모주식수가 상장예정주식수보다 크거나 80% 넘으면 잘못 읽은 것
         if os_ and ts and (os_ > ts or os_ / ts > 0.8):
-            fx(it, "공모주식수", os_, None); it["offerShares"] = os_ = None
-            if o and oa and oa > o * ts:
-                fx(it, "공모금액", oa, None); it["offerAmount"] = oa = None
+            k = os_ / 1000
+            if 0.03 <= k / ts <= 0.8 and k == int(k):                   # 단위 착오(천 배) → 1/1000
+                fx(it, "공모주식수(단위)", os_, int(k)); it["offerShares"] = os_ = int(k)
+                if o and oa and abs(oa / (o * os_ * 1000) - 1) < 0.03:
+                    fx(it, "공모금액(단위)", oa, o * os_); it["offerAmount"] = oa = o * os_
+            elif o and oa and abs(oa / (o * os_) - 1) < 0.03:            # 공모주식수·공모금액은 서로 맞음 → 상장예정주식수가 틀림
+                fx(it, "상장예정주식수", ts, None); it["totalShares"] = ts = None
+                if it.get("marcapAtOffer"):
+                    fx(it, "공모시총", it["marcapAtOffer"], None); it["marcapAtOffer"] = None
+            else:
+                fx(it, "공모주식수", os_, None); it["offerShares"] = os_ = None
+                if o and oa and oa > o * ts:
+                    fx(it, "공모금액", oa, None); it["offerAmount"] = oa = None
         # 2) 공모금액 ≠ 공모가 × 공모주식수(15% 넘게 차이) → 곱으로
         if o and os_ and oa and abs(oa / (o * os_) - 1) > 0.15 and not spac:
             new = round(o * os_); fx(it, "공모금액", oa, new); it["offerAmount"] = oa = new
@@ -358,6 +383,10 @@ def quality_pass(items, log=print):
             v = round(v)
             if v != cur:
                 fx(it, "인수수수료 금액", cur, v)
+        elif target and fixed_fee(it, oa, target):
+            v = fixed_fee(it, oa, target)                               # 정액(최저) 수수료: 신고서 금액 유지
+            if v != cur:
+                fx(it, "인수수수료 금액(정액)", cur, v)
         elif target:
             v = round(oa * target / 100)
             fx(it, "인수수수료 금액(공모금액×수수료율)", cur, v)
@@ -796,12 +825,25 @@ def sane_total(ts, shares):
 
 def first_close(bars, m38, adj):
     """상장일 종가(원래 가격). 시세가 배당 등으로 수정되지 않았으면(첫날 시가가 38 시가와 같음) 거래소 시세를,
-    수정된 시세면 38의 종가를 쓴다. 첫날 수익률도 이 값으로 계산해 표의 종가·수익률이 서로 맞게 한다."""
+    수정된 시세면 38의 종가를 쓴다. 첫날 수익률도 이 값으로 계산해 표의 종가·수익률이 서로 맞게 한다.
+    38 종가가 시세÷수정비율과 3% 넘게 다르면(38 오기·다른 날 종가) 시세 기준 값을 쓴다."""
     m38 = m38 or {}
     raw = not m38.get("open") or abs(bars[0][1] / m38["open"] - 1) < 0.003
     if adj == 1 and raw:
         return bars[0][4]
-    return m38.get("firstClose") or round(bars[0][4] / adj)
+    calc = round(bars[0][4] / adj)
+    fc = m38.get("firstClose")
+    return fc if fc and abs(fc / calc - 1) <= 0.03 else calc
+
+
+def tick_ok(p):
+    """거래소 호가 단위에 맞는 가격인지(2023년 이후·이전 호가표 중 하나라도 맞으면 OK)"""
+    for t in (((2000, 1), (5000, 5), (20000, 10), (50000, 50), (200000, 100), (500000, 500)),
+              ((1000, 1), (5000, 5), (10000, 10), (50000, 50), (100000, 100), (500000, 500))):
+        tk = next((s for lim, s in t if p < lim), 1000)
+        if p % tk == 0:
+            return True
+    return False
 
 
 def fix_adj(it, det, so, dt=None):
@@ -867,6 +909,8 @@ def peers_bad(det):
 def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, light=True, tech=False):
     """det(기존 상세)를 갱신. 무거운 작업(문서 파싱·요약)은 한 번만."""
     corp = dt.corp_code(code)
+    if not corp and listed and (date.today() - listed).days <= 60:
+        corp = dt.corp_by_name(name)           # 막 상장한 회사: DART 목록에 종목코드가 아직 없으면 회사명으로
     if not corp:
         det["dartStatus"] = "고유번호 없음"
         return ai_budget
@@ -1131,6 +1175,11 @@ def main():
             # 네이버 일봉은 무상증자·액면분할이 반영된 '수정주가'. 38의 실제 시초가와 비교해 비율(adj)을 구해
             # 공모가도 같은 기준으로 바꿔 수익률을 계산한다. (예: 무상증자 1:1 → adj 0.5)
             raw_open = (m38 or {}).get("open")
+            if (raw_open and offer and not tick_ok(raw_open) and tick_ok(bars[0][1])
+                    and 0.6 <= bars[0][1] / offer <= 4.0):           # 38 시초가가 호가 단위에 안 맞음 → 38 오기, 시세 그대로
+                log(f"  - {name}: 38 시초가 {raw_open:,}원이 호가 단위와 안 맞아 무시(시세 시가 {bars[0][1]:,}원)")
+                m38 = {k: v for k, v in m38.items() if k not in ("open", "firstClose")}
+                raw_open = None
             adj = bars[0][1] / raw_open if raw_open else 1.0
             if abs(adj - 1) < 0.03:
                 adj = 1.0
