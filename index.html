@@ -487,6 +487,7 @@ const TABS = {
       {k:'listed', t:'상장일', l:1, r: x => `${x.listed}<div class="mu" style="font-size:12px">D+${x.days}</div>`},
       {k:'techG', t:'기술평가', r: x => techCell(x)},
       {k:'offer', t:'공모가', r: x => x.offer ? fmt(x.offer) + (x.spac ? '<div class="mu" style="font-size:12px">합병 기준가</div>' : '') : '–'},
+      {k:'offerAmount', t:'공모금액', r: x => x.spac ? '<span class="mu">–</span>' : eok(x.offerAmount)},
       {k:'marcapAtOffer', t:'공모 시총', r: x => eok(x.marcapAtOffer)},
       {k:'newRatio', t:'신주 : 구주', r: x => x.newRatio == null ? '<span class="mu">–</span>'
         : `${fmtR(x.newRatio)} : ${fmtR(100 - x.newRatio)}${x.offerShares ? `<div class="mu" style="font-size:12px">${x.oldShareRatio > 0 ? `신주 ${man(x.offerShares * x.newRatio / 100)} · 구주 ${man(x.offerShares * x.oldShareRatio / 100)}` : `신주 ${man(x.offerShares)}`}</div>` : ''}`},
@@ -510,7 +511,7 @@ const TABS = {
         ? `${f2(x.feeRate)}%${(x.uwFeeAmtDoc || x.uwFee) ? `<div class="mu" style="font-size:12px">${eok(x.uwFeeAmtDoc || x.uwFee)}</div>` : ''}` : '<span class="mu">–</span>'},
       {k:'perfFeeRate', t:'성과수수료', r: x => x.perfFeeRate != null ? `${f2(x.perfFeeRate)}% 이내` : (x.feeRate != null ? '<span class="mu">없음</span>' : '<span class="mu">–</span>')},
     ],
-    note: () => '인수수수료(성과 제외) = 증권신고서 ‘인수 등에 관한 사항 – 인수수수료’ 표의 기본 수수료율(인수금액 대비)과 금액. 성과수수료는 따로 표시(신고서 기준 ‘○% 이내’ 한도, 지급 여부는 상장 후 결정). 비교회사는 마우스를 올리면 전체 목록이 보입니다. 스팩합병 상장일 = KIND 합병상장기업현황의 합병상장일. 시초가 아래 % = 공모가 대비. 수익률은 모두 공모가 대비 종가 기준입니다. 초일 = 상장일 종가, 1개월·3개월·6개월·1년 = 상장일로부터 그 기간이 지난 날(휴장이면 다음 거래일)의 종가. 아직 기간이 안 지났으면 ‘–’. 스팩합병은 공모가 대신 합병 기준가(합병가액)로 계산하고, 공모 시총 = 기준가 × 상장주식수입니다. 무상증자·액면분할은 수정주가로 맞췄습니다. 행을 누르면 상세가 열립니다.' },
+    note: () => '공모금액 = 확정공모가 × 공모주식수(구주매출 포함, 증권신고서 원문 금액이 있으면 그 값). 스팩합병은 공모가 없어 ‘–’. 인수수수료(성과 제외) = 증권신고서 ‘인수 등에 관한 사항 – 인수수수료’ 표의 기본 수수료율(인수금액 대비)과 금액. 성과수수료는 따로 표시(신고서 기준 ‘○% 이내’ 한도, 지급 여부는 상장 후 결정). 비교회사는 마우스를 올리면 전체 목록이 보입니다. 스팩합병 상장일 = KIND 합병상장기업현황의 합병상장일. 시초가 아래 % = 공모가 대비. 수익률은 모두 공모가 대비 종가 기준입니다. 초일 = 상장일 종가, 1개월·3개월·6개월·1년 = 상장일로부터 그 기간이 지난 날(휴장이면 다음 거래일)의 종가. 아직 기간이 안 지났으면 ‘–’. 스팩합병은 공모가 대신 합병 기준가(합병가액)로 계산하고, 공모 시총 = 기준가 × 상장주식수입니다. 무상증자·액면분할은 수정주가로 맞췄습니다. 행을 누르면 상세가 열립니다.' },
   withdrawn: { src: () => PIPE.withdrawn || [], sort: 'resultDate', yr: true, track: false,
     cols: [
       {k:'result', t:'결과', l:1, r: x => `<span class="tag ${/미승인/.test(x.result) ? 't-미승인' : 't-철회'}">${esc(x.result || '–')}</span>`},
