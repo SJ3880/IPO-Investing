@@ -155,7 +155,10 @@ table.raw td{border:1px solid var(--line);padding:4px 6px;text-align:center;whit
 :root[data-theme="dark"] .tag.t-철회{background:#222a36;color:#a3adbd}:root[data-theme="dark"] .tag.t-미승인{background:#3a1d1d;color:#ff9b9b}
 :root[data-theme="dark"] .chip.spac{color:#f5b54a}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip.spac{color:#f5b54a}}
-.topbar{display:flex;justify-content:flex-end;margin-bottom:6px}
+.topbar{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.xlsbtn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:5px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.xlsbtn:hover{border-color:var(--accent);color:var(--accent)}
+.xlsbtn:disabled{opacity:.6;cursor:progress}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--panel)}
 .seg button{border:0;background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;padding:5px 11px;cursor:pointer}
 .seg button.on{background:var(--accent);color:#fff}
@@ -201,6 +204,7 @@ footer details{margin-bottom:12px}
 <body>
 <div class="wrap">
   <div class="topbar">
+    <button class="xlsbtn" id="xlsBtn" title="심사중·심사승인·수요예측·청약·상장완료·철회·미승인 전체를 시트별로 받기">⬇ 엑셀로 다운로드</button>
     <div class="seg" id="themeSeg" title="화면 모드">
       <button data-t="auto">자동</button><button data-t="light">☀ 밝게</button><button data-t="dark">🌙 어둡게</button>
     </div>
@@ -1114,6 +1118,141 @@ $('#rangeSeg').addEventListener('click', e => { const b = e.target.closest('butt
 window.addEventListener('hashchange', () => setView(location.hash.slice(1)));
 $('#dim').addEventListener('click', closeDetail); $('#close').addEventListener('click', closeDetail);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+/* ---------- 엑셀로 다운로드: 탭별 시트(전체 데이터, 화면 필터와 무관) ---------- */
+function loadExcelJS(){
+  if (window.ExcelJS) return Promise.resolve(window.ExcelJS);
+  return new Promise((ok, no) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    s.onload = () => ok(window.ExcelJS); s.onerror = () => no(new Error('엑셀 모듈을 불러오지 못했습니다'));
+    document.head.appendChild(s);
+  });
+}
+const XD = s => { if (!s) return null; const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null; };
+const XE = v => v ? Math.round(v / 1e6) / 100 : null;           // 원 → 억원(소수 2자리)
+const XP = v => v == null || v === '' || isNaN(v) ? null : +v / 100;  // 35.9 → 0.359 (% 서식)
+const XN = v => v == null || v === '' || isNaN(v) ? null : +v;
+const dartLink = r => r ? { text: '원문', hyperlink: `https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${r}` } : null;
+const F = { int: '#,##0', eok: '#,##0', dec: '#,##0.00', pct: '0.0%;[Red]-0.0%', pct2: '0.00%', date: 'yyyy-mm-dd', x: '0.00"배"', ratio: '#,##0.00":1"' };
+const XSHEETS = [
+  { name: '심사중', src: () => PIPE.review || [], sort: 'applied', cols: [
+    ['회사', x => x.name, null, 22], ['시장', x => x.market, null, 8], ['상장유형', x => x.listType, null, 12],
+    ['스팩합병', x => x.spac ? 'O' : '', null, 8], ['청구일', x => XD(x.applied), F.date, 11], ['경과(일)', x => XN(x.days), F.int, 9],
+    ['예상 결과 시점', x => XD(x.expected), F.date, 13], ['상장주선인', x => x.uw, null, 30],
+  ]},
+  { name: '심사승인', src: () => PIPE.approved || [], sort: 'resultDate', cols: [
+    ['상태', x => x.after ? x.result : '승인 · 공모 대기', null, 16], ['회사', x => x.name, null, 22], ['시장', x => x.market, null, 8],
+    ['상장유형', x => x.listType, null, 12], ['청구일', x => XD(x.applied), F.date, 11], ['승인일', x => XD(x.resultDate), F.date, 11],
+    ['승인 후(일)', x => XN(x.daysSince), F.int, 10], ['승인 효력 만료', x => XD(x.expire), F.date, 13], ['상장주선인', x => x.uw, null, 30],
+  ]},
+  { name: '수요예측·청약', src: () => PIPE.offering || [], sort: null, cols: [
+    ['단계', x => x.stage, null, 11], ['회사', x => x.name, null, 22], ['시장', x => x.market, null, 8], ['상장트랙', x => x.track, null, 18],
+    ['기술평가 등급', x => gradeText(x.techGrades) || null, null, 12], ['평가기관', x => agText(x.techGrades) || null, null, 34],
+    ['수요예측 시작', x => XD((x.demand || [])[0]), F.date, 12], ['수요예측 종료', x => XD((x.demand || [])[1]), F.date, 12],
+    ['청약 시작', x => XD((x.sub || [])[0]), F.date, 11], ['청약 종료', x => XD((x.sub || [])[1]), F.date, 11],
+    ['상장예정일', x => XD(x.listDate), F.date, 11], ['확정공모가(원)', x => XN(x.offer), F.int, 12],
+    ['밴드 하단(원)', x => XN((x.band || [])[0]), F.int, 11], ['밴드 상단(원)', x => XN((x.band || [])[1]), F.int, 11],
+    ['공모금액(억원)', x => XE(x.amount), F.eok, 12], ['상장예정주식수', x => XN(x.totalShares), F.int, 13],
+    ['공모시총(억원)', x => XE(x.marcapAtOffer || (x.offer && x.totalShares ? x.offer * x.totalShares : null)), F.eok, 12],
+    ['공모시총 하단(억원)', x => !x.offer && x.band && x.totalShares ? XE(x.band[0] * x.totalShares) : null, F.eok, 13],
+    ['공모시총 상단(억원)', x => !x.offer && x.band && x.totalShares ? XE(x.band[1] * x.totalShares) : null, F.eok, 13],
+    ['평가방법', x => x.valuation?.method || null, null, 11], ['적용 배수', x => XN(x.valuation?.appliedMult), F.x, 10],
+    ['공모할인율 하단', x => XP(x.valuation?.discountRange?.[0]), F.pct2, 11], ['공모할인율 상단', x => XP(x.valuation?.discountRange?.[1]), F.pct2, 11],
+    ['상장일 유통(%)', x => XP(x.floatAtListing), F.pct, 11], ['구주매출(%)', x => XP(x.oldShareRatio), F.pct, 10],
+    ['기관경쟁률', x => XN(x.instComp), F.ratio, 12], ['의무보유확약(%)', x => XP(x.commit), F.pct, 11], ['일반경쟁률', x => XN(x.subComp), F.ratio, 12],
+    ['주관사', x => (x.underwriters && x.underwriters.length ? x.underwriters.join(', ') : x.uw) || null, null, 26],
+    ['증권신고서', x => dartLink(x.rcpNo), null, 9],
+  ]},
+  { name: '상장완료', src: () => DATA, sort: 'listed', cols: [
+    ['회사', x => x.name, null, 22], ['종목코드', x => x.code, null, 9], ['시장', x => x.market, null, 8],
+    ['상장방식', x => x.spac ? '스팩합병' : '직상장', null, 9], ['상장유형', x => x.listType, null, 11], ['상장트랙', x => x.track, null, 18],
+    ['기술평가 등급', x => gradeText(x.techGrades) || null, null, 12], ['평가기관', x => agText(x.techGrades) || null, null, 34],
+    ['업종', x => x.sector, null, 24], ['주요 제품', x => x.product, null, 30], ['상장일', x => XD(x.listed), F.date, 11],
+    ['공모가·합병기준가(원)', x => XN(x.offer), F.int, 13], ['밴드 하단(원)', x => XN((x.band || [])[0]), F.int, 11], ['밴드 상단(원)', x => XN((x.band || [])[1]), F.int, 11],
+    ['공모금액(억원)', x => x.spac ? null : XE(x.offerAmount), F.eok, 12], ['공모시총(억원)', x => XE(x.marcapAtOffer), F.eok, 12],
+    ['공모주식수', x => XN(x.offerShares), F.int, 12], ['상장예정주식수', x => XN(x.totalShares), F.int, 13],
+    ['신주 비율', x => XP(x.newRatio), F.pct, 9], ['구주 비율', x => x.newRatio == null ? null : XP(100 - x.newRatio), F.pct, 9],
+    ['상장일 유통가능(%)', x => XP(x.floatAtListing), F.pct, 12], ['3개월 후 유통가능(%)', x => XP(x.float3m), F.pct, 13],
+    ['평가방법', x => x.valMethod || null, null, 10], ['적용 배수', x => XN(x.valMult), F.x, 10],
+    ['공모할인율', x => XP(x.discOffer), F.pct2, 10], ['밴드 할인율 하단', x => XP(x.discBand?.[0]), F.pct2, 11], ['밴드 할인율 상단', x => XP(x.discBand?.[1]), F.pct2, 11],
+    ['비교회사 수', x => XN(x.peerCount), F.int, 9], ['비교회사(Peer group)', x => (x.peers || []).map(p => p.n).join(', ') || null, null, 40],
+    ['시초가(원)', x => XN(x.open), F.int, 10], ['시초가 공모가 대비', x => XP(x.openVsOffer), F.pct, 12],
+    ['초일 수익률', x => XP(x.firstDayRet), F.pct, 10], ['1개월', x => XP(x.ret1m), F.pct, 9], ['3개월', x => XP(x.ret3m), F.pct, 9],
+    ['6개월', x => XP(x.ret6m), F.pct, 9], ['1년', x => XP(x.ret1y), F.pct, 9],
+    ['현재가(원)', x => XN(x.price), F.int, 10], ['공모가 대비', x => XP(x.retVsOffer), F.pct, 10], ['고점 대비', x => XP(x.fromPeak), F.pct, 10],
+    ['현재 시총(억원)', x => XE(x.marcapNum), F.eok, 12],
+    ['기관경쟁률', x => XN(x.instComp), F.ratio, 12], ['의무보유확약(%)', x => XP(x.commit), F.pct, 11],
+    ['주관사', x => x.uwMain, null, 26], ['인수수수료율(성과 제외)', x => XP(x.feeRate), F.pct2, 13],
+    ['인수수수료(억원)', x => XE(x.uwFeeAmtDoc || x.uwFee), F.dec, 12], ['성과수수료(한도)', x => XP(x.perfFeeRate), F.pct2, 12],
+    ['증권신고서', x => dartLink(x.rcpNo), null, 9],
+  ]},
+  { name: '철회·미승인', src: () => PIPE.withdrawn || [], sort: 'resultDate', cols: [
+    ['결과', x => x.result, null, 14], ['회사', x => x.name, null, 22], ['시장', x => x.market, null, 8], ['상장유형', x => x.listType, null, 12],
+    ['청구일', x => XD(x.applied), F.date, 11], ['결정일', x => XD(x.resultDate), F.date, 11],
+    ['심사기간(일)', x => x.applied && x.resultDate ? Math.round((new Date(x.resultDate) - new Date(x.applied)) / 864e5) : null, F.int, 11],
+    ['상장주선인', x => x.uw, null, 30],
+  ]},
+];
+async function downloadExcel(){
+  const btn = $('#xlsBtn'), label = btn.textContent;
+  btn.disabled = true; btn.textContent = '만드는 중…';
+  try {
+    const ExcelJS = await loadExcelJS();
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'IPO 동향 분석'; wb.created = new Date();
+    const upd = PIPE.updated || META.updated || '';
+    const FONT = 'Malgun Gothic', NAVY = 'FF1F3A5F', ZEBRA = 'FFF5F7FA', LINE = 'FFE3E7ED';
+    for (const S of XSHEETS){
+      let rows = S.src().slice();
+      if (S.sort) rows.sort((a, b) => String(b[S.sort] || '').localeCompare(String(a[S.sort] || '')));
+      const ws = wb.addWorksheet(S.name, { views: [{ state: 'frozen', xSplit: S.name === '상장완료' ? 1 : 0, ySplit: 4, showGridLines: false }] });
+      const nc = S.cols.length;
+      ws.columns = S.cols.map(c => ({ width: c[3] || 12 }));
+      ws.mergeCells(1, 1, 1, Math.min(nc, 8));
+      const t1 = ws.getCell(1, 1); t1.value = `IPO 동향 분석 · ${S.name} (${rows.length.toLocaleString('ko-KR')}건)`;
+      t1.font = { name: FONT, size: 14, bold: true, color: { argb: NAVY } };
+      ws.mergeCells(2, 1, 2, Math.min(nc, 8));
+      const t2 = ws.getCell(2, 1); t2.value = `기준 ${upd} (KST) · 출처 KIND·DART·네이버금융 · 금액 단위 억원, 비율은 %`;
+      t2.font = { name: FONT, size: 9, color: { argb: 'FF6B7280' } };
+      ws.getRow(1).height = 24;
+      const hr = ws.getRow(4); hr.height = 30;
+      S.cols.forEach((c, i) => {
+        const cell = hr.getCell(i + 1); cell.value = c[0];
+        cell.font = { name: FONT, size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: NAVY } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        cell.border = { right: { style: 'thin', color: { argb: 'FF3B5577' } } };
+      });
+      rows.forEach((x, ri) => {
+        const r = ws.getRow(5 + ri);
+        S.cols.forEach((c, i) => {
+          let v; try { v = c[1](x); } catch (e) { v = null; }
+          const cell = r.getCell(i + 1);
+          cell.value = v == null || v === '' ? null : v;
+          cell.font = { name: FONT, size: 10, ...(i === 0 || c[0] === '회사' ? { bold: true } : {}), ...(v && v.hyperlink ? { color: { argb: 'FF2563EB' }, underline: true } : {}) };
+          if (c[2]) cell.numFmt = c[2];
+          cell.alignment = { vertical: 'middle', horizontal: c[2] ? (c[2] === F.date ? 'center' : 'right') : 'left', wrapText: false };
+          cell.border = { bottom: { style: 'thin', color: { argb: LINE } } };
+          if (ri % 2) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: ZEBRA } };
+        });
+        r.height = 18;
+      });
+      ws.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4 + rows.length, column: nc } };
+    }
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `IPO_Data_${(upd || new Date().toISOString()).slice(0, 10)}.xlsx`;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(a.href); }, 4000);
+  } catch (e) {
+    console.log('[엑셀] 실패', e); btn.textContent = '다운로드 실패 – 다시 시도'; setTimeout(() => { btn.textContent = label; }, 3000); btn.disabled = false; return;
+  }
+  btn.disabled = false; btn.textContent = label;
+}
+$('#xlsBtn').addEventListener('click', downloadExcel);
 
 Promise.all([
   fetch('data/ipos.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => ({})),
