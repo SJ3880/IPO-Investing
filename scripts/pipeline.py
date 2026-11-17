@@ -195,8 +195,10 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
             if price and row.get("totalShares"):
                 row["marcapAtOffer"] = int(price * row["totalShares"])
             offering.append(row)
-    order = {"청약 중": 0, "수요예측 중": 1, "청약 대기": 2, "상장 대기": 3, "신고서 제출": 4}
-    offering.sort(key=lambda x: (order.get(x["stage"], 9), x["listDate"] or x["sub"][0] or "9999"))
+    # 상장이 가까운 순: 상장 대기 → 청약 중 → 청약 대기 → 수요예측 중 → 신고서 제출, 같은 단계는 날짜 빠른 순
+    order = {"상장 대기": 0, "청약 중": 1, "청약 대기": 2, "수요예측 중": 3, "신고서 제출": 4}
+    offering.sort(key=lambda x: (order.get(x["stage"], 9),
+                                 x["listDate"] or (x.get("sub") or [None])[0] or (x.get("demand") or [None])[0] or "9999"))
 
     # ---------- 예비심사
     review, approved, withdrawn, inv_rows = [], [], [], []

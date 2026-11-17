@@ -558,6 +558,10 @@ const TABS = {
     note: () => '예비심사를 청구했다가 스스로 철회했거나 거래소가 승인하지 않은 회사입니다.' },
 };
 
+// 수요예측·청약: 상장이 가까운 순(상장 대기 → 청약 중 → 청약 대기 → 수요예측 중 → 신고서 제출), 같은 단계는 날짜 빠른 순
+const STAGE_ORDER = {'상장 대기': 0, '청약 중': 1, '청약 대기': 2, '수요예측 중': 3, '신고서 제출': 4};
+const offerDate = x => x.listDate || (x.sub || [])[0] || (x.demand || [])[0] || '9999';
+const offerOrder = (a, b) => ((STAGE_ORDER[a.stage] ?? 9) - (STAGE_ORDER[b.stage] ?? 9)) || offerDate(a).localeCompare(offerDate(b));
 function rowsFor(v){
   const T = TABS[v];
   const q = $('#q').value.trim().toLowerCase(), mk = $('#mk').value, yr = $('#yr').value, tr = $('#track').value;
@@ -580,7 +584,7 @@ function rowsFor(v){
       (r.retVsOffer == null || r.retVsOffer >= off) && (!$('#sRebound').checked || (r.ret5d ?? -1) > 0) && (!$('#sMa').checked || r.aboveMa20));
   }
   const sk = sortKey || T.sort;
-  if (!sk) return rows;
+  if (!sk) return v === 'offering' ? rows.slice().sort(offerOrder) : rows;
   const val = r => sk === 'demandS' ? (r.demand || [])[0] : sk === 'subS' ? (r.sub || [])[0]
     : sk === 'dur' ? (r.applied && r.resultDate ? new Date(r.resultDate) - new Date(r.applied) : null) : r[sk];
   return rows.slice().sort((a, b) => {
@@ -1235,6 +1239,7 @@ async function downloadExcel(){
     for (const S of XSHEETS){
       let rows = S.src().slice();
       if (S.sort) rows.sort((a, b) => String(b[S.sort] || '').localeCompare(String(a[S.sort] || '')));
+      else if (S.name === '수요예측·청약') rows.sort(offerOrder);
       const ws = wb.addWorksheet(S.name, { views: [{ state: 'frozen', xSplit: S.cols.findIndex(c => c[0] === '회사') + 1, ySplit: 4, showGridLines: false }] });
       const nc = S.cols.length;
       ws.columns = S.cols.map(c => ({ width: c[3] || 12 }));
