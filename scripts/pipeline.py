@@ -315,6 +315,8 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
             cal.append({"date": iso(ld), "end": iso(ld), "type": "상장", "name": x["name"]})
     cal.sort(key=lambda e: (e["date"], e["type"]))
 
+    reit = lambda x: bool(re.search(r"(?<![블플])리츠", str(x.get("name") or "")))   # 리츠는 모든 시트에서 제외
+    review, approved, offering, withdrawn = ([x for x in L if not reit(x)] for L in (review, approved, offering, withdrawn))
     return {
         "review": review, "approved": approved, "offering": offering, "withdrawn": withdrawn,
         "monthly": monthly, "quarterly": quarterly, "calendar": cal,

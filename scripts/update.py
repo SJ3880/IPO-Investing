@@ -117,6 +117,14 @@ def fetch_listings(since: date) -> pd.DataFrame:
     return df[["code", "name", "sector", "product", "listed", "market"]].sort_values("listed", ascending=False).reset_index(drop=True)
 
 
+NAME_FIX = {"0158S0": "엘리스그룹"}
+
+
+def is_reit(name):
+    """리츠(부동산투자회사) 이름: '…리츠', '이리츠코크렙' 등. '블리츠웨이'처럼 이름 속 글자는 제외"""
+    return bool(re.search(r"(?<![블플])리츠", str(name or "")))
+
+
 def ipo_filter(listings):
     """KIND 신규상장기업 목록으로 공모 상장만 남기고 상장유형·주선인을 붙인다(실패하면 그대로)"""
     try:
@@ -136,6 +144,7 @@ def ipo_filter(listings):
     out["listType"] = out["name"].map(lambda n: info[pipelib.norm(n)][0] or None)
     lt = out["listType"].fillna("")
     out = out[~lt.str.contains("재상장") & ~(lt.str.contains("이전") & (out["market"] == "코스피"))]
+    out = out[~out["name"].map(is_reit)]                       # 리츠(부동산투자회사)는 제외
     log(f"[KIND 신규상장] {len(lc)}건 → 공모 상장 {len(out)}개 (분할·재상장 등 {len(listings) - len(out)}개 제외)")
     return out.reset_index(drop=True)
 
@@ -604,6 +613,9 @@ def match_row(name, listed, rows, lo, hi):
         return min(exact, key=lambda r: abs((r["d"] - listed).days))
     part = [r for r in rows if min(len(n), len(norm(r["name"]))) >= 4
             and (n in norm(r["name"]) or norm(r["name"]) in n) and lo <= (r["d"] - listed).days <= hi]
+    if not part:                                    # '엘리스'(KIND) ↔ '엘리스그룹'(38)처럼 짧은 이름이 앞부분에 그대로 붙은 경우
+        part = [r for r in rows if min(len(n), len(norm(r["name"]))) >= 3
+                and (norm(r["name"]).startswith(n) or n.startswith(norm(r["name"]))) and lo <= (r["d"] - listed).days <= hi]
     return part[0] if len(part) == 1 else None      # 후보가 여럿이면 틀릴 수 있으니 포기
 
 
@@ -1018,6 +1030,7 @@ def main():
     n_fetch = {"full": 0, "recent": 0}
     for i, row in listings.iterrows():
         code, name, listed = row["code"], str(row["name"]), row["listed"]
+        name = NAME_FIX.get(code, name)               # KIND 목록 이름이 실제 회사명과 다른 경우
         show = True
         try:
             bars, how = load_or_fetch(code, listed)
@@ -1279,6 +1292,8 @@ def main():
         it["valMult"] = v.get("appliedMult")
         it["fairValue"] = fair
         it["discBand"] = disc_b
+        if not it.get("band") and v.get("bandDoc") and not it.get("spac"):     # 38에 없으면 신고서의 희망밴드
+            it["band"] = v["bandDoc"]
         it["discOffer"] = round((1 - it["offer"] / fair) * 100, 1) if fair and it.get("offer") and not it.get("spac") else None
         it["peers"] = [{"n": x["name"], "v": x["v"]} for x in (v.get("peers") or []) if valuation._is_name(x["name"])]
         it["peerChecked"] = bool(v.get("peerChecked"))
