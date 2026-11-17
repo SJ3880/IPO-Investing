@@ -1178,6 +1178,7 @@ def main():
             except Exception as e:
                 log(f"  - {it['name']} 기술평가 등급 실패: {e}")
         log(f"[기술평가 등급] 이번에 {n_tg}개 읽음 (시작 후 {mins():.0f}분)")
+    no_doc = {}
     for it in items:
         p = DETAIL / f"{it['code']}.json"
         try:
@@ -1300,6 +1301,8 @@ def main():
         it["opLoss"] = fin.get("op") is not None and fin["op"] < 0
         it["mezz"] = any(e.get("tag") == "메자닌(CB·BW·EB)" for e in det.get("events") or [])
         it["hasLockup"] = bool(det.get("lockup") or det.get("lockupTables"))
+        if not det.get("shares") and not det.get("rcpNo"):
+            no_doc[it["code"]] = id(it)                  # 신고서를 못 읽은 종목(공모 수치가 비어 있어야 함)
         p.write_text(json.dumps(det, ensure_ascii=False, separators=(",", ":")), "utf-8")
         time.sleep(0.1)
 
@@ -1353,6 +1356,23 @@ def main():
 
     if left:
         log(f"[DART] 시간 제한으로 {left}개 종목은 다음 실행 때 이어서 처리합니다.")
+    # 안전장치: 신고서를 못 읽은 종목에 다른 종목의 공모 수치가 섞여 들어가면 비운다(원인 추적용 기록 남김)
+    DOC_KEYS = ("offerShares", "offerAmount", "totalShares", "float1m", "float3m", "float6m", "float1y", "floatAtListing",
+                "peers", "discBand", "discOffer", "fairValue", "valMethod", "valMult", "uwFee", "uwFeeRate", "uwFeeRateDoc",
+                "perfFeeRate", "oldShareRatio")
+    mix_dbg = []
+    for it in items:
+        if it["code"] in no_doc and (it.get("offerShares") or it.get("totalShares") or it.get("peers")):
+            mix_dbg.append({"code": it["code"], "name": it["name"], "sameObj": no_doc[it["code"]] == id(it),
+                            "vals": {k: it.get(k) for k in ("offerShares", "totalShares", "uwFee")}})
+            for k in DOC_KEYS:
+                it[k] = None
+            it["peerChecked"] = False
+            it["hasLockup"] = False
+    if mix_dbg:
+        log(f"[점검] 신고서 없는 종목에 섞여 든 공모 수치 비움: {[x['name'] for x in mix_dbg]}")
+        (DATA / "debug").mkdir(exist_ok=True)
+        (DATA / "debug" / "mixed_values.json").write_text(json.dumps(mix_dbg, ensure_ascii=False, indent=1), "utf-8")
     save(items, model_meta, missing, dart_on=bool(dt))
     log(f"[완료] {len(items)}개 저장, 공모가 미확인 {len(missing)}개")
 
