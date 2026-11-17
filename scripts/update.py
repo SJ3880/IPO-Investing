@@ -262,6 +262,45 @@ def listing_date_doc(text, after):
     return None
 
 
+def add_products(pipe, inv_df, limit=250):
+    """심사중·심사승인·수요예측·청약 행에 KIND 회사개요의 '주요제품'을 붙인다(한 번 읽으면 data/kind_corp.json 에 보관)"""
+    cp = DATA / "kind_corp.json"
+    try:
+        cache = json.loads(cp.read_text("utf-8")) if cp.exists() else {}
+    except Exception:
+        cache = {}
+    by_name = {}
+    if inv_df is not None and len(inv_df):
+        for _, r in inv_df.iterrows():
+            nm_, kc = r.get("name"), r.get("kindCode")
+            if isinstance(nm_, str) and isinstance(kc, str) and kc:
+                key = pipelib.norm(nm_)
+                if key not in by_name or str(r.get("applied") or "") > by_name[key][1]:
+                    by_name[key] = (kc, str(r.get("applied") or ""))
+    rows = [x for s in ("review", "approved", "offering") for x in pipe.get(s, [])]
+    n_new = 0
+    for x in rows:
+        kc = x.get("kindCode") or (by_name.get(pipelib.norm(x.get("name") or "")) or (None,))[0]
+        if not kc:
+            continue
+        c = cache.get(kc)
+        if c is None and n_new < limit and mins() < 85:
+            try:
+                d = kindlib.corp_detail(kc)
+                c = cache[kc] = {"product": d.get("주요제품") or None, "sector": d.get("업종") or None,
+                                 "name": d.get("회사명") or x.get("name"), "at": date.today().isoformat()}
+                n_new += 1
+                time.sleep(0.3)
+            except Exception as e:
+                log(f"  - {x.get('name')} 주요제품 실패: {e}")
+                continue
+        if c:
+            x["product"] = x.get("product") or c.get("product")
+            x["sector"] = x.get("sector") or c.get("sector")
+    cp.write_text(json.dumps(cache, ensure_ascii=False, indent=0), "utf-8")
+    log(f"[주요제품] 새로 읽음 {n_new}개 · 보관 {len(cache)}개")
+
+
 def has_tech_eval(track):
     """전문평가기관 기술평가를 받는 상장 유형(기술평가 2곳, 소부장 1곳, 사업모델)"""
     return bool(re.search(r"기술평가|소부장|사업모델", str(track or "")))
@@ -1354,6 +1393,10 @@ def main():
                            "sched38": sched is not None and len(sched) > 0, "invstg": inv_ok, "dart": bool(dt)}
         (DATA / "debug").mkdir(exist_ok=True)
         (DATA / "debug" / "offering_enrich.json").write_text(json.dumps(enrich_dbg, ensure_ascii=False, indent=1), "utf-8")
+        try:                                        # KIND 예비심사 상세의 '주요제품'(심사중·승인·공모 진행)
+            add_products(pipe, inv_df)
+        except Exception as e:
+            log(f"[주요제품] 실패: {e}")
         (DATA / "pipeline.json").write_text(json.dumps(pipe, ensure_ascii=False, separators=(",", ":")), "utf-8")
         try:                                        # 공모 진행 회사의 트랙·등급 보관(상장 직후 KIND 목록 반영 전까지 사용)
             mp_ = DATA / "offer_memory.json"

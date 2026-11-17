@@ -192,6 +192,25 @@ def invstg(from_date="2015-01-01", to_date=None, debug_dir=None, log=print):
     return normalize_invstg(allx)
 
 
+def corp_detail(biz_no, timeout=30):
+    """KIND 예비심사기업 상세(회사개요): 주요제품·업종 등 표의 '항목 → 값'"""
+    import html as _h
+    url = f"{BASE}/listinvstg/listinvstgcom.do"
+    r = S.get(url, params={"method": "searchListInvstgCorpDetail", "bizProcNo": biz_no},
+              headers={"User-Agent": UA, "Referer": f"{BASE}/listinvstg/listinvstgcom.do?method=searchListInvstgCorpMain"},
+              timeout=timeout)
+    r.raise_for_status()
+    r.encoding = "utf-8"
+    txt = r.text
+    out = {}
+    for th, td in re.findall(r"<th[^>]*>(.*?)</th>\s*<td[^>]*>(.*?)</td>", txt, flags=re.S | re.I):
+        key = re.sub(r"\s+", "", re.sub(r"<[^>]+>", "", _h.unescape(th)))
+        val = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", _h.unescape(td))).strip()
+        if key and key not in out:
+            out[key] = val
+    return out
+
+
 def normalize_invstg(df):
     """화면 컬럼 이름이 조금 달라도 표준 이름으로 맞춘다"""
     def pick(*keys, no=()):

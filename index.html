@@ -58,7 +58,7 @@ table.list{width:100%;border-collapse:collapse;white-space:nowrap}
 .list th.l,.list td.l{text-align:left}
 .list tbody tr{cursor:pointer}
 .list tbody tr:hover{background:var(--panel2)}
-td .nm{font-weight:600}td .sc{color:var(--muted);font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;display:block}
+td .pd{min-width:170px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:260px;font-size:12px;line-height:1.35;color:var(--text);white-space:normal}td .nm{font-weight:600}td .sc{color:var(--muted);font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;display:block}
 .up{color:var(--up)}.dn{color:var(--down)}.mu{color:var(--muted)}
 .empty{padding:40px 16px;text-align:center;color:var(--muted)}
 .screen{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
@@ -363,6 +363,7 @@ const md = iso => iso ? iso.slice(5).replace('-', '.') : '–';
 const rng = a => a && a[0] ? `${md(a[0])}~${md(a[1])}` : '–';
 const daysTo = iso => iso ? Math.ceil((new Date(iso + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5) : null;
 const spacChip = r => r.spac ? `<span class="chip spac" title="${esc(r.listType || '스팩합병')}">스팩합병</span>` : '';
+const prod = x => x.product ? `<span class="pd" title="${esc(x.product)}">${esc(x.product)}</span>` : '<span class="mu">–</span>';
 const nm = (r, extra='') => `<span class="nm">${esc(r.name)}</span>${spacChip(r)}${extra}<span class="sc">${esc(r.sector || '')}</span>`;
 // 기술평가 등급 {grades:[...], agencies:[...], paired, ev} (예전 형식 [{agency,grade}]도 읽음)
 const TG = g => !g ? null : Array.isArray(g) ? (g.length ? { grades: g.map(x => x.grade), agencies: g.map(x => x.agency), paired: true, ev: g[0].ev } : null)
@@ -447,6 +448,7 @@ const TABS = {
   review: { src: () => PIPE.review || [], sort: 'applied', yr: true, track: false,
     cols: [
       {k:'name', t:'회사', l:1, r: x => nm(x, x.listType && !/신규/.test(x.listType) ? `<span class="chip">${esc(x.listType)}</span>` : '')},
+      {k:'product', t:'주요제품', l:1, r: x => prod(x)},
       {k:'market', t:'시장', l:1},
       {k:'applied', t:'청구일', l:1},
       {k:'days', t:'경과', r: x => x.days != null ? `${x.days}일` : '–'},
@@ -458,6 +460,7 @@ const TABS = {
     cols: [
       {k:'result', t:'상태', l:1, r: x => x.after ? `<span class="tag ${/만료/.test(x.result) ? 't-미승인' : 't-철회'}">${esc(x.result)}</span>` : '<span class="tag t-상장">승인 · 공모 대기</span>'},
       {k:'name', t:'회사', l:1, r: x => nm(x)},
+      {k:'product', t:'주요제품', l:1, r: x => prod(x)},
       {k:'market', t:'시장', l:1},
       {k:'applied', t:'청구일', l:1},
       {k:'resultDate', t:'승인일', l:1},
@@ -470,6 +473,7 @@ const TABS = {
     cols: [
       {k:'stage', t:'단계', l:1, r: x => `<span class="tag t-${x.stage.replace(/\s/g,'').replace('중','중')}${/청약/.test(x.stage) ? ' t-청약' : /수요예측/.test(x.stage) ? ' t-수요예측' : /상장/.test(x.stage) ? ' t-상장' : ''}">${esc(x.stage)}</span>`},
       {k:'name', t:'회사', l:1, r: x => nm({...x, sector: [x.market, x.underwriters ? '' : ''].filter(Boolean).join(' ')}, trackChip(x.track, x.techGrades))},
+      {k:'product', t:'주요제품', l:1, r: x => prod(x)},
       {k:'demandS', t:'수요예측', l:1, r: x => rng(x.demand)},
       {k:'subS', t:'청약', l:1, r: x => rng(x.sub)},
       {k:'listDate', t:'상장예정', l:1, r: x => x.listDate ? `${md(x.listDate)}` : '<span class="mu">미정</span>'},
@@ -487,6 +491,7 @@ const TABS = {
   listed: { src: () => DATA, sort: 'listed', yr: true, track: true, screen: true,
     cols: [
       {k:'name', t:'회사', l:1, r: x => nm(x, trackChip(x.track, x.techGrades) + (x.listType && !x.spac && /이전|합병/.test(x.listType) ? `<span class="chip">${esc(x.listType)}</span>` : ''))},
+      {k:'product', t:'주요제품', l:1, r: x => prod(x)},
       {k:'market', t:'시장', l:1},
       {k:'listed', t:'상장일', l:1, r: x => `${x.listed}<div class="mu" style="font-size:12px">D+${x.days}</div>`},
       {k:'techG', t:'기술평가', r: x => techCell(x)},
@@ -1060,7 +1065,7 @@ function setSize(z){
   $('#sizeSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.z === z)); store.set('tsize', z);
 }
 $('#sizeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setSize(b.dataset.z); });
-let WIDTHS = store.get('colw', {}), RESIZED = 0;
+let WIDTHS = store.get('colw2', {}), RESIZED = 0;
 function applyWidths(){
   let st = document.getElementById('colW'); if (!st) { st = document.createElement('style'); st.id = 'colW'; document.head.appendChild(st); }
   st.textContent = Object.entries(WIDTHS[VIEW] || {}).map(([i, px]) => {
@@ -1074,13 +1079,13 @@ function startResize(h, x0, isTouch){
   const X = ev => isTouch ? ev.touches[0].clientX : ev.clientX;
   const mv = ev => { if (isTouch) ev.preventDefault(); (WIDTHS[VIEW] = WIDTHS[VIEW] || {})[i] = Math.max(40, Math.round(w0 + X(ev) - x0)); applyWidths(); };
   const up = () => { document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', mv); document.removeEventListener(isTouch ? 'touchend' : 'mouseup', up);
-    h.classList.remove('on'); document.body.style.cursor = ''; store.set('colw', WIDTHS); RESIZED = Date.now(); };
+    h.classList.remove('on'); document.body.style.cursor = ''; store.set('colw2', WIDTHS); RESIZED = Date.now(); };
   document.addEventListener(isTouch ? 'touchmove' : 'mousemove', mv, { passive: false });
   document.addEventListener(isTouch ? 'touchend' : 'mouseup', up);
 }
 $('#head').addEventListener('mousedown', e => { const h = e.target.closest('.rz'); if (!h) return; e.preventDefault(); startResize(h, e.clientX, false); });
 $('#head').addEventListener('touchstart', e => { const h = e.target.closest('.rz'); if (!h) return; startResize(h, e.touches[0].clientX, true); }, { passive: true });
-$('#resetW').addEventListener('click', () => { delete WIDTHS[VIEW]; store.set('colw', WIDTHS); applyWidths(); });
+$('#resetW').addEventListener('click', () => { delete WIDTHS[VIEW]; store.set('colw2', WIDTHS); applyWidths(); });
 setTheme(store.get('theme', 'auto')); setSize(store.get('tsize', 'm'));
 
 /* ---------- 비교회사 툴팁 ---------- */
@@ -1137,17 +1142,17 @@ const dartLink = r => r ? { text: '원문', hyperlink: `https://dart.fss.or.kr/d
 const F = { int: '#,##0', eok: '#,##0', dec: '#,##0.00', pct: '0.0%;[Red]-0.0%', pct2: '0.00%', date: 'yyyy-mm-dd', x: '0.00"배"', ratio: '#,##0.00":1"' };
 const XSHEETS = [
   { name: '심사중', src: () => PIPE.review || [], sort: 'applied', cols: [
-    ['회사', x => x.name, null, 22], ['시장', x => x.market, null, 8], ['상장유형', x => x.listType, null, 12],
+    ['회사', x => x.name, null, 22], ['주요 제품', x => x.product, null, 32], ['업종', x => x.sector, null, 22], ['시장', x => x.market, null, 8], ['상장유형', x => x.listType, null, 12],
     ['스팩합병', x => x.spac ? 'O' : '', null, 8], ['청구일', x => XD(x.applied), F.date, 11], ['경과(일)', x => XN(x.days), F.int, 9],
     ['예상 결과 시점', x => XD(x.expected), F.date, 13], ['상장주선인', x => x.uw, null, 30],
   ]},
   { name: '심사승인', src: () => PIPE.approved || [], sort: 'resultDate', cols: [
-    ['상태', x => x.after ? x.result : '승인 · 공모 대기', null, 16], ['회사', x => x.name, null, 22], ['시장', x => x.market, null, 8],
+    ['상태', x => x.after ? x.result : '승인 · 공모 대기', null, 16], ['회사', x => x.name, null, 22], ['주요 제품', x => x.product, null, 32], ['업종', x => x.sector, null, 22], ['시장', x => x.market, null, 8],
     ['상장유형', x => x.listType, null, 12], ['청구일', x => XD(x.applied), F.date, 11], ['승인일', x => XD(x.resultDate), F.date, 11],
     ['승인 후(일)', x => XN(x.daysSince), F.int, 10], ['승인 효력 만료', x => XD(x.expire), F.date, 13], ['상장주선인', x => x.uw, null, 30],
   ]},
   { name: '수요예측·청약', src: () => PIPE.offering || [], sort: null, cols: [
-    ['단계', x => x.stage, null, 11], ['회사', x => x.name, null, 22], ['시장', x => x.market, null, 8], ['상장트랙', x => x.track, null, 18],
+    ['단계', x => x.stage, null, 11], ['회사', x => x.name, null, 22], ['주요 제품', x => x.product, null, 32], ['업종', x => x.sector, null, 22], ['시장', x => x.market, null, 8], ['상장트랙', x => x.track, null, 18],
     ['기술평가 등급', x => gradeText(x.techGrades) || null, null, 12], ['평가기관', x => agText(x.techGrades) || null, null, 34],
     ['수요예측 시작', x => XD((x.demand || [])[0]), F.date, 12], ['수요예측 종료', x => XD((x.demand || [])[1]), F.date, 12],
     ['청약 시작', x => XD((x.sub || [])[0]), F.date, 11], ['청약 종료', x => XD((x.sub || [])[1]), F.date, 11],
