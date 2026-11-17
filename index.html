@@ -365,7 +365,7 @@ const eok = won => won ? (won >= 1e12 ? (won / 1e12).toFixed(2) + '조' : Math.r
 
 let DATA = [], META = {}, PIPE = {}, VIEW = 'overview', sortKey = null, sortDir = -1;
 const md = iso => iso ? iso.slice(5).replace('-', '.') : '–';
-const rng = a => a && a[0] ? `${yd(a[0])}~${a[1] ? (a[1].slice(0, 4) === a[0].slice(0, 4) ? a[1].slice(5) : yd(a[1])) : ''}` : '–';
+const rng = a => a && a[0] ? `${md(a[0])}~${md(a[1])}` : '–';
 const daysTo = iso => iso ? Math.ceil((new Date(iso + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5) : null;
 const spacChip = r => r.spac ? `<span class="chip spac" title="${esc(r.listType || '스팩합병')}">스팩합병</span>` : '';
 // 주관사 약칭(업계에서 부르는 이름)
@@ -383,9 +383,9 @@ const uwOne = s => { const c = String(s).replace(/\(구\)|\(주\)|㈜|주식회�
   for (const [re, v] of UW_SHORT) if (re.test(c)) return v; return c.replace(/(투자증권|금융투자|증권회사|증권)(서울지점)?$/, '') || c; };
 const uwS = s => { if (!s) return ''; const arr = Array.isArray(s) ? s : String(s).split(/[,·/]|(?<=증권)(?=\S)/);
   return [...new Set(arr.map(uwOne).filter(Boolean))].join(', '); };
-// 날짜는 YY-MM-DD
-const yd = iso => iso ? String(iso).slice(2, 10) : '–';
-const dfmt = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v.slice(2) : v;
+// 날짜 표시(YYYY-MM-DD)
+const yd = iso => iso ? String(iso).slice(0, 10) : '–';
+const dfmt = v => v;
 const prod = x => x.product ? `<span class="pd" title="${esc(x.product)}">${esc(x.product)}</span>` : '<span class="mu">–</span>';
 const nm = (r, extra='') => `<span class="nm">${esc(r.name)}</span>${spacChip(r)}${extra}<span class="sc">${esc(r.sector || '')}</span>`;
 // 기술평가 등급 {grades:[...], agencies:[...], paired, ev} (예전 형식 [{agency,grade}]도 읽음)
@@ -499,7 +499,7 @@ const TABS = {
       {k:'product', t:'주요제품', l:1, r: x => prod(x)},
       {k:'demandS', t:'수요예측', l:1, r: x => rng(x.demand)},
       {k:'subS', t:'청약', l:1, r: x => rng(x.sub)},
-      {k:'listDate', t:'상장예정', l:1, r: x => x.listDate ? `${yd(x.listDate)}` : '<span class="mu">미정</span>'},
+      {k:'listDate', t:'상장예정', l:1, r: x => x.listDate ? `${md(x.listDate)}` : '<span class="mu">미정</span>'},
       {k:'offer', t:'공모가(밴드)', r: x => x.offer ? `<b>${fmt(x.offer)}</b>${x.band ? `<div class="mu" style="font-size:12px">${fmt(x.band[0])}~${fmt(x.band[1])}</div>` : ''}` : (x.band ? `${fmt(x.band[0])}~${fmt(x.band[1])}` : '–')},
       {k:'amount', t:'공모금액', r: x => eok(x.amount)},
       {k:'marcapAtOffer', t:'공모 시총', r: x => mcapUp(x)},
@@ -1167,7 +1167,7 @@ const XE = v => v ? Math.round(v / 1e6) / 100 : null;           // 원 → 억�
 const XP = v => v == null || v === '' || isNaN(v) ? null : +v / 100;  // 35.9 → 0.359 (% 서식)
 const XN = v => v == null || v === '' || isNaN(v) ? null : +v;
 const dartLink = r => r ? { text: '원문', hyperlink: `https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${r}` } : null;
-const F = { int: '#,##0', eok: '#,##0', dec: '#,##0.00', pct: '0.0%;[Red]-0.0%', pct2: '0.00%', date: 'yy-mm-dd', x: '0.00"배"', ratio: '#,##0.00":1"' };
+const F = { int: '#,##0', eok: '#,##0', dec: '#,##0.00', pct: '0.0%;[Red]-0.0%', pct2: '0.00%', date: 'yyyy-mm-dd', x: '0.00"배"', ratio: '#,##0.00":1"' };
 const XSHEETS = [
   { name: '심사중', src: () => PIPE.review || [], sort: 'applied', cols: [
     ['회사', x => x.name, null, 22], ['주요 제품', x => x.product, null, 32], ['업종', x => x.sector, null, 22], ['시장', x => x.market, null, 8], ['상장유형', x => x.listType, null, 12],
