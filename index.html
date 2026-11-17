@@ -58,6 +58,11 @@ table.list{width:100%;border-collapse:collapse;white-space:nowrap}
 .list th.l,.list td.l{text-align:left}
 .list tbody tr{cursor:pointer}
 .list tbody tr:hover{background:var(--panel2)}
+/* 옆으로 넘겨도 회사명은 왼쪽에 고정 */
+.list th.stk,.list td.stk{position:sticky;left:0;z-index:2;background:var(--panel);box-shadow:inset -1px 0 0 var(--line)}
+.list th.stk{z-index:4;background:var(--panel2)}
+.list tbody tr:hover td.stk{background:var(--panel2)}
+@media (max-width:640px){.list td.stk,.list th.stk{max-width:132px;min-width:110px;white-space:normal}.list td.stk .sc{max-width:120px;white-space:nowrap}.list td.stk .chip{margin-left:0}}
 td .pd{min-width:170px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:260px;font-size:12px;line-height:1.35;color:var(--text);white-space:normal}td .nm{font-weight:600}td .sc{color:var(--muted);font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;display:block}
 .up{color:var(--up)}.dn{color:var(--down)}.mu{color:var(--muted)}
 .empty{padding:40px 16px;text-align:center;color:var(--muted)}
@@ -360,9 +365,27 @@ const eok = won => won ? (won >= 1e12 ? (won / 1e12).toFixed(2) + '조' : Math.r
 
 let DATA = [], META = {}, PIPE = {}, VIEW = 'overview', sortKey = null, sortDir = -1;
 const md = iso => iso ? iso.slice(5).replace('-', '.') : '–';
-const rng = a => a && a[0] ? `${md(a[0])}~${md(a[1])}` : '–';
+const rng = a => a && a[0] ? `${yd(a[0])}~${a[1] ? (a[1].slice(0, 4) === a[0].slice(0, 4) ? a[1].slice(5) : yd(a[1])) : ''}` : '–';
 const daysTo = iso => iso ? Math.ceil((new Date(iso + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5) : null;
 const spacChip = r => r.spac ? `<span class="chip spac" title="${esc(r.listType || '스팩합병')}">스팩합병</span>` : '';
+// 주관사 약칭(업계에서 부르는 이름)
+const UW_SHORT = [
+  [/한국투자|한투/, '한투'], [/엔에이치|NH|농협/, 'NH'], [/미래에셋/, '미래'], [/^대우증권|^대우$/, '미래(대우)'], [/케이비|KB/, 'KB'],
+  [/삼성/, '삼성'], [/신한/, '신한'], [/하나/, '하나'], [/키움/, '키움'], [/대신/, '대신'], [/유진/, '유진'],
+  [/아이비케이|IBK/, 'IBK'], [/신영/, '신영'], [/한화/, '한화'], [/하이투자/, '하이'], [/아이엠|iM/i, 'iM'], [/디비|DB|동부/, 'DB'],
+  [/교보/, '교보'], [/유안타/, '유안타'], [/상상인/, '상상인'], [/에스케이|SK/, 'SK'], [/현대차|HMC|현대증권/, '현대차'],
+  [/비엔케이|BNK/, 'BNK'], [/메리츠/, '메리츠'], [/이베스트|LS증권/, 'LS'], [/다올|KTB/, '다올'], [/케이프/, '케이프'],
+  [/한양/, '한양'], [/부국/, '부국'], [/흥국/, '흥국'], [/코리아에셋/, '코리아에셋'], [/우리/, '우리'], [/엘아이지|LIG/, 'LIG'],
+  [/제이피모간|JP모간|JP Morgan/i, 'JP모간'], [/모간스탠리|모건스탠리/, '모간스탠리'], [/메릴린치/, '메릴린치'], [/골드만/, '골드만삭스'],
+  [/씨티|Citi/i, '씨티'], [/크레디트스위스|CS증권/, 'CS'], [/유비에스|UBS/, 'UBS'], [/홍콩상하이|HSBC/, 'HSBC'], [/토스/, '토스'], [/카카오페이/, '카카오페이'],
+];
+const uwOne = s => { const c = String(s).replace(/\(구\)|\(주\)|㈜|주식회사|\(농협\)|\(영업소\)|\s/g, ''); if (!c || c === '-') return '';
+  for (const [re, v] of UW_SHORT) if (re.test(c)) return v; return c.replace(/(투자증권|금융투자|증권회사|증권)(서울지점)?$/, '') || c; };
+const uwS = s => { if (!s) return ''; const arr = Array.isArray(s) ? s : String(s).split(/[,·/]|(?<=증권)(?=\S)/);
+  return [...new Set(arr.map(uwOne).filter(Boolean))].join(', '); };
+// 날짜는 YY-MM-DD
+const yd = iso => iso ? String(iso).slice(2, 10) : '–';
+const dfmt = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v.slice(2) : v;
 const prod = x => x.product ? `<span class="pd" title="${esc(x.product)}">${esc(x.product)}</span>` : '<span class="mu">–</span>';
 const nm = (r, extra='') => `<span class="nm">${esc(r.name)}</span>${spacChip(r)}${extra}<span class="sc">${esc(r.sector || '')}</span>`;
 // 기술평가 등급 {grades:[...], agencies:[...], paired, ev} (예전 형식 [{agency,grade}]도 읽음)
@@ -452,8 +475,8 @@ const TABS = {
       {k:'market', t:'시장', l:1},
       {k:'applied', t:'청구일', l:1},
       {k:'days', t:'경과', r: x => x.days != null ? `${x.days}일` : '–'},
-      {k:'expected', t:'예상 결과 시점', l:1, r: x => x.expected ? `${x.expected} <span class="mu">(${daysTo(x.expected) >= 0 ? 'D-' + daysTo(x.expected) : '지남'})</span>` : '–'},
-      {k:'uw', t:'상장주선인', l:1},
+      {k:'expected', t:'예상 결과 시점', l:1, r: x => x.expected ? `${yd(x.expected)} <span class="mu">(${daysTo(x.expected) >= 0 ? 'D-' + daysTo(x.expected) : '지남'})</span>` : '–'},
+      {k:'uw', t:'상장주선인', l:1, r: x => esc(uwS(x.uw) || '–')},
     ],
     note: () => PIPE.medianReviewDays ? `예상 결과 시점 = 청구일 + 최근 2년 승인 건의 심사기간 중앙값(${PIPE.medianReviewDays}일). 실제와 다를 수 있습니다.` : '' },
   approved: { src: () => PIPE.approved || [], sort: 'resultDate', yr: true, track: false,
@@ -465,8 +488,8 @@ const TABS = {
       {k:'applied', t:'청구일', l:1},
       {k:'resultDate', t:'승인일', l:1},
       {k:'daysSince', t:'승인 후', r: x => x.daysSince != null ? `${x.daysSince}일` : '–'},
-      {k:'expire', t:'승인 효력 만료', l:1, r: x => x.expire ? `${x.expire} <span class="${daysTo(x.expire) < 45 ? 'up' : 'mu'}">(${daysTo(x.expire) >= 0 ? 'D-' + daysTo(x.expire) : '만료'})</span>` : '–'},
-      {k:'uw', t:'상장주선인', l:1},
+      {k:'expire', t:'승인 효력 만료', l:1, r: x => x.expire ? `${yd(x.expire)} <span class="${daysTo(x.expire) < 45 ? 'up' : 'mu'}">(${daysTo(x.expire) >= 0 ? 'D-' + daysTo(x.expire) : '만료'})</span>` : '–'},
+      {k:'uw', t:'상장주선인', l:1, r: x => esc(uwS(x.uw) || '–')},
     ],
     note: () => '예비심사 승인 후 6개월 안에 상장(증권신고서 제출·공모)을 마쳐야 합니다. 증권신고서를 내면 ‘수요예측·청약’ 탭으로 옮겨갑니다. ‘공모 철회·상장 철회·승인효력기간 만료’는 예비심사는 통과했지만 이후 공모·상장을 접었거나 6개월 효력이 끝난 회사입니다(날짜는 KIND 결과확정일).' },
   offering: { src: () => PIPE.offering || [], sort: null, yr: true, track: true,
@@ -476,7 +499,7 @@ const TABS = {
       {k:'product', t:'주요제품', l:1, r: x => prod(x)},
       {k:'demandS', t:'수요예측', l:1, r: x => rng(x.demand)},
       {k:'subS', t:'청약', l:1, r: x => rng(x.sub)},
-      {k:'listDate', t:'상장예정', l:1, r: x => x.listDate ? `${md(x.listDate)}` : '<span class="mu">미정</span>'},
+      {k:'listDate', t:'상장예정', l:1, r: x => x.listDate ? `${yd(x.listDate)}` : '<span class="mu">미정</span>'},
       {k:'offer', t:'공모가(밴드)', r: x => x.offer ? `<b>${fmt(x.offer)}</b>${x.band ? `<div class="mu" style="font-size:12px">${fmt(x.band[0])}~${fmt(x.band[1])}</div>` : ''}` : (x.band ? `${fmt(x.band[0])}~${fmt(x.band[1])}` : '–')},
       {k:'amount', t:'공모금액', r: x => eok(x.amount)},
       {k:'marcapAtOffer', t:'공모 시총', r: x => mcapUp(x)},
@@ -485,7 +508,7 @@ const TABS = {
       {k:'floatAtListing', t:'상장일 유통', r: x => x.floatAtListing != null ? x.floatAtListing.toFixed(1) + '%' : '–'},
       {k:'instComp', t:'경쟁률(기관·일반)', r: x => (x.instComp ? `기관 ${fmt(x.instComp)}:1<div class="mu" style="font-size:12px">확약 ${x.commit ?? '–'}%</div>` : '') + (x.subComp ? `<div class="mu" style="font-size:12px">일반 ${fmt(x.subComp)}:1</div>` : '') || '–'},
       {k:'oldShareRatio', t:'구주매출', r: x => x.oldShareRatio != null ? x.oldShareRatio + '%' : '–'},
-      {k:'uw', t:'주관사', l:1, r: x => esc((x.underwriters && x.underwriters.length ? x.underwriters.join(', ') : x.uw) || '–')},
+      {k:'uw', t:'주관사', l:1, r: x => esc(uwS(x.underwriters && x.underwriters.length ? x.underwriters : x.uw) || '–')},
     ],
     note: () => '단계는 오늘 날짜 기준 자동 분류. 공모가는 확정 전이면 희망밴드. 공모 시총 = 상장예정주식수 × 확정공모가(확정 전이면 희망밴드 하단~상단).' },
   listed: { src: () => DATA, sort: 'listed', yr: true, track: true, screen: true,
@@ -493,7 +516,8 @@ const TABS = {
       {k:'name', t:'회사', l:1, r: x => nm(x, trackChip(x.track, x.techGrades) + (x.listType && !x.spac && /이전|합병/.test(x.listType) ? `<span class="chip">${esc(x.listType)}</span>` : ''))},
       {k:'product', t:'주요제품', l:1, r: x => prod(x)},
       {k:'market', t:'시장', l:1},
-      {k:'listed', t:'상장일', l:1, r: x => `${x.listed}<div class="mu" style="font-size:12px">D+${x.days}</div>`},
+      {k:'uwMain', t:'주관사', l:1, r: x => esc(uwS(x.underwriters && x.underwriters.length ? x.underwriters : x.uw38) || '–')},
+      {k:'listed', t:'상장일', l:1, r: x => `${yd(x.listed)}<div class="mu" style="font-size:12px">D+${x.days}</div>`},
       {k:'techG', t:'기술평가', r: x => techCell(x)},
       {k:'offer', t:'공모가', r: x => x.offer ? fmt(x.offer) + (x.spac ? '<div class="mu" style="font-size:12px">합병 기준가</div>' : '') : '–'},
       {k:'offerAmount', t:'공모금액', r: x => x.spac ? '<span class="mu">–</span>' : eok(x.offerAmount)},
@@ -529,7 +553,7 @@ const TABS = {
       {k:'applied', t:'청구일', l:1},
       {k:'resultDate', t:'결정일', l:1},
       {k:'dur', t:'심사기간', r: x => x.applied && x.resultDate ? Math.round((new Date(x.resultDate) - new Date(x.applied)) / 864e5) + '일' : '–'},
-      {k:'uw', t:'상장주선인', l:1},
+      {k:'uw', t:'상장주선인', l:1, r: x => esc(uwS(x.uw) || '–')},
     ],
     note: () => '예비심사를 청구했다가 스스로 철회했거나 거래소가 승인하지 않은 회사입니다.' },
 };
@@ -569,12 +593,12 @@ function rowsFor(v){
 function renderList(){
   const T = TABS[VIEW];
   const sk = sortKey || T.sort;
-  $('#head').innerHTML = T.cols.map((c, i) => `<th class="${c.l ? 'l' : ''}" data-k="${c.k}" data-i="${i}">${c.t}${sk === c.k ? (sortDir > 0 ? ' ▲' : ' ▼') : ''}<span class="rz"></span></th>`).join('');
+  $('#head').innerHTML = T.cols.map((c, i) => `<th class="${c.l ? 'l' : ''}${c.k === 'name' ? ' stk' : ''}" data-k="${c.k}" data-i="${i}">${c.t}${sk === c.k ? (sortDir > 0 ? ' ▲' : ' ▼') : ''}<span class="rz"></span></th>`).join('');
   applyWidths();
   const rows = rowsFor(VIEW);
   const key = VIEW === 'listed' ? 'code' : 'name';
   $('#body').innerHTML = rows.length
-    ? rows.map(r => `<tr data-id="${esc(r[key])}">${T.cols.map(c => `<td class="${c.l ? 'l' : ''}">${c.r ? c.r(r) : esc(r[c.k] ?? '–')}</td>`).join('')}</tr>`).join('')
+    ? rows.map(r => `<tr data-id="${esc(r[key])}">${T.cols.map(c => `<td class="${c.l ? 'l' : ''}${c.k === 'name' ? ' stk' : ''}">${c.r ? c.r(r) : esc(dfmt(r[c.k]) ?? '–')}</td>`).join('')}</tr>`).join('')
     : `<tr><td colspan="${T.cols.length}" class="empty">${emptyMsg(VIEW)}</td></tr>`;
   $('#tabnote').textContent = (T.note && T.note()) || '';
   $('#track').style.display = T.track ? '' : 'none';
@@ -1139,17 +1163,17 @@ const XE = v => v ? Math.round(v / 1e6) / 100 : null;           // 원 → 억�
 const XP = v => v == null || v === '' || isNaN(v) ? null : +v / 100;  // 35.9 → 0.359 (% 서식)
 const XN = v => v == null || v === '' || isNaN(v) ? null : +v;
 const dartLink = r => r ? { text: '원문', hyperlink: `https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${r}` } : null;
-const F = { int: '#,##0', eok: '#,##0', dec: '#,##0.00', pct: '0.0%;[Red]-0.0%', pct2: '0.00%', date: 'yyyy-mm-dd', x: '0.00"배"', ratio: '#,##0.00":1"' };
+const F = { int: '#,##0', eok: '#,##0', dec: '#,##0.00', pct: '0.0%;[Red]-0.0%', pct2: '0.00%', date: 'yy-mm-dd', x: '0.00"배"', ratio: '#,##0.00":1"' };
 const XSHEETS = [
   { name: '심사중', src: () => PIPE.review || [], sort: 'applied', cols: [
     ['회사', x => x.name, null, 22], ['주요 제품', x => x.product, null, 32], ['업종', x => x.sector, null, 22], ['시장', x => x.market, null, 8], ['상장유형', x => x.listType, null, 12],
     ['스팩합병', x => x.spac ? 'O' : '', null, 8], ['청구일', x => XD(x.applied), F.date, 11], ['경과(일)', x => XN(x.days), F.int, 9],
-    ['예상 결과 시점', x => XD(x.expected), F.date, 13], ['상장주선인', x => x.uw, null, 30],
+    ['예상 결과 시점', x => XD(x.expected), F.date, 13], ['상장주선인', x => uwS(x.uw) || null, null, 18],
   ]},
   { name: '심사승인', src: () => PIPE.approved || [], sort: 'resultDate', cols: [
     ['상태', x => x.after ? x.result : '승인 · 공모 대기', null, 16], ['회사', x => x.name, null, 22], ['주요 제품', x => x.product, null, 32], ['업종', x => x.sector, null, 22], ['시장', x => x.market, null, 8],
     ['상장유형', x => x.listType, null, 12], ['청구일', x => XD(x.applied), F.date, 11], ['승인일', x => XD(x.resultDate), F.date, 11],
-    ['승인 후(일)', x => XN(x.daysSince), F.int, 10], ['승인 효력 만료', x => XD(x.expire), F.date, 13], ['상장주선인', x => x.uw, null, 30],
+    ['승인 후(일)', x => XN(x.daysSince), F.int, 10], ['승인 효력 만료', x => XD(x.expire), F.date, 13], ['상장주선인', x => uwS(x.uw) || null, null, 18],
   ]},
   { name: '수요예측·청약', src: () => PIPE.offering || [], sort: null, cols: [
     ['단계', x => x.stage, null, 11], ['회사', x => x.name, null, 22], ['주요 제품', x => x.product, null, 32], ['업종', x => x.sector, null, 22], ['시장', x => x.market, null, 8], ['상장트랙', x => x.track, null, 18],
@@ -1166,7 +1190,7 @@ const XSHEETS = [
     ['공모할인율 하단', x => XP(x.valuation?.discountRange?.[0]), F.pct2, 11], ['공모할인율 상단', x => XP(x.valuation?.discountRange?.[1]), F.pct2, 11],
     ['상장일 유통(%)', x => XP(x.floatAtListing), F.pct, 11], ['구주매출(%)', x => XP(x.oldShareRatio), F.pct, 10],
     ['기관경쟁률', x => XN(x.instComp), F.ratio, 12], ['의무보유확약(%)', x => XP(x.commit), F.pct, 11], ['일반경쟁률', x => XN(x.subComp), F.ratio, 12],
-    ['주관사', x => (x.underwriters && x.underwriters.length ? x.underwriters.join(', ') : x.uw) || null, null, 26],
+    ['주관사', x => uwS(x.underwriters && x.underwriters.length ? x.underwriters : x.uw) || null, null, 16],
     ['증권신고서', x => dartLink(x.rcpNo), null, 9],
   ]},
   { name: '상장완료', src: () => DATA, sort: 'listed', cols: [
@@ -1188,7 +1212,7 @@ const XSHEETS = [
     ['현재가(원)', x => XN(x.price), F.int, 10], ['공모가 대비', x => XP(x.retVsOffer), F.pct, 10], ['고점 대비', x => XP(x.fromPeak), F.pct, 10],
     ['현재 시총(억원)', x => XE(x.marcapNum), F.eok, 12],
     ['기관경쟁률', x => XN(x.instComp), F.ratio, 12], ['의무보유확약(%)', x => XP(x.commit), F.pct, 11],
-    ['주관사', x => x.uwMain, null, 26], ['인수수수료율(성과 제외)', x => XP(x.feeRate), F.pct2, 13],
+    ['주관사', x => uwS(x.underwriters && x.underwriters.length ? x.underwriters : x.uw38) || null, null, 16], ['인수수수료율(성과 제외)', x => XP(x.feeRate), F.pct2, 13],
     ['인수수수료(억원)', x => XE(x.uwFeeAmtDoc || x.uwFee), F.dec, 12], ['성과수수료(한도)', x => XP(x.perfFeeRate), F.pct2, 12],
     ['증권신고서', x => dartLink(x.rcpNo), null, 9],
   ]},
@@ -1196,7 +1220,7 @@ const XSHEETS = [
     ['결과', x => x.result, null, 14], ['회사', x => x.name, null, 22], ['시장', x => x.market, null, 8], ['상장유형', x => x.listType, null, 12],
     ['청구일', x => XD(x.applied), F.date, 11], ['결정일', x => XD(x.resultDate), F.date, 11],
     ['심사기간(일)', x => x.applied && x.resultDate ? Math.round((new Date(x.resultDate) - new Date(x.applied)) / 864e5) : null, F.int, 11],
-    ['상장주선인', x => x.uw, null, 30],
+    ['상장주선인', x => uwS(x.uw) || null, null, 18],
   ]},
 ];
 async function downloadExcel(){
@@ -1211,7 +1235,7 @@ async function downloadExcel(){
     for (const S of XSHEETS){
       let rows = S.src().slice();
       if (S.sort) rows.sort((a, b) => String(b[S.sort] || '').localeCompare(String(a[S.sort] || '')));
-      const ws = wb.addWorksheet(S.name, { views: [{ state: 'frozen', xSplit: S.name === '상장완료' ? 1 : 0, ySplit: 4, showGridLines: false }] });
+      const ws = wb.addWorksheet(S.name, { views: [{ state: 'frozen', xSplit: S.cols.findIndex(c => c[0] === '회사') + 1, ySplit: 4, showGridLines: false }] });
       const nc = S.cols.length;
       ws.columns = S.cols.map(c => ({ width: c[3] || 12 }));
       ws.mergeCells(1, 1, 1, Math.min(nc, 8));
