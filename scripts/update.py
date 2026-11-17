@@ -1521,10 +1521,13 @@ def main():
                 "perfFeeRate", "oldShareRatio")
     mix_dbg = []
     for it in items:
-        if it["code"] in no_doc and (it.get("offerShares") or it.get("totalShares") or it.get("peers")):
+        if it["code"] in no_doc and (it.get("offerShares") or it.get("peers") or it.get("uwFee")
+                                     or (it.get("totalShares") and it.get("totalSharesSrc") != "상장주식수")):
             mix_dbg.append({"code": it["code"], "name": it["name"], "sameObj": no_doc[it["code"]] == id(it),
                             "vals": {k: it.get(k) for k in ("offerShares", "totalShares", "uwFee")}})
             for k in DOC_KEYS:
+                if k == "totalShares" and it.get("totalSharesSrc") == "상장주식수":
+                    continue
                 it[k] = None
             it["peerChecked"] = False
             it["hasLockup"] = False
