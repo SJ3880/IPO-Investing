@@ -331,6 +331,7 @@ def quality_pass(items, log=print):
     fx = lambda it, what, old, new: fixes.append({"name": it["name"], "listed": it["listed"], "what": what, "old": old, "new": new})
     for it in items:
         spac = bool(it.get("spac"))
+        fee_base = it.pop("_feeBase", None)                             # 주요정보의 인수금액(인수대가와 같은 기준, 보통 희망가 하단)
         o, oa = it.get("offer"), it.get("offerAmount")
         os_, ts = it.get("offerShares"), it.get("totalShares")
         # 1) 공모주식수가 상장예정주식수보다 크거나 80% 넘으면 잘못 읽은 것
@@ -394,6 +395,13 @@ def quality_pass(items, log=print):
             v = None
             if cur:
                 fx(it, "인수수수료 금액", cur, None)
+        # 주요정보의 인수대가는 희망가(보통 하단) 기준 → 수수료율이 그 기준으로 맞으면 확정 공모금액 기준으로 환산
+        if v and rd and fee_base and abs(fee_base / oa - 1) > 0.01:
+            gap_base, gap_final = abs(v / fee_base * 100 / rd - 1), abs(v / oa * 100 / rd - 1)
+            if gap_base <= 0.06 and gap_base < gap_final:
+                nv = round(v * oa / fee_base)
+                fx(it, "인수수수료 금액(확정 공모금액 기준)", v, nv)
+                v = nv
         it["uwFeeAmtDoc"] = v
         it["uwFee"] = v
         if v and not rd:
@@ -1453,6 +1461,7 @@ def main():
         it["oldShareRatio"] = det.get("oldShareRatio")
         it["uwFee"] = det.get("uwFee")
         fee_base = det.get("amount") or it.get("offerAmount")       # 인수대가와 같은 기준(주요정보 금액)으로 나눈다
+        it["_feeBase"] = det.get("amount")                          # quality_pass 에서 확정 공모금액 기준으로 환산할 때 씀(저장 안 됨)
         it["uwFeeRate"] = det.get("uwFeeRate") or (round(det["uwFee"] / fee_base * 100, 2)
                                                    if det.get("uwFee") and fee_base else None)
         it["uwFeeRateDoc"] = det.get("uwFeeRateDoc")
@@ -1462,7 +1471,7 @@ def main():
         if not it["uwFee"] and not it["uwFeeAmtDoc"] and it["uwFeeRateDoc"] and it.get("offerAmount"):
             it["uwFee"] = round(it["offerAmount"] * it["uwFeeRateDoc"] / 100)   # 금액이 표에 없으면 공모금액 × 수수료율
         it["uwMethod"] = det.get("uwMethod")
-        it["underwriters"] = det.get("underwriters") or None
+        it["underwriters"] = det.get("underwriters") or split_uw(it.get("uw38")) or None   # 신고서에 없으면 38 주관사
         it["putback"] = det.get("putback")
         if v.get("appliedMult") and fair and it.get("offer") and not it.get("spac"):
             it["impliedMult"] = round(v["appliedMult"] * it["offer"] / fair, 2)   # 확정공모가 기준 실제 배수

@@ -98,6 +98,9 @@ def main():
             if fresh.get("dartStatus"):
                 runlog["errors"].append({"name": name, "err": fresh.get("dartStatus")})
             continue
+        od = dartlib.doc_old_ratio(fresh.get("fundDoc"), it.get("offerAmount"))   # 낮 업데이트와 같은 기준(원문 조달 내역 우선)
+        if od is not None:
+            fresh["oldShareRatio"] = od
         diffs = []
         for label, get in CMP.items():
             a, b = get(det), get(fresh)

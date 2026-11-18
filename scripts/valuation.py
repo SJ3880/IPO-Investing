@@ -50,9 +50,14 @@ def _multiple(s):
     return v if v is not None and 0 < v < 1000 else None
 
 
+# 표의 다른 칸이 회사명으로 읽힌 것: 선정 여부(O/X·제외·선정), 회계기준, 학력, 자금 표, 주식수, 기간 기준
+NOT_COMPANY = re.compile(r"^(O|X|○|×|제외|선정|미선정|적정|부적정|적합|부적합|개별|K-?IFRS개별|비경상제외|박사(\(의사포함\))?|석사|학사|"
+                         r"총소요자금|지출예정|백만위안|[\d,]+주|`?\d{2,4}년.*기준)$", re.I)
+
+
 def _is_name(s):
     s = _clean(s)
-    if not s or len(s) > 30 or NOT_NAME.match(s.replace(" ", "")):
+    if not s or len(s) > 30 or NOT_NAME.match(s.replace(" ", "")) or NOT_COMPANY.match(s.replace(" ", "")):
         return False
     if re.fullmatch(r"(유사|비교|대상)?(회사|기업|법인)\s*[A-Z\d]+", s.replace(" ", "")):
         return False
@@ -514,6 +519,7 @@ def sanitize(v):
     if not v:
         return v
     ps, marked = [], set()
+    junk = any(NOT_COMPANY.match(_name(p.get("name") or "").replace(" ", "")) for p in v.get("peers") or [])
     for p in v.get("peers") or []:
         raw = p.get("name") or ""
         n = _name(raw)
@@ -525,10 +531,12 @@ def sanitize(v):
         ps = []
     am = v.get("appliedMult")
     if ps and am:
+        named = list(ps)
         ps, ok = reconcile_peers(ps, am, marked=marked)
         # 평균이 적용 배수와 3% 넘게 다르면 최종 비교회사 표가 아님(1·2차 후보·다른 표) → 보여주지 않음
         if not ok and abs(sum(p["v"] for p in ps) / len(ps) - am) / am > 0.03:
-            ps = []
+            # 단, 이름이 깨진 줄(O·X 등)을 뺀 탓에 평균이 달라진 경우엔 이름이 확실한 회사는 남긴다(검증 표시는 안 함)
+            ps = named if junk else []
     else:
         ok = False
     v["peers"], v["peerChecked"] = ps, bool(ok)
