@@ -15,6 +15,17 @@ def norm(name):
     return re.sub(r"[\s\.\-·]", "", s).lower()
 
 
+# 영문 약자를 한글로 읽은 이름(KTE ↔ 케이티이): KIND·DART가 같은 회사를 서로 다르게 적는 경우 맞추기
+_LETTER = dict(zip("ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                   "에이 비 씨 디 이 에프 지 에이치 아이 제이 케이 엘 엠 엔 오 피 큐 알 에스 티 유 브이 더블유 엑스 와이 제트".split()))
+
+
+def name_keys(name):
+    n = norm(name)
+    spelled = re.sub(r"[a-z]", lambda m: _LETTER[m[0].upper()], n)
+    return {n, spelled}
+
+
 def d(s):
     m = re.search(r"(\d{4})[./-](\d{1,2})[./-](\d{1,2})", str(s or ""))
     return date(int(m[1]), int(m[2]), int(m[3])) if m else None
@@ -111,7 +122,8 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
             ds, de = drange(r.get("수요예측일정"))
             ss, se = drange(r.get("청약일정"))
             ld = d(r.get("상장예정일"))
-            filed_names.setdefault(norm(name), []).append(filed or ds or ss)
+            for k in name_keys(name):
+                filed_names.setdefault(k, []).append(filed or ds or ss)
             near = [x for x in (ds, ss, ld) if x]
             recent = (filed and (today - filed).days <= 200) or \
                      (near and max(near) >= today - timedelta(days=45))
@@ -195,6 +207,25 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
             if price and row.get("totalShares"):
                 row["marcapAtOffer"] = int(price * row["totalShares"])
             offering.append(row)
+    # 같은 증권신고서(접수번호)가 KIND에 이름만 달리 두 번 올라온 경우(하나에어로 ↔ 하나에어로다이내믹스) → 하나로 합침
+    merged = {}
+    for row in offering:
+        key = row.get("rcpNo")
+        if not key:
+            merged[id(row)] = row
+            continue
+        if key in merged:
+            a, b = merged[key], row
+            if sum(v is not None for v in b.values()) > sum(v is not None for v in a.values()):
+                a, b = b, a
+            for k, v in b.items():
+                if a.get(k) is None and v is not None:
+                    a[k] = v
+            log(f"  - 공모 진행 중복 합침: {b['name']} → {a['name']} (접수번호 {key})")
+            merged[key] = a
+        else:
+            merged[key] = row
+    offering = list(merged.values())
     # 상장이 가까운 순: 상장 대기 → 청약 중 → 청약 대기 → 수요예측 중 → 신고서 제출, 같은 단계는 날짜 빠른 순
     order = {"상장 대기": 0, "청약 중": 1, "청약 대기": 2, "수요예측 중": 3, "신고서 제출": 4}
     offering.sort(key=lambda x: (order.get(x["stage"], 9),
@@ -226,7 +257,7 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
             if st == "approved":
                 if is_listed(name, ap):
                     continue
-                if any(f and ap and f >= ap for f in filed_names.get(norm(name), [])):
+                if any(f and ap and f >= ap for k in name_keys(name) for f in filed_names.get(k, [])):
                     continue            # 이미 증권신고서 제출 → 공모 진행 탭
                 if rd:
                     row["daysSince"] = (today - rd).days

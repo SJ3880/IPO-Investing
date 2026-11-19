@@ -808,8 +808,16 @@ TRACKS = [
     ("기술특례(기술평가)", re.compile(r"기술\s*평가\s*(특례|결과|등급)|기술성장기업|기술특례")),
     ("이익미실현(테슬라)", re.compile(r"이익\s*미실현\s*(기업|요건|특례)?|테슬라\s*요건")),
 ]
-SELF = re.compile(r"(당사|동사|발행회사)(는|가|의|와|로서|로|에)")
+SELF = re.compile(r"(당사|동사|발행회사)(는|가|의|와(?!\s*동일)|로서|로|에)")   # '동사와 같은 기술성장기업'은 자기 얘기, '동사와 동일한 업종의 A사'는 비교회사
 NEG = re.compile(r"(해당하지\s*않|아닙니다|아니며|아닌|없습니다|제외)")
+# 이미 상장한 다른 회사(비교회사·동종업체) 이야기: 공모 전 회사가 자기 상장을 과거형으로 쓸 수 없음
+OTHER_CO = re.compile(r"상장(하였|되었|한\s*바\s*있)(습니다|으며|고)|에\s*속하며")
+
+
+def bad_track_evidence(ev):
+    """예전에 저장된 트랙 근거가 다른 회사 이야기인지('동사와 동일한 … 2025년 11월 기술성장기업 특례로 상장하였습니다')"""
+    ev = str(ev or "")
+    return bool(ev) and bool(re.match(r"\s*(당사|동사|발행회사)와\s*동일", ev) or OTHER_CO.search(ev))
 
 
 def listing_track(plain):
@@ -822,7 +830,7 @@ def listing_track(plain):
         for m in SELF.finditer(snt):
             clause = snt[m.start(): m.start() + 220]      # '당사는 …' 뒤쪽만 본다
             clause = re.sub(r"\([^)]*\)", "", clause)       # 괄호 안 규정 설명 제거
-            if NEG.search(clause) or not any(k in clause for k in ("상장", "특례", "요건", "평가", "추천")):
+            if NEG.search(clause) or OTHER_CO.search(clause) or not any(k in clause for k in ("상장", "특례", "요건", "평가", "추천")):
                 continue
             for name, rx in TRACKS:
                 if rx.search(clause):

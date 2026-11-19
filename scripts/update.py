@@ -331,6 +331,7 @@ def quality_pass(items, log=print):
     fx = lambda it, what, old, new: fixes.append({"name": it["name"], "listed": it["listed"], "what": what, "old": old, "new": new})
     for it in items:
         spac = bool(it.get("spac"))
+        b0 = it.get("band") if isinstance(it.get("band"), list) else None
         fee_base = it.pop("_feeBase", None)                             # 주요정보의 인수금액(인수대가와 같은 기준, 보통 희망가 하단)
         o, oa = it.get("offer"), it.get("offerAmount")
         os_, ts = it.get("offerShares"), it.get("totalShares")
@@ -396,15 +397,20 @@ def quality_pass(items, log=print):
             if cur:
                 fx(it, "인수수수료 금액", cur, None)
         # 주요정보의 인수대가는 희망가(보통 하단) 기준 → 수수료율이 그 기준으로 맞으면 확정 공모금액 기준으로 환산
-        if v and rd and fee_base and abs(fee_base / oa - 1) > 0.01:
-            gap_base, gap_final = abs(v / fee_base * 100 / rd - 1), abs(v / oa * 100 / rd - 1)
+        # 주요정보 금액이 없으면 희망밴드 하단·상단 × 공모주식수를 기준 후보로 본다(바이오다인: 하단 기준 금액만 표에 있음)
+        bases = [fee_base] if fee_base else ([x * os_ for x in (b0 or [])[:2] if x] if os_ else [])
+        for fb in bases:
+            if not (v and rd and fb and abs(fb / oa - 1) > 0.01):
+                continue
+            gap_base, gap_final = abs(v / fb * 100 / rd - 1), abs(v / oa * 100 / rd - 1)
             if gap_base <= 0.06 and gap_base < gap_final:
-                nv = round(v * oa / fee_base)
+                nv = round(v * oa / fb)
                 fx(it, "인수수수료 금액(확정 공모금액 기준)", v, nv)
                 v = nv
+                break
         it["uwFeeAmtDoc"] = v
         it["uwFee"] = v
-        if v and not rd:
+        if v:                                                          # 실효 수수료율 = 최종 금액 ÷ 확정 공모금액(희망가 기준 옛 비율이 남지 않게)
             it["uwFeeRate"] = round(v / oa * 100, 2)
         # 4) 그 밖에 이상해 보이는 값(자동 수정은 안 하고 기록만)
         b = it.get("band")
@@ -1314,7 +1320,9 @@ def main():
     except Exception:
         pass
 
-    def resolve_track(it, doc_track):
+    def resolve_track(it, doc_track, ev=None):
+        if ev is not None and doc_track and doc_track != "일반" and dartlib.bad_track_evidence(ev):
+            doc_track = "일반"                          # 근거 문장이 비교회사 이야기 → 신고서 트랙으로 쓰지 않음
         if it["code"] in manual_tracks:
             return manual_tracks[it["code"]], "직접 입력"
         n, c5 = pipelib.norm(it["name"]), "#" + it["code"][:5]   # 이름이 바뀌어도 종목코드로 찾음
@@ -1356,7 +1364,7 @@ def main():
             rc = det.get("rcpNo") or (recent_off.get(pipelib.norm(it["name"])) or {}).get("rcpNo")   # 막 상장: 공모 때 신고서
             if det.get("techVer") == 10 or not rc:
                 continue
-            if not has_tech_eval(resolve_track(it, det.get("track"))[0]):
+            if not has_tech_eval(resolve_track(it, det.get("track"), det.get("trackEvidence") or "")[0]):
                 continue
             try:
                 xml = dt.document_text(rc)
@@ -1395,11 +1403,11 @@ def main():
                 light = recent2y or not disc_at or (today - date.fromisoformat(disc_at)).days >= 7   # 오래된 종목 공시는 주 1회
                 ai_budget = dart_detail(dt, it["code"], it["name"], date.fromisoformat(it["listed"]), det, ai_budget, heavy,
                                        spac=bool(it.get("spac")), light=light,
-                                       tech=has_tech_eval(resolve_track(it, det.get("track"))[0]))
+                                       tech=has_tech_eval(resolve_track(it, det.get("track"), det.get("trackEvidence") or "")[0]))
             except Exception as e:
                 log(f"  - {it['name']} DART 전체 실패: {e}")
         # 목록 화면용 요약 필드
-        it["track"], it["trackSrc"] = resolve_track(it, det.get("track"))
+        it["track"], it["trackSrc"] = resolve_track(it, det.get("track"), det.get("trackEvidence") or "")
         if it["track"] is None and det.get("dartStatus", "").startswith("증권신고서 없음"):
             it["track"] = "공모 없음(스팩합병·이전상장)"
         it["floatAtListing"] = det.get("floatAtListing")
@@ -1484,7 +1492,8 @@ def main():
                 det["marketAt"] = it["asOf"]
                 det["sharesAdj"] = it.get("adj")
         so = det.get("sharesOut")
-        if so and det.get("totalShares") and det["totalShares"] > so * 3:   # 상장예정주식수를 잘못 읽은 경우
+        so_then = so * (det.get("sharesAdj") or 1.0) if so else None    # 상장 당시 기준 주식수(병합·분할·무상증자 되돌림)
+        if so_then and det.get("totalShares") and det["totalShares"] > so_then * 3:   # 상장예정주식수를 잘못 읽은 경우
             det["totalShares"] = None
             it["totalShares"] = None
         fix_adj(it, det, so, dt)
