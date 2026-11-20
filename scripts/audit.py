@@ -101,6 +101,15 @@ def main():
         od = dartlib.doc_old_ratio(fresh.get("fundDoc"), it.get("offerAmount"))   # 낮 업데이트와 같은 기준(원문 조달 내역 우선)
         if od is not None:
             fresh["oldShareRatio"] = od
+        # 상장예정주식수: 공모주식수와 안 맞는 값(공모주식수를 잘못 읽음·보호예수 합계 등)은 버리고,
+        # 기존 값이 상장 당시 주식수(지금 주식수 ÷ 병합·분할 비율)와 맞는데 새 값이 크게 다르면 기존 값 유지(아이디피)
+        ts_new = U.sane_total(fresh.get("totalShares"), fresh.get("shares") or det.get("shares"))
+        so = det.get("sharesOut")
+        so_then = so * (det.get("sharesAdj") or 1.0) if so else None
+        ts_old = det.get("totalShares")
+        if ts_new and ts_old and so_then and abs(ts_old / so_then - 1) <= 0.03 and abs(ts_new / so_then - 1) > 0.10:
+            ts_new = None
+        fresh["totalShares"] = ts_new
         diffs = []
         for label, get in CMP.items():
             a, b = get(det), get(fresh)

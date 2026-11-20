@@ -399,10 +399,15 @@ def quality_pass(items, log=print):
         # 주요정보의 인수대가는 희망가(보통 하단) 기준 → 수수료율이 그 기준으로 맞으면 확정 공모금액 기준으로 환산
         # 주요정보 금액이 없으면 희망밴드 하단·상단 × 공모주식수를 기준 후보로 본다(바이오다인: 하단 기준 금액만 표에 있음)
         bases = [fee_base] if fee_base else ([x * os_ for x in (b0 or [])[:2] if x] if os_ else [])
+        # 금액이 기본+성과수수료 합계인 경우(영광와이케이엠씨: 3%+1.5%)도 같은 방식으로 본다
+        # (주요정보 인수대가가 있을 때만, 기본 수수료율로 확정 공모금액과 이미 맞으면 그대로 둠)
+        pf = it.get("perfFeeRate") or 0
+        rates = [rd] + ([rd + pf] if fee_base and v and rd and 0 < pf <= 5 and abs(v / oa * 100 / rd - 1) > 0.06 else [])
         for fb in bases:
             if not (v and rd and fb and abs(fb / oa - 1) > 0.01):
                 continue
-            gap_base, gap_final = abs(v / fb * 100 / rd - 1), abs(v / oa * 100 / rd - 1)
+            gap_base = min(abs(v / fb * 100 / r - 1) for r in rates)
+            gap_final = min(abs(v / oa * 100 / r - 1) for r in rates)
             if gap_base <= 0.06 and gap_base < gap_final:
                 nv = round(v * oa / fb)
                 fx(it, "인수수수료 금액(확정 공모금액 기준)", v, nv)
