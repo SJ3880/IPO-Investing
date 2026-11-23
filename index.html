@@ -135,6 +135,32 @@ table.raw td{border:1px solid var(--line);padding:4px 6px;text-align:center;whit
 .stage .s{color:var(--muted);font-size:12px}
 .stage:not(:last-child)::after{content:"›";position:absolute;right:-8px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;z-index:1}
 .ov{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:12px}
+.calhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.calnav{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.calnav b{min-width:92px;text-align:center;font-size:15px}
+.calnav .btn{padding:4px 10px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;cursor:pointer;font:inherit;font-size:13px}
+.calnav .btn:hover{border-color:var(--accent)}
+.calgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line);border-radius:8px;overflow:hidden}
+.calgrid .wd{font-size:12px;color:var(--muted);text-align:center;padding:6px 0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg)}
+.calgrid .day{min-height:96px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:4px;font-size:12px;cursor:pointer;min-width:0}
+.calgrid .day.other{opacity:.38}
+.calgrid .day.sel{outline:2px solid var(--accent);outline-offset:-2px}
+.calgrid .day .dn{font-size:12px;color:var(--muted);margin-bottom:3px;display:flex;justify-content:space-between}
+.calgrid .day.today .dn b{background:var(--accent);color:#fff;border-radius:10px;padding:0 6px}
+.calgrid .wd.sun,.calgrid .day.sun .dn b{color:#d9534f}.calgrid .wd.sat,.calgrid .day.sat .dn b{color:#3b7ddd}
+.calgrid .day.today .dn b{color:#fff}
+.calgrid .ev{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:4px;padding:1px 5px;margin-bottom:2px;font-size:11.5px;line-height:1.5}
+.calgrid .more{font-size:11px;color:var(--muted)}
+.calgrid .dots{display:none}
+#calDay{margin-top:10px}
+#calDay ul{list-style:none;margin:0;padding:0}
+#calDay li{display:grid;grid-template-columns:88px 64px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;align-items:center}
+.charts3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:10px}
+.ch3t{font-size:13px;font-weight:600;margin-bottom:4px}
+.ch3t i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+@media (max-width:900px){.charts3{grid-template-columns:1fr}}
+@media (max-width:640px){.calgrid .day{min-height:54px;padding:3px}.calgrid .ev,.calgrid .more{display:none}.calgrid .dots{display:flex;gap:3px;flex-wrap:wrap}
+  .calgrid .dots i{width:7px;height:7px;border-radius:50%}.calgrid .dots i.t-수요예측{background:#7c5cff}.calgrid .dots i.t-청약{background:#2f6fed}.calgrid .dots i.t-상장{background:#1baf7a}}
 .ov h4{margin:0 0 8px;font-size:14px}
 .cal{list-style:none;margin:0;padding:0;max-height:330px;overflow-y:auto}
 .cal li{display:grid;grid-template-columns:78px 58px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;align-items:center}
@@ -233,15 +259,24 @@ footer details{margin-bottom:12px}
   <!-- 한눈에 -->
   <section class="view" id="v-overview">
     <div class="stages" id="stages"></div>
-    <div class="ov">
-      <div class="card"><h4>다가오는 일정 <span class="mu" style="font-weight:400;font-size:12px">· 3주</span></h4><ul class="cal" id="cal"></ul></div>
-      <div class="card viz">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
-          <h4 style="margin:0">월별 건수 <span class="mu" style="font-weight:400;font-size:12px">· 코스피+코스닥</span></h4>
-          <div class="seg" id="rangeSeg"><button data-r="24" class="on">최근 2년</button><button data-r="999">2015년~</button></div>
-        </div>
-        <div class="lgd"><span><i style="background:var(--s1)"></i>예비심사 청구</span><span><i style="background:var(--s2)"></i>심사 승인</span><span><i style="background:var(--s3)"></i>상장</span></div>
-        <div class="chartbox" id="monthly"></div>
+    <div class="card">
+      <div class="calhead">
+        <h4 style="margin:0">일정 <span class="mu" style="font-weight:400;font-size:12px">· 수요예측 · 청약 · 상장</span></h4>
+        <div class="calnav"><button class="btn" id="calPrev" aria-label="이전 달">‹</button><b id="calTitle"></b><button class="btn" id="calNext" aria-label="다음 달">›</button><button class="btn" id="calToday">오늘</button>
+          <span class="lgd" style="margin:0 0 0 6px"><span><span class="tag t-수요예측">수요예측</span></span><span><span class="tag t-청약">청약</span></span><span><span class="tag t-상장">상장</span></span></span></div>
+      </div>
+      <div class="calgrid" id="calGrid"></div>
+      <div id="calDay"></div>
+    </div>
+    <div class="card viz" style="margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <h4 style="margin:0">월별 건수 <span class="mu" style="font-weight:400;font-size:12px">· 코스피+코스닥</span></h4>
+        <div class="seg" id="rangeSeg"><button data-r="24" class="on">최근 2년</button><button data-r="999">2015년~ (분기)</button></div>
+      </div>
+      <div class="charts3">
+        <div><div class="ch3t"><i style="background:var(--s1)"></i>예비심사 청구 <span class="mu" id="sum-a"></span></div><div class="chartbox" id="mc-a"></div></div>
+        <div><div class="ch3t"><i style="background:var(--s2)"></i>심사 승인 <span class="mu" id="sum-b"></span></div><div class="chartbox" id="mc-b"></div></div>
+        <div><div class="ch3t"><i style="background:var(--s3)"></i>상장 <span class="mu" id="sum-c"></span></div><div class="chartbox" id="mc-c"></div></div>
       </div>
     </div>
     <div class="card pulse" style="margin-top:12px">
@@ -636,10 +671,7 @@ function renderOverview(){
     st('offering', '수요예측·청약', of.length, `지금 진행 중 ${subing}곳`) +
     st('listed', '최근 30일 상장', recent30, `${thisYear}년 누적 ${ytd}곳`) +
     st('withdrawn', '철회·미승인', wd12, '최근 1년');
-  const cal = PIPE.calendar || [];
-  $('#cal').innerHTML = cal.length ? cal.map(e => `<li><span class="dt">${md(e.date)}${e.end !== e.date ? '~' + md(e.end) : ''}</span>
-      <span class="tag t-${e.type}">${e.type}</span><span>${esc(e.name)}</span></li>`).join('')
-    : `<li style="display:block" class="mu">${PIPE.updated ? '3주 안에 예정된 일정이 없습니다.' : '다음 업데이트 후 표시됩니다.'}</li>`;
+  renderCal();
   const qs = (PIPE.quarterly || []).slice(-8).reverse();
   $('#qtable').innerHTML = '<tr><th>분기</th><th>상장</th><th>첫날 수익률 중앙값</th><th>밴드 상단 이상</th><th>기관경쟁률 중앙값</th></tr>' +
     (qs.length ? qs.map(q => `<tr><td>${q.q}</td><td>${q.n}곳</td><td>${pct(q.firstMed)}</td><td>${q.topBand != null ? q.topBand + '%' : '–'}</td><td>${q.instCompMed ? fmt(q.instCompMed) + ':1' : '–'}</td></tr>`).join('')
@@ -693,41 +725,75 @@ function renderPulse(rv, ap, of, wd){
   $('#pulseKw').innerHTML = '';
 }
 
+/* ---------- 일정 캘린더(월) ---------- */
+const isoOf = dt => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+let CAL_M = null, CAL_SEL = null;
+function calEvents(){
+  const ev = (PIPE.calendar || []).map(e => ({ ...e }));
+  const have = new Set(ev.filter(e => e.type === '상장').map(e => e.name.replace(/\(.*?\)/g, '')));
+  for (const x of DATA) if (x.listed && !have.has(x.name.replace(/\(.*?\)/g, ''))) ev.push({ date: x.listed, end: x.listed, type: '상장', name: x.name, done: true });   // 이미 상장한 회사
+  const ord = { 수요예측: 0, 청약: 1, 상장: 2 };
+  return ev.sort((a, b) => (ord[a.type] - ord[b.type]) || a.name.localeCompare(b.name));
+}
+function renderCal(){
+  const now = new Date(), today = isoOf(now);
+  if (!CAL_M) CAL_M = new Date(now.getFullYear(), now.getMonth(), 1);
+  const y = CAL_M.getFullYear(), m = CAL_M.getMonth();
+  $('#calTitle').textContent = `${y}년 ${m + 1}월`;
+  const EV = calEvents(), on = d => { const w = new Date(d + 'T00:00').getDay(); return (w === 0 || w === 6) ? [] : EV.filter(e => e.date <= d && d <= e.end); };   // 주말엔 수요예측·청약·상장 없음
+  const first = new Date(y, m, 1), start = new Date(y, m, 1 - first.getDay());
+  const weeks = Math.ceil((first.getDay() + new Date(y, m + 1, 0).getDate()) / 7);
+  let h = ['일', '월', '화', '수', '목', '금', '토'].map((w, i) => `<div class="wd ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${w}</div>`).join('');
+  for (let i = 0; i < weeks * 7; i++) {
+    const dt = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i), d = isoOf(dt), es = on(d), dow = dt.getDay();
+    const cls = ['day', dt.getMonth() !== m && 'other', d === today && 'today', d === CAL_SEL && 'sel', dow === 0 && 'sun', dow === 6 && 'sat'].filter(Boolean).join(' ');
+    h += `<div class="${cls}" data-d="${d}"><div class="dn"><b>${dt.getDate()}</b>${es.length > 3 ? `<span>${es.length}</span>` : ''}</div>
+      ${es.slice(0, 3).map(e => `<span class="ev tag t-${e.type}" title="${esc(`${e.type} · ${e.name}${e.end !== e.date ? ` (${md(e.date)}~${md(e.end)})` : ''}`)}">${esc(e.name.replace(/\(유가\)/, ''))}</span>`).join('')}
+      ${es.length > 3 ? `<span class="more">+${es.length - 3}건 더보기</span>` : ''}
+      <span class="dots">${es.slice(0, 6).map(e => `<i class="tag t-${e.type}" style="padding:0"></i>`).join('')}</span></div>`;
+  }
+  $('#calGrid').innerHTML = h;
+  document.querySelectorAll('#calGrid .day').forEach(c => c.onclick = () => { CAL_SEL = CAL_SEL === c.dataset.d ? null : c.dataset.d; renderCal(); });
+  const sel = CAL_SEL || (today.slice(0, 7) === `${y}-${String(m + 1).padStart(2, '0')}` ? today : null);
+  const list = CAL_SEL ? on(CAL_SEL) : EV.filter(e => e.end >= (sel || isoOf(first)) && e.date <= isoOf(new Date(y, m + 1, 0))).sort((a, b) => a.date.localeCompare(b.date));
+  $('#calDay').innerHTML = `<div class="mu" style="font-size:12px;margin-bottom:4px">${CAL_SEL ? `${md(CAL_SEL)} 일정` : sel ? '오늘 이후 이번 달 일정' : `${m + 1}월 일정`} ${list.length}건${CAL_SEL ? ' · 날짜를 다시 누르면 전체로' : ' · 날짜를 누르면 그날 일정만'}</div>
+    <ul>${list.map(e => `<li><span class="mu">${md(e.date)}${e.end !== e.date ? '~' + md(e.end) : ''}</span><span class="tag t-${e.type}">${e.type}</span><span>${esc(e.name)}</span></li>`).join('') || '<li style="display:block" class="mu">일정이 없어요.</li>'}</ul>`;
+}
+
 let RANGE = 24;
 function drawMonthly(){
-  let ms = PIPE.monthly || [];
-  const box = $('#monthly');
-  if (!ms.length) { box.innerHTML = '<div class="empty">다음 업데이트 후 표시됩니다.</div>'; return; }
+  const ms = PIPE.monthly || [];
+  if (!ms.length) { ['a', 'b', 'c'].forEach(k => $('#mc-' + k).innerHTML = '<div class="empty">다음 업데이트 후 표시됩니다.</div>'); return; }
   let pts;
-  if (RANGE < 999) pts = ms.slice(-RANGE).map(m => ({label: m.m, a: m.applied, b: m.approved, c: m.listed}));
+  if (RANGE < 999) pts = ms.slice(-RANGE).map(m => ({ label: m.m, a: m.applied, b: m.approved, c: m.listed }));
   else { const q = {}; ms.forEach(m => { const [y, mo] = m.m.split('-'); const k = `${y} Q${Math.floor((+mo - 1) / 3) + 1}`;
-      q[k] = q[k] || {label: k, a: 0, b: 0, c: 0}; q[k].a += m.applied; q[k].b += m.approved; q[k].c += m.listed; }); pts = Object.values(q); }
-  const W = 720, H = 220, L = 30, R = 6, T = 8, B = 26, iw = W - L - R, ih = H - T - B;
-  const max = Math.max(4, ...pts.flatMap(p => [p.a, p.b, p.c]));
-  const step = Math.ceil(max / 4), top = step * 4, gw = iw / pts.length, bw = Math.max(2, Math.min(10, (gw - 4) / 3 - 2));
-  const y = v => T + ih - v / top * ih;
-  let g = '';
-  for (let i = 0; i <= 4; i++) { const v = step * i; g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end" font-size="10" fill="var(--muted)">${v}</text>`; }
-  const every = Math.ceil(pts.length / 8);
-  pts.forEach((p, i) => {
-    const cx = L + gw * i + gw / 2, x0 = cx - (bw * 3 + 4) / 2;
-    [['a', 'var(--s1)'], ['b', 'var(--s2)'], ['c', 'var(--s3)']].forEach(([k, col], j) => {
-      const v = p[k]; if (!v) return; const x = x0 + j * (bw + 2), h = ih - (y(v) - T);
-      g += `<path d="M${x},${T + ih} v${-(h - 2)} a2,2 0 0 1 2,-2 h${bw - 4 > 0 ? bw - 4 : 0} a2,2 0 0 1 2,2 v${h - 2} z" fill="${col}"/>`;
+      q[k] = q[k] || { label: k, a: 0, b: 0, c: 0 }; q[k].a += m.applied; q[k].b += m.approved; q[k].c += m.listed; }); pts = Object.values(q); }
+  const NAME = { a: '예비심사 청구', b: '심사 승인', c: '상장' };
+  [['a', 'var(--s1)'], ['b', 'var(--s2)'], ['c', 'var(--s3)']].forEach(([k, col]) => {
+    const box = $('#mc-' + k), tot = pts.reduce((s, p) => s + (p[k] || 0), 0);
+    $('#sum-' + k).textContent = `· 기간 합계 ${tot}건 · ${RANGE < 999 ? '월' : '분기'} 평균 ${(tot / pts.length).toFixed(1)}건`;
+    const W = 360, H = 190, L = 26, R = 4, T = 8, B = 24, iw = W - L - R, ih = H - T - B;
+    const max = Math.max(4, ...pts.map(p => p[k] || 0)), step = Math.ceil(max / 4), top = step * 4, gw = iw / pts.length, bw = Math.max(2, Math.min(14, gw - 3));
+    const y = v => T + ih - v / top * ih;
+    let g = '';
+    for (let i = 0; i <= 4; i++) { const v = step * i; g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end" font-size="9.5" fill="var(--muted)">${v}</text>`; }
+    const every = Math.ceil(pts.length / 6);
+    pts.forEach((p, i) => {
+      const cx = L + gw * i + gw / 2, v = p[k] || 0;
+      if (v) { const h = ih - (y(v) - T), r = Math.min(2, bw / 2, h / 2); g += `<path d="M${cx - bw / 2},${T + ih} v${-(h - r)} a${r},${r} 0 0 1 ${r},${-r} h${bw - 2 * r} a${r},${r} 0 0 1 ${r},${r} v${h - r} z" fill="${col}"/>`; }
+      if (i % every === 0) g += `<text x="${cx}" y="${H - 7}" text-anchor="middle" font-size="9.5" fill="var(--muted)">${RANGE < 999 ? p.label.slice(2).replace('-', '.') : p.label.replace('20', "'")}</text>`;
+      g += `<rect x="${L + gw * i}" y="${T}" width="${gw}" height="${ih}" fill="transparent" data-i="${i}"/>`;
     });
-    if (i % every === 0) g += `<text x="${cx}" y="${H - 8}" text-anchor="middle" font-size="10" fill="var(--muted)">${RANGE < 999 ? p.label.slice(2).replace('-', '.') : p.label.replace('20', "'")}</text>`;
-    g += `<rect x="${L + gw * i}" y="${T}" width="${gw}" height="${ih}" fill="transparent" data-i="${i}"/>`;
+    box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${NAME[k]} ${RANGE < 999 ? '월별' : '분기별'} 건수">${g}</svg><div class="tip"></div>`;
+    const tip = box.querySelector('.tip'), svg = box.querySelector('svg');
+    svg.addEventListener('mousemove', e => {
+      const i = e.target.dataset?.i; if (i == null) { tip.style.display = 'none'; return; }
+      const p = pts[i], rect = box.getBoundingClientRect();
+      tip.innerHTML = `<b>${p.label}</b><br>${NAME[k]} ${p[k] || 0}건`; tip.style.display = 'block';
+      tip.style.left = Math.min(rect.width - 130, Math.max(0, e.clientX - rect.left + 10)) + 'px'; tip.style.top = (e.clientY - rect.top - 40) + 'px';
+    });
+    svg.addEventListener('mouseleave', () => tip.style.display = 'none');
   });
-  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="월별 예비심사 청구·승인·상장 건수">${g}</svg><div class="tip"></div>`;
-  const tip = box.querySelector('.tip');
-  box.querySelector('svg').addEventListener('mousemove', e => {
-    const i = e.target.dataset?.i; if (i == null) { tip.style.display = 'none'; return; }
-    const p = pts[i], rect = box.getBoundingClientRect();
-    tip.innerHTML = `<b>${p.label}</b><br>청구 ${p.a} · 승인 ${p.b} · 상장 ${p.c}`;
-    tip.style.display = 'block';
-    tip.style.left = Math.min(rect.width - 150, Math.max(0, e.clientX - rect.left + 10)) + 'px'; tip.style.top = (e.clientY - rect.top - 40) + 'px';
-  });
-  box.querySelector('svg').addEventListener('mouseleave', () => tip.style.display = 'none');
 }
 
 /* ---------- 탭 이동 ---------- */
@@ -1146,6 +1212,9 @@ $('#body').addEventListener('click', e => {
   else if (VIEW === 'offering') openUp(tr.dataset.id);
 });
 ['#q', '#mk', '#af', '#how', '#yr', '#mo', '#track', '#sOn', '#sMin', '#sMax', '#sDrop', '#sOffer', '#sRebound', '#sMa'].forEach(s => $(s).addEventListener('input', renderList));
+$('#calPrev').onclick = () => { CAL_M = new Date(CAL_M.getFullYear(), CAL_M.getMonth() - 1, 1); CAL_SEL = null; renderCal(); };
+$('#calNext').onclick = () => { CAL_M = new Date(CAL_M.getFullYear(), CAL_M.getMonth() + 1, 1); CAL_SEL = null; renderCal(); };
+$('#calToday').onclick = () => { CAL_M = null; CAL_SEL = null; renderCal(); };
 $('#rangeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
   RANGE = +b.dataset.r; $('#rangeSeg').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); drawMonthly(); });
 window.addEventListener('hashchange', () => setView(location.hash.slice(1)));

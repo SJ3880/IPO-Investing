@@ -335,16 +335,17 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
             "topBand": round(len(top) / len(bp) * 100) if bp else None,
         })
 
-    # ---------- 다가오는 일정 (오늘 ~ 21일)
+    # ---------- 일정 캘린더 (지난달 1일 ~ 60일 뒤, 시작일은 실제 날짜 그대로)
     cal = []
-    end = today + timedelta(days=21)
+    start = (today.replace(day=1) - timedelta(days=1)).replace(day=1)
+    end = today + timedelta(days=60)
     for x in offering:
         for kind_, (a, b) in (("수요예측", x["demand"]), ("청약", x["sub"])):
             a, b = d(a), d(b)
-            if a and b and b >= today and a <= end:
-                cal.append({"date": iso(max(a, today)), "end": iso(b), "type": kind_, "name": x["name"]})
+            if a and b and b >= start and a <= end:
+                cal.append({"date": iso(a), "end": iso(b), "type": kind_, "name": x["name"]})
         ld = d(x["listDate"])
-        if ld and today <= ld <= end:
+        if ld and start <= ld <= end:
             cal.append({"date": iso(ld), "end": iso(ld), "type": "상장", "name": x["name"]})
     cal.sort(key=lambda e: (e["date"], e["type"]))
 
