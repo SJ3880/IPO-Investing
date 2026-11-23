@@ -1231,7 +1231,8 @@ def main():
             "openAdj": bars[0][1], "price": price, "asOf": bars[-1][0],
             "adjSrc": "spac" if sp else ("38" if (m38 or {}).get("open") else "none"),
             "retVsOpen": pct(price, bars[0][1]), "retVsOffer": pct(price, offer_adj),
-            "openVsOffer": pct(bars[0][1], offer_adj),
+            "openVsOffer": (pct((m38 or {}).get("open") or bars[0][1], offer) if adj == 1      # 조정 3% 미만: 화면의 시초가 그대로
+                            else pct(bars[0][1], offer_adj)),
             "peak": peak, "fromPeak": pct(price, peak),
             "ret5d": pct(price, closes[-6]) if len(closes) > 5 else None,
             "ret20d": pct(price, closes[-21]) if len(closes) > 20 else None,
@@ -1442,7 +1443,7 @@ def main():
         if not it.get("band") and v.get("bandDoc") and not it.get("spac"):     # 38에 없으면 신고서의 희망밴드
             it["band"] = v["bandDoc"]
         it["discOffer"] = round((1 - it["offer"] / fair) * 100, 1) if fair and it.get("offer") and not it.get("spac") else None
-        it["peers"] = [{"n": x["name"], "v": x["v"]} for x in (v.get("peers") or []) if valuation._is_name(x["name"])]
+        it["peers"] = [{"n": valuation._name(x["name"]), "v": x["v"]} for x in (v.get("peers") or []) if valuation._is_name(x["name"])]
         it["peerChecked"] = bool(v.get("peerChecked"))
         it["trackManual"] = it["code"] in manual_tracks
         # 공모 데이터 시트용(증권신고서·주요정보)
@@ -1455,6 +1456,10 @@ def main():
             det["parseVer"] = 0
         it["totalShares"] = det.get("totalShares")
         it["techGrades"] = det.get("techGrades") or (recent_off.get(pipelib.norm(it["name"])) or {}).get("techGrades") or None
+        if isinstance(it["techGrades"], dict) and "&cr" in str(it["techGrades"].get("ev")):
+            it["techGrades"] = {**it["techGrades"], "ev": re.sub(r"\s*&cr;?\s*", " ", it["techGrades"]["ev"]).strip()}
+        if it.get("track") in ("일반", "이익미실현(테슬라)"):
+            it["techGrades"] = None                        # 기술평가 특례가 아니면 신고서의 다른 '등급' 문장(창투사 평가 등)은 쓰지 않음
         it["offerShares"] = det.get("shares")
         # 공모금액 = 공모주식수 × 확정 공모가. (DART 주요정보의 금액은 희망가 하단 기준이라 확정가와 다를 수 있음)
         it["offerAmount"] = (round(det["shares"] * it["offer"]) if det.get("shares") and it.get("offer") and not it.get("spac")

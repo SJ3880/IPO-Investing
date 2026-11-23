@@ -951,7 +951,8 @@ def tech_grades(plain):
        → {"grades": ["A","BBB"], "agencies": ["이크레더블","나이스디앤비"], "paired": 기관별로 짝지어진 근거가 있으면 True, "ev": 근거 문장}
        신고서 문장 예: '전문평가기관 2개 기관(X, Y)으로부터 … 2개 기관으로부터 A, BBB 등급을 통보받았습니다'
                       'X와 Y로부터 각각 A 등급, A 등급' · '2개 기관으로부터 모두 A등급' · '1개 기관으로부터 A등급, 다른 1개 기관으로부터 BBB등급'"""
-    f = re.sub(r"\s+", " ", plain.replace("\n", " | "))
+    f = re.sub(r"\s+", " ", re.sub(r"&cr;?", " ", plain).replace("\n", " | "))
+    f = re.sub(r"(NICE|나이스)\s+(평가정보|디앤비|디엔비)", r"\1\2", f)    # 'NICE 평가정보' 띄어쓰기
     sents = re.split(r"(?<=다)\.\s*|\s\|\s", f)
     pos = 0
     first = None

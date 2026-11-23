@@ -17,7 +17,9 @@ NOT_NAME = re.compile(r"^(구분|회사명|기업명|유사회사|비교회사|�
 
 
 def _clean(s):
-    return re.sub(r"\s+", " ", s or "").strip()
+    s = re.sub(r"(?<=[가-힣])\s*&cr;?\s*(?=[가-힣])", "", s or "")      # DART 셀 안 줄바꿈(&cr;): 한글 사이는 붙이고
+    s = re.sub(r"\s*&cr;?\s*", " ", s)                                # 그 밖에는 띄어쓰기
+    return re.sub(r"\s+", " ", s).strip()
 
 
 def mult_name(s):
@@ -62,6 +64,8 @@ def _is_name(s):
     if re.fullmatch(r"(유사|비교|대상)?(회사|기업|법인)\s*[A-Z\d]+", s.replace(" ", "")):
         return False
     if _num(s) is not None and re.fullmatch(r"[-\d,.\s배%원()]+", s):
+        return False
+    if re.fullmatch(r"[-\d,.\s]+(?:x|X|배|times)?", s):              # '5.0 x', '5 3 .0 x' 같은 배수 칸
         return False
     if re.search(r"\d", s) and re.search(r"(백만|천만|억|조|만|EUR|USD|JPY|CNY|원|달러|유로|엔|%)", s):
         return False                                   # '117 백만 EUR' 같은 금액 칸은 회사 이름이 아님

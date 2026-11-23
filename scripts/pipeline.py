@@ -111,6 +111,8 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
                 return it
         return None
 
+    listed_rcp = {it.get("rcpNo") for it in listed_items if it.get("rcpNo")}
+
     # ---------- 공모 진행
     offering, filed_names, skipped = [], {}, []
     if pub_df is not None and len(pub_df):
@@ -180,6 +182,8 @@ def build(today, listed_items, pub_df, inv_df, demand38, enrich=None, log=print)
                     row.update(enrich(name, base_d) or {})   # 최근 증권신고서가 있는 같은 이름 회사만 연결됨
                 except Exception as e:
                     log(f"  - {name} 공모 상세 실패: {e}")
+            if row.get("rcpNo") and row["rcpNo"] in listed_rcp:   # 이름이 달라도(하나에어로다이내믹스 ↔ 하나에어로) 같은 신고서면 이미 상장
+                continue
             if row.get("market") == "코넥스":
                 skipped.append({"name": name, "filed": iso(filed), "why": "코넥스로 판별"})
                 continue
