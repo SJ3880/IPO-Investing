@@ -771,7 +771,8 @@ function drawMonthly(){
   const NAME = { a: '예비심사 청구', b: '심사 승인', c: '상장' };
   [['a', 'var(--s1)'], ['b', 'var(--s2)'], ['c', 'var(--s3)']].forEach(([k, col]) => {
     const box = $('#mc-' + k), tot = pts.reduce((s, p) => s + (p[k] || 0), 0);
-    $('#sum-' + k).textContent = `· 기간 합계 ${tot}건 · ${RANGE < 999 ? '월' : '분기'} 평균 ${(tot / pts.length).toFixed(1)}건`;
+    const months = RANGE < 999 ? pts.length : ms.length;   // 분기 보기도 실제 개월 수로 연평균 계산
+    $('#sum-' + k).textContent = `· 기간 합계 ${tot}건 · ${RANGE < 999 ? '월' : '분기'} 평균 ${(tot / pts.length).toFixed(1)}건 · 연평균 ${(tot / months * 12).toFixed(1)}건`;
     const W = 360, H = 190, L = 26, R = 4, T = 8, B = 24, iw = W - L - R, ih = H - T - B;
     const max = Math.max(4, ...pts.map(p => p[k] || 0)), step = Math.ceil(max / 4), top = step * 4, gw = iw / pts.length, bw = Math.max(2, Math.min(14, gw - 3));
     const y = v => T + ih - v / top * ih;
