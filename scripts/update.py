@@ -1211,7 +1211,7 @@ def main():
         code, name, listed = row["code"], str(row["name"]), row["listed"]
         name = NAME_FIX.get(code, name)               # KIND 목록 이름이 실제 회사명과 다른 경우
         show = True
-        dl = bool(row.get("delisted")) if "delisted" in row else False
+        dl = row.get("delisted") is True or str(row.get("delisted")) == "True"   # 빈칸(NaN)은 상장폐지 아님
         none_mark = PRICES / f"{code}.none"            # 상장폐지라 시세를 못 받는 종목: 매일 다시 받지 않음
         try:
             if dl and none_mark.exists():
@@ -1389,6 +1389,10 @@ def main():
         pass
 
     def resolve_track(it, doc_track, ev=None):
+        tg = (DETAIL_CACHE.get(it["code"]) or {}).get("techGrades") if "DETAIL_CACHE" in globals() else None
+        if doc_track in (None, "", "일반", "기술특례(기술평가)") and re.search(r"사업\s*모델\s*(기업|평가|특례)", " ".join(
+                [str(ev or ""), str((tg or {}).get("ev") or "") if isinstance(tg, dict) else ""])):
+            doc_track = "기술특례(사업모델)"            # '기술성장기업특례(사업모델기업)', 'KRX 사업모델평가' 문장
         if ev is not None and doc_track and doc_track != "일반" and dartlib.bad_track_evidence(ev):
             doc_track = "일반"                          # 근거 문장이 비교회사 이야기 → 신고서 트랙으로 쓰지 않음
         if it["code"] in manual_tracks:
@@ -1475,6 +1479,7 @@ def main():
             except Exception as e:
                 log(f"  - {it['name']} DART 전체 실패: {e}")
         # 목록 화면용 요약 필드
+        globals().setdefault("DETAIL_CACHE", {})[it["code"]] = det
         it["track"], it["trackSrc"] = resolve_track(it, det.get("track"), det.get("trackEvidence") or "")
         if it["track"] is None and det.get("dartStatus", "").startswith("증권신고서 없음"):
             it["track"] = "공모 없음(스팩합병·이전상장)"
