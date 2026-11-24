@@ -74,9 +74,10 @@ def norm(name: str) -> str:
 
 
 def is_spac(name: str) -> bool:
-    """스팩 이름: '…스팩25호', '…제12호스팩', '…기업인수목적…'. '아인스팩씨엔에스'처럼 회사명 속 글자는 제외"""
+    """스팩 이름: '…스팩25호', '…제12호스팩', '…기업인수목적…', '케이프이에스제4호'(KIND 신규상장 목록은 '기업인수목적'을 떼고 줌).
+       '아인스팩씨엔에스'처럼 회사명 속 글자는 제외"""
     n = re.sub(r"\s+", "", str(name))
-    return "기업인수목적" in n or bool(re.search(r"스팩(?:\d+호)?$|스팩\d+호|스팩제?\d+호", n))
+    return "기업인수목적" in n or bool(re.search(r"스팩(?:\d+호)?$|스팩\d+호|스팩제?\d+호|제\d+호$", n))
 
 
 def first_date(s):
@@ -148,7 +149,7 @@ def ipo_filter(listings, listings_all=None):
     c5 = lambda c: str(c or "").strip()[:5]
     info, info_c = {}, {}
     for _, r in lc.iterrows():
-        v = (str(r.get("상장유형") or ""), str(r.get("상장주선인") or ""))
+        v = (str(r.get("상장유형") or ""), str(r.get("상장주선인") or ""), str(r.get("회사명") or "").strip())
         info.setdefault(pipelib.norm(r["회사명"]), v)
         if c5(r.get("회사코드")):
             info_c.setdefault(c5(r.get("회사코드")), v)
@@ -157,6 +158,9 @@ def ipo_filter(listings, listings_all=None):
     keep = [bool(hit(n, c)) for n, c in zip(listings["name"], listings["code"])]
     out = listings[keep].copy()
     out["listType"] = [(hit(n, c) or ("", ""))[0] or None for n, c in zip(out["name"], out["code"])]
+    # 상장 당시 이름(캐리소프트·빅히트처럼 지금 이름과 다르면): 38·KIND 공모 목록은 그때 이름이라 공모가 찾기에 씀
+    out["altName"] = [((hit(n, c) or ("", "", ""))[2] if pipelib.norm((hit(n, c) or ("", "", ""))[2]) != pipelib.norm(n) else None)
+                      for n, c in zip(out["name"], out["code"])]
     out["delisted"] = False
     # ---- 상장폐지된 공모 상장 회사
     try:
@@ -1210,6 +1214,12 @@ def main():
     for i, row in listings.iterrows():
         code, name, listed = row["code"], str(row["name"]), row["listed"]
         name = NAME_FIX.get(code, name)               # KIND 목록 이름이 실제 회사명과 다른 경우
+        alt = row.get("altName") if "altName" in row else None
+        alt = alt if isinstance(alt, str) and alt.strip() else None
+
+        def mrow(d0, rows, lo, hi, _n=name, _a=alt):
+            """지금 이름으로 먼저, 못 찾으면 상장 당시 이름으로(이름이 바뀐 회사: 캐리소프트→캐리 등)"""
+            return match_row(_n, d0, rows, lo, hi) or (match_row(_a, d0, rows, lo, hi) if _a else None)
         show = True
         dl = row.get("delisted") is True or str(row.get("delisted")) == "True"   # 빈칸(NaN)은 상장폐지 아님
         none_mark = PRICES / f"{code}.none"            # 상장폐지라 시세를 못 받는 종목: 매일 다시 받지 않음
@@ -1229,10 +1239,10 @@ def main():
                 continue
             bars = []
         if not bars and dl:          # 상장폐지: 시세가 없어도 공모 정보는 남김(주가 칸은 비움)
-            m38 = match_row(name, listed, offers38, -7, 7)
-            mp = match_row(name, listed, pub_offers, -10, 10)
+            m38 = mrow(listed, offers38, -7, 7)
+            mp = mrow(listed, pub_offers, -10, 10)
             offer = manual.get(code) or (mp or {}).get("offer") or (m38 or {}).get("offer") or (prev.get(code) or {}).get("offer")
-            dm = match_row(name, listed, demand38, -60, 0) or {}
+            dm = mrow(listed, demand38, -60, 0) or {}
             items.append({"code": code, "name": name, "market": row["market"], "listType": row.get("listType"),
                           "sector": None if pd.isna(row["sector"]) else str(row["sector"]), "product": None,
                           "listed": listed.isoformat(), "days": (today - listed).days, "offer": offer,
@@ -1248,9 +1258,20 @@ def main():
             m38 = mp = None
             offer = manual.get(code) or sp.get("base")
             adj = 1.0 if manual.get(code) else (sp.get("adj") or 1.0)
+            # 상장 뒤 무상증자·액면분할·병합으로 수정주가가 다시 계산되면(시세 전체를 새로 받음) 합병 첫날 시가가 바뀐다.
+            # 처음 본 첫날 시가(openRef)와 지금 시가의 비율만큼 adj도 바꿔야 공모가(기준가) 대비 수익률이 맞는다(핑거스토리 무상증자).
+            o_now = next((b[1] for b in bars if b[0] >= sp["mergeDate"]), None)
+            c_ = spac_cache.get(code)
+            if o_now and c_ is not None:
+                if not c_.get("openRef"):
+                    c_["openRef"] = o_now
+                    spac_cache_p.write_text(json.dumps(spac_cache, ensure_ascii=False, indent=1), "utf-8")
+                elif abs(o_now / c_["openRef"] - 1) >= 0.03:
+                    adj = adj * o_now / c_["openRef"]
+                    log(f"  - {name}: 합병 뒤 수정주가 변경(첫날 시가 {c_['openRef']:,}→{o_now:,}원) → 기준가 조정 {adj:.4f}")
         else:
-            m38 = match_row(name, listed, offers38, -7, 7)
-            mp = match_row(name, listed, pub_offers, -10, 10)
+            m38 = mrow(listed, offers38, -7, 7)
+            mp = mrow(listed, pub_offers, -10, 10)
             offer = manual.get(code) or (mp or {}).get("offer") or (m38 or {}).get("offer") or (prev.get(code) or {}).get("offer")
             # 네이버 일봉은 무상증자·액면분할이 반영된 '수정주가'. 38의 실제 시초가와 비교해 비율(adj)을 구해
             # 공모가도 같은 기준으로 바꿔 수익률을 계산한다. (예: 무상증자 1:1 → adj 0.5)
@@ -1264,7 +1285,7 @@ def main():
             if abs(adj - 1) < 0.03:
                 adj = 1.0
         offer_adj = offer * adj if offer else None
-        dm = {} if sp else (match_row(name, listed, demand38, -60, 0) or {})
+        dm = {} if sp else (mrow(listed, demand38, -60, 0) or {})
         sector = None if pd.isna(row["sector"]) else str(row["sector"])
         (PRICES / f"{code}.json").write_text(json.dumps(bars, separators=(",", ":")), "utf-8")
         if not sp:                   # 확률 모델·비교 통계는 공모 상장만
