@@ -62,4 +62,10 @@ jobs:
           path: .
       - id: deploy
         if: ${{ !cancelled() }}
+        continue-on-error: true            # 올린 직후엔 GitHub가 파일을 못 찾는 경우가 있어 아래에서 한 번 더
+        uses: actions/deploy-pages@v4
+      - if: ${{ !cancelled() && steps.deploy.outcome == 'failure' }}
+        run: sleep 45
+      - id: deploy2
+        if: ${{ !cancelled() && steps.deploy.outcome == 'failure' }}
         uses: actions/deploy-pages@v4

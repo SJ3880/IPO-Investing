@@ -1,0 +1,27 @@
+name: 화면만 다시 배포
+on: workflow_dispatch          # 데이터 수집 없이 지금 저장된 내용으로 사이트만 다시 올림
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deploy
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+      - if: ${{ steps.deploy.outcome == 'failure' }}
+        run: sleep 45
+      - if: ${{ steps.deploy.outcome == 'failure' }}
+        uses: actions/deploy-pages@v4
