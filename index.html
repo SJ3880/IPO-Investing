@@ -548,7 +548,7 @@ const TABS = {
     note: () => '단계는 오늘 날짜 기준 자동 분류. 공모가는 확정 전이면 희망밴드. 공모 시총 = 상장예정주식수 × 확정공모가(확정 전이면 희망밴드 하단~상단).' },
   listed: { src: () => DATA, sort: 'listed', yr: true, track: true, screen: true,
     cols: [
-      {k:'name', t:'회사', l:1, r: x => nm(x, trackChip(x.track, x.techGrades) + (x.listType && !x.spac && /이전|합병/.test(x.listType) ? `<span class="chip">${esc(x.listType)}</span>` : ''))},
+      {k:'name', t:'회사', l:1, r: x => nm(x, (x.delisted ? '<span class="chip" style="background:#d9534f;color:#fff;border-color:#d9534f" title="상장 뒤 상장폐지된 회사 · 주가 칸은 비어 있어요">상장폐지</span>' : '') + trackChip(x.track, x.techGrades) + (x.listType && !x.spac && /이전|합병/.test(x.listType) ? `<span class="chip">${esc(x.listType)}</span>` : ''))},
       {k:'product', t:'주요제품', l:1, r: x => prod(x)},
       {k:'market', t:'시장', l:1},
       {k:'uwMain', t:'주관사', l:1, r: x => esc(uwS(x.underwriters && x.underwriters.length ? x.underwriters : x.uw38) || '–')},

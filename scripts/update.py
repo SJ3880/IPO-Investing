@@ -127,10 +127,17 @@ def is_reit(name):
     return bool(re.search(r"(?<![블플])리츠", str(name or "")))
 
 
-def ipo_filter(listings):
-    """KIND 신규상장기업 목록으로 공모 상장만 남기고 상장유형·주선인을 붙인다(실패하면 그대로)"""
+def ipo_filter(listings, listings_all=None):
+    """KIND 신규상장기업 목록으로 공모 상장만 남기고 상장유형·주선인을 붙인다(실패하면 그대로)
+       · 이름이 바뀐 회사(캐리소프트 → 캐리)도 놓치지 않게 회사코드(앞 5자리)로도 맞춤
+       · 상장 뒤 상장폐지된 회사(셀리버리 등)는 현재 상장법인목록에 없으므로 신규상장 목록에서 찾아 '상장폐지'로 추가"""
     try:
-        lc = pd.concat([kindlib.listing_companies(m, SINCE.isoformat()) for m in ("1", "2")], ignore_index=True)
+        parts = []
+        for m, label in (("1", "코스피"), ("2", "코스닥")):
+            d = kindlib.listing_companies(m, SINCE.isoformat())
+            d["market"] = label
+            parts.append(d)
+        lc = pd.concat(parts, ignore_index=True)
     except Exception as e:
         log(f"[KIND 신규상장] 실패 → 상장법인목록 그대로 사용: {e}")
         listings["listType"] = None
@@ -138,17 +145,49 @@ def ipo_filter(listings):
     if not len(lc):
         listings["listType"] = None
         return listings
-    info = {}
+    c5 = lambda c: str(c or "").strip()[:5]
+    info, info_c = {}, {}
     for _, r in lc.iterrows():
-        info.setdefault(pipelib.norm(r["회사명"]), (str(r.get("상장유형") or ""), str(r.get("상장주선인") or "")))
-    keep = listings["name"].map(lambda n: pipelib.norm(n) in info)
+        v = (str(r.get("상장유형") or ""), str(r.get("상장주선인") or ""))
+        info.setdefault(pipelib.norm(r["회사명"]), v)
+        if c5(r.get("회사코드")):
+            info_c.setdefault(c5(r.get("회사코드")), v)
+    def hit(n, code):
+        return info_c.get(c5(code)) or info.get(pipelib.norm(n))
+    keep = [bool(hit(n, c)) for n, c in zip(listings["name"], listings["code"])]
     out = listings[keep].copy()
-    out["listType"] = out["name"].map(lambda n: info[pipelib.norm(n)][0] or None)
+    out["listType"] = [(hit(n, c) or ("", ""))[0] or None for n, c in zip(out["name"], out["code"])]
+    out["delisted"] = False
+    # ---- 상장폐지된 공모 상장 회사
+    try:
+        base = listings_all if listings_all is not None else listings
+        alive_c = {c5(c) for c in base["code"]}
+        alive_n = {pipelib.norm(n) for n in base["name"]}
+        rows = []
+        for _, r in lc.iterrows():
+            nm, cc = str(r["회사명"]).strip(), c5(r.get("회사코드"))
+            if not cc or cc in alive_c or pipelib.norm(nm) in alive_n or is_spac(nm):
+                continue
+            lt = str(r.get("상장유형") or "")
+            sec = str(r.get("증권구분") or "")
+            if "재상장" in lt or ("이전" in lt and r["market"] == "코스피") or (sec and "주권" not in sec and "주식" not in sec and sec not in ("0", "")):
+                continue
+            ld = pd.to_datetime(r.get("상장일"), errors="coerce")
+            if pd.isna(ld) or ld.date() < SINCE:
+                continue
+            rows.append({"code": cc + "0" if len(cc) == 5 else cc, "name": nm, "sector": r.get("업종"), "product": None,
+                         "listed": ld.date(), "market": r["market"], "listType": lt or None, "delisted": True})
+        if rows:
+            dl = pd.DataFrame(rows).drop_duplicates(subset=["code"])
+            out = pd.concat([out, dl], ignore_index=True)
+            log(f"[상장폐지] 신규상장 목록에만 있는 회사 {len(dl)}개 추가")
+    except Exception as e:
+        log(f"[상장폐지] 추가 실패(건너뜀): {e}")
     lt = out["listType"].fillna("")
     out = out[~lt.str.contains("재상장") & ~(lt.str.contains("이전") & (out["market"] == "코스피"))]
     out = out[~out["name"].map(is_reit)]                       # 리츠(부동산투자회사)는 제외
-    log(f"[KIND 신규상장] {len(lc)}건 → 공모 상장 {len(out)}개 (분할·재상장 등 {len(listings) - len(out)}개 제외)")
-    return out.reset_index(drop=True)
+    log(f"[KIND 신규상장] {len(lc)}건 → 공모 상장 {len(out)}개 (분할·재상장 등 제외)")
+    return out.sort_values("listed", ascending=False).reset_index(drop=True)
 
 
 # ---------------------------------------------------------------- 1-2. 스팩합병 상장
@@ -928,8 +967,8 @@ def peers_bad(det):
 def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, light=True, tech=False):
     """det(기존 상세)를 갱신. 무거운 작업(문서 파싱·요약)은 한 번만."""
     corp = dt.corp_code(code)
-    if not corp and listed and (date.today() - listed).days <= 60:
-        corp = dt.corp_by_name(name)           # 막 상장한 회사: DART 목록에 종목코드가 아직 없으면 회사명으로
+    if not corp:
+        corp = dt.corp_by_name(name)           # 막 상장한 회사·상장폐지 회사: DART 목록에 종목코드가 없으면 회사명으로
     if not corp:
         det["dartStatus"] = "고유번호 없음"
         return ai_budget
@@ -1102,7 +1141,7 @@ def main():
 
     try:
         listings_all = fetch_listings(None)
-        listings = ipo_filter(listings_all[listings_all["listed"] >= SINCE].reset_index(drop=True))
+        listings = ipo_filter(listings_all[listings_all["listed"] >= SINCE].reset_index(drop=True), listings_all)
     except Exception as e:
         log(f"[오류] KIND 목록을 받지 못했습니다: {e}")
         sys.exit(0 if prev else 1)
@@ -1172,13 +1211,35 @@ def main():
         code, name, listed = row["code"], str(row["name"]), row["listed"]
         name = NAME_FIX.get(code, name)               # KIND 목록 이름이 실제 회사명과 다른 경우
         show = True
+        dl = bool(row.get("delisted")) if "delisted" in row else False
+        none_mark = PRICES / f"{code}.none"            # 상장폐지라 시세를 못 받는 종목: 매일 다시 받지 않음
         try:
-            bars, how = load_or_fetch(code, listed)
+            if dl and none_mark.exists():
+                bars, how = [], "recent"
+            else:
+                bars, how = load_or_fetch(code, listed)
+                if dl and not bars:
+                    none_mark.write_text("")
             n_fetch[how] += 1
         except Exception as e:
-            log(f"  - {name}({code}) 시세 실패: {e}")
-            if code in prev and show:
-                items.append(prev[code])
+            if not dl:
+                log(f"  - {name}({code}) 시세 실패: {e}")
+                if code in prev and show:
+                    items.append(prev[code])
+                continue
+            bars = []
+        if not bars and dl:          # 상장폐지: 시세가 없어도 공모 정보는 남김(주가 칸은 비움)
+            m38 = match_row(name, listed, offers38, -7, 7)
+            mp = match_row(name, listed, pub_offers, -10, 10)
+            offer = manual.get(code) or (mp or {}).get("offer") or (m38 or {}).get("offer") or (prev.get(code) or {}).get("offer")
+            dm = match_row(name, listed, demand38, -60, 0) or {}
+            items.append({"code": code, "name": name, "market": row["market"], "listType": row.get("listType"),
+                          "sector": None if pd.isna(row["sector"]) else str(row["sector"]), "product": None,
+                          "listed": listed.isoformat(), "days": (today - listed).days, "offer": offer,
+                          "open": (m38 or {}).get("open"), "firstClose": (m38 or {}).get("firstClose"),
+                          "openVsOffer": pct((m38 or {}).get("open"), offer), "firstDayRet": pct((m38 or {}).get("firstClose"), offer),
+                          "instComp": dm.get("instComp"), "commit": dm.get("commit"), "uw38": dm.get("uw38"),
+                          "band": dm.get("band"), "bandPos": band_pos(offer, dm.get("band")), "delisted": True})
             continue
         if not bars:
             continue
@@ -1242,6 +1303,7 @@ def main():
             "firstDayRet": pct(first_close(bars, m38, adj), offer) if adj == 1 else pct(bars[0][4], offer_adj),
             **horizon_returns(bars, listed, offer_adj),
             "tradeValue20": round(sum(val20) / len(val20)) if val20 else None,
+            **({"delisted": True} if dl else {}),
             **({"spac": True, "baseSrc": "직접 입력" if manual.get(code) else sp.get("baseSrc"),
                 "uw38": sp.get("uw"), "spacApplied": sp["applied"].isoformat() if sp.get("applied") else None,
                 "spacRcpNo": sp.get("rcpNo")} if sp else {}),
