@@ -1504,6 +1504,11 @@ def main():
         it["track"], it["trackSrc"] = resolve_track(it, det.get("track"), det.get("trackEvidence") or "")
         if it["track"] is None and det.get("dartStatus", "").startswith("증권신고서 없음"):
             it["track"] = "공모 없음(스팩합병·이전상장)"
+        tl_fix = dartlib.diluted_series_fix(det)          # 기간별 표에 '행사 시(희석)' 칸이 같이 있으면 공모 후 기준 칸으로 다시 계산
+        if tl_fix:
+            log(f"[점검] {it['name']} 유통가능물량: 희석 기준 칸 대신 공모 후 기준 칸 {det.get('floatAtListing')}→{tl_fix[0]['pct']}%")
+            det["lockup"] = tl_fix
+            det["floatAtListing"] = next((p_["pct"] for p_ in tl_fix if p_["m"] == 0), det.get("floatAtListing"))
         it["floatAtListing"] = det.get("floatAtListing")
         # 공모가 산정 근거(증권신고서 'Ⅳ. 인수인의 의견') → 상장완료 표에 바로 보이도록 요약
         v = valuation.sanitize(det.get("valuation")) or {}   # 비교회사 평균 = 적용 배수 재검증(제외 회사·기간 칸 정리)

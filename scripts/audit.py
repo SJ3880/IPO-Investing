@@ -52,6 +52,14 @@ def same(a, b):
     return a == b
 
 
+def _mark(p, det):
+    try:
+        det["auditAt"] = date.today().isoformat()
+        p.write_text(json.dumps(det, ensure_ascii=False, separators=(",", ":")), "utf-8")
+    except Exception:
+        pass
+
+
 def main():
     if not U.DART_KEY:
         print("DART_API_KEY 가 없어 원문 대조를 건너뜁니다.")
@@ -64,14 +72,27 @@ def main():
         st = json.loads(STATE.read_text("utf-8"))
     except Exception:
         st = {"cursor": 0, "rounds": 0}
-    if st["cursor"] >= len(items):
-        st["cursor"], st["rounds"] = 0, st.get("rounds", 0) + 1
-    batch = items[st["cursor"]: st["cursor"] + PER_RUN]
+    # 순번(cursor) 대신 '마지막 원문 대조일(auditAt)'이 가장 오래된(없으면 맨 앞) 회사부터 고름
+    # → 상장폐지 회사 추가 등으로 목록 순서가 바뀌어도 빠지거나 두 번 보는 회사가 없음
+    def _audit_at(x):
+        try:
+            return json.loads((U.DETAIL / f"{x['code']}.json").read_text("utf-8")).get("auditAt") or ""
+        except Exception:
+            return ""
+    aat = {x["code"]: _audit_at(x) for x in items}
+    order = sorted(range(len(items)), key=lambda i: (aat[items[i]["code"]], i))
+    batch = [items[i] for i in order[:PER_RUN]]
+    if batch and all(aat[x["code"]] for x in batch) and not any(not v for v in aat.values()):
+        if min(aat.values()) >= st.get("roundStart", ""):
+            st["rounds"] = st.get("rounds", 0) + 1
+            st["roundStart"] = date.today().isoformat()
+    st["cursor"] = sum(1 for v in aat.values() if v)          # 한 번 이상 대조한 회사 수(진행률 표시용)
     try:
         old_log = json.loads(LOGF.read_text("utf-8"))
     except Exception:
         old_log = []
-    runlog = {"at": datetime.now(U.KST).strftime("%Y-%m-%d %H:%M"), "from": st["cursor"], "checked": [], "changed": [], "errors": []}
+    runlog = {"at": datetime.now(U.KST).strftime("%Y-%m-%d %H:%M"), "from": st["cursor"],
+              "range": [batch[0]["listed"], batch[-1]["listed"]] if batch else None, "checked": [], "changed": [], "errors": []}
     t0 = time.time()
     done = 0
     for it in batch:
@@ -91,12 +112,14 @@ def main():
         except Exception as e:
             runlog["errors"].append({"name": name, "err": str(e)[:200]})
             done += 1
+            _mark(p, det)          # 실패해도 '확인한 날'은 남겨, 다음 밤에 같은 회사만 계속 붙잡지 않게
             continue
         done += 1
         runlog["checked"].append(name)
         if fresh.get("dartStatus") != "ok":
             if fresh.get("dartStatus"):
                 runlog["errors"].append({"name": name, "err": fresh.get("dartStatus")})
+            _mark(p, det)
             continue
         od = dartlib.doc_old_ratio(fresh.get("fundDoc"), it.get("offerAmount"))   # 낮 업데이트와 같은 기준(원문 조달 내역 우선)
         if od is not None:
@@ -128,7 +151,7 @@ def main():
         det["auditAt"] = date.today().isoformat()
         p.write_text(json.dumps(det, ensure_ascii=False, separators=(",", ":")), "utf-8")
         time.sleep(0.2)
-    st["cursor"] += done
+    st["cursor"] = sum(1 for x in items if aat[x["code"]] or x["name"] in runlog["checked"])
     st["total"] = len(items)
     st["last"] = runlog["at"]
     STATE.parent.mkdir(exist_ok=True)

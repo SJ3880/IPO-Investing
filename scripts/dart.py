@@ -727,6 +727,11 @@ def holders_timeline(grid):
 def series_timeline(grid):
     """'상장일 / 1개월 후 / 3개월 후 …' 기간별 추이 표"""
     pts = {}
+    # '공모 후 기준 | 주식매수선택권 및 신주인수권 행사 시' 처럼 희석 기준 칸이 함께 있으면 공모 후 기준 칸만 본다(엠비디 34.06% vs 32.90%)
+    dil = set()
+    for r in grid[:4]:
+        if r and not ("후" in r[0] and PERIOD_RE.search(r[0])) and "상장일" not in r[0]:
+            dil |= {j for j, c in enumerate(r) if j > 0 and re.search(r"행사|희석|전환", c)}
     for r in grid:
         if not r:
             continue
@@ -736,7 +741,8 @@ def series_timeline(grid):
         m = period_months(h) if PERIOD_RE.search(h) else (0 if "상장" in h else None)
         if m is None:
             continue
-        ps = [to_pct(x) for x in r[1:] if "%" in x or re.fullmatch(r"\d{1,3}\.\d+", x.replace(" ", ""))]
+        cells = [x for j, x in enumerate(r) if j > 0 and j not in dil] if dil and len(dil) < len(r) - 1 else r[1:]
+        ps = [to_pct(x) for x in cells if "%" in x or re.fullmatch(r"\d{1,3}\.\d+", x.replace(" ", ""))]
         ps = [x for x in ps if x]
         if ps:
             pts[m] = ps[-1]
@@ -744,6 +750,35 @@ def series_timeline(grid):
     if len(pts) >= 2 and all(b >= a - 0.01 for a, b in zip(vals, vals[1:])):
         return [{"m": k, "pct": round(pts[k], 2)} for k in sorted(pts)]
     return []
+
+
+def diluted_series_fix(det):
+    """저장된 유통가능물량이 '공모 후 기준 | 주식매수선택권 행사 시' 기간별 표의 희석 칸에서 읽힌 경우 → 공모 후 기준으로 다시 계산한 값
+       (주주별 표에서 읽은 값이나 다른 표에서 온 값은 건드리지 않음)"""
+    try:
+        T = det.get("lockupTables") or []
+        old = det.get("lockup") or []
+        if not T or not old:
+            return None
+        g = expand(T[0])
+        head = " ".join(c for r in g[:3] for c in r)
+        if not re.search(r"행사|희석", head) or holders_timeline(g):
+            return None
+        new = series_timeline(g)
+        if not new or len(new) != len(old):
+            return None
+        if not new or abs(new[0]["pct"] - old[0]["pct"]) < 0.05:
+            return None
+        # 기존 값이 그 표의 맨 오른쪽(희석) 칸 값과 같을 때만 바꿈
+        for r in g:
+            if r and "상장일" in r[0]:
+                ps = [to_pct(x) for x in r[1:] if "%" in x]
+                if ps and ps[-1] is not None and abs(ps[-1] - old[0]["pct"]) < 0.05:
+                    return new
+                break
+        return None
+    except Exception:
+        return None
 
 
 def lockup_timeline(rows):
@@ -812,12 +847,15 @@ SELF = re.compile(r"(당사|동사|발행회사)(는|가|의|와(?!\s*동일)|�
 NEG = re.compile(r"(해당하지\s*않|아닙니다|아니며|아닌|없습니다|제외)")
 # 이미 상장한 다른 회사(비교회사·동종업체) 이야기: 공모 전 회사가 자기 상장을 과거형으로 쓸 수 없음
 OTHER_CO = re.compile(r"상장(하였|되었|한\s*바\s*있)(습니다|으며|고)|에\s*속하며")
+# 규정 설명 문장: '발행회사가 인수인의 추천에 의하여 … 사업모델기업 특례를 위하여 모집ㆍ매출하는 경우'(인수인 의무취득 조항)
+RULE_TXT = re.compile(r"발행회사가\s*인수인의\s*추천에\s*의하여|발행회사가[^.]{0,120}(하는|되는)\s*경우\s*$")
 
 
 def bad_track_evidence(ev):
     """예전에 저장된 트랙 근거가 다른 회사 이야기인지('동사와 동일한 … 2025년 11월 기술성장기업 특례로 상장하였습니다')"""
     ev = str(ev or "")
-    return bool(ev) and bool(re.match(r"\s*(당사|동사|발행회사)와\s*동일", ev) or OTHER_CO.search(ev))
+    return bool(ev) and bool(re.match(r"\s*(당사|동사|발행회사)와\s*동일", ev) or OTHER_CO.search(ev)
+                             or RULE_TXT.search(ev))
 
 
 def listing_track(plain):
@@ -830,7 +868,7 @@ def listing_track(plain):
         for m in SELF.finditer(snt):
             clause = snt[m.start(): m.start() + 220]      # '당사는 …' 뒤쪽만 본다
             clause = re.sub(r"\([^)]*\)", "", clause)       # 괄호 안 규정 설명 제거
-            if NEG.search(clause) or OTHER_CO.search(clause) or not any(k in clause for k in ("상장", "특례", "요건", "평가", "추천")):
+            if NEG.search(clause) or OTHER_CO.search(clause) or RULE_TXT.search(snt[m.start():].strip()) or not any(k in clause for k in ("상장", "특례", "요건", "평가", "추천")):
                 continue
             for name, rx in TRACKS:
                 if rx.search(clause):
