@@ -449,6 +449,11 @@ class Dart:
             return sorted(c, key=lambda r: r["rcept_no"], reverse=True)
         if merger:
             return pick("증권신고서", "합병") or pick("투자설명서", "합병") or pick("투자설명서")
+        if merger == "alts":                          # 원문 파일이 없는 문서 대비: 투자설명서(최신순) → 증권신고서(지분증권, 최신순)
+            key = lambda r: r["rcept_no"]
+            a = sorted((r for r in rows if "투자설명서" in r["report_nm"] and "합병" not in r["report_nm"]), key=key, reverse=True)
+            b = sorted((r for r in rows if "증권신고서(지분증권)" in r["report_nm"]), key=key, reverse=True)
+            return a + b
         return pick("투자설명서") or pick("증권신고서(지분증권)")
 
     def document_text(self, rcept_no):

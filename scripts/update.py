@@ -968,6 +968,24 @@ def peers_bad(det):
     return not valuation.mean_ok(ps, am)
 
 
+def doc_with_fallback(dt, f, corp, listed, allow=True):
+    """신고서 원문 읽기. 오래된 '[기재정정]투자설명서' 등은 DART에 원문 파일이 없음(파일이 존재하지 않습니다)
+    → 같은 공모의 이전 투자설명서·증권신고서(지분증권)를 최신순으로 차례로 시도. 돌려주는 값: (원문, 실제로 읽은 문서 행)"""
+    try:
+        return dt.document_text(f["rcept_no"]), f
+    except RuntimeError as e0:
+        if not allow or not corp or "원문 없음" not in str(e0):
+            raise
+        for g in dt.prospectus(corp, listed, merger="alts"):
+            if g["rcept_no"] == f["rcept_no"]:
+                continue
+            try:
+                return dt.document_text(g["rcept_no"]), g
+            except RuntimeError:
+                continue
+        raise
+
+
 def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, light=True, tech=False):
     """det(기존 상세)를 갱신. 무거운 작업(문서 파싱·요약)은 한 번만."""
     corp = dt.corp_code(code)
@@ -982,7 +1000,9 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
     need_doc = heavy and (retry or reparse)
     if (mins() < LIGHT_UNTIL_MIN and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 10):
         try:                                       # 기술평가 등급만 새로 읽기(신고서 전체를 다시 분석하지 않음)
-            xml = dt.document_text(det["rcpNo"])
+            xml, g = doc_with_fallback(dt, {"rcept_no": det["rcpNo"]}, corp, listed, allow=not spac)
+            if g.get("report_nm"):                 # 원래 문서에 원문이 없어 다른 신고서를 읽음 → 그 문서로 바꿔 둠
+                det["rcpNo"], det["rcpTitle"] = g["rcept_no"], re.sub(r"\s+", " ", g["report_nm"]).strip()
             plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
             det["techGrades"] = dartlib.tech_grades(plain) or None
             det["techVer"] = 10
@@ -994,8 +1014,10 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
             f = dt.prospectus(corp, listed, merger=spac)
             if f:
                 det["rcpNo"] = f["rcept_no"]
+                xml_doc, f = doc_with_fallback(dt, f, corp, listed, allow=not spac)
+                det["rcpNo"] = f["rcept_no"]
                 det["rcpTitle"] = re.sub(r"\s+", " ", f["report_nm"]).strip()
-                info = dartlib.analyze_document(dt.document_text(f["rcept_no"]))
+                info = dartlib.analyze_document(xml_doc)
                 det["lockup"] = info["lockup"]
                 det["lockupTables"] = info["lockupTables"]
                 det["track"] = info["track"]
@@ -1460,7 +1482,12 @@ def main():
             if not has_tech_eval(resolve_track(it, det.get("track"), det.get("trackEvidence") or "")[0]):
                 continue
             try:
-                xml = dt.document_text(rc)
+                corp_ = None
+                if not it.get("spac") and det.get("rcpNo") == rc:
+                    corp_ = dt.corp_code(it["code"]) or dt.corp_by_name(it["name"])
+                xml, g = doc_with_fallback(dt, {"rcept_no": rc}, corp_, date.fromisoformat(it["listed"]), allow=bool(corp_))
+                if g.get("report_nm"):
+                    det["rcpNo"], det["rcpTitle"] = g["rcept_no"], re.sub(r"\s+", " ", g["report_nm"]).strip()
                 plain = dartlib.strip_tags(re.sub(r"</(P|TD|TE|TH|TU|TR|TITLE)>", "\n", xml, flags=re.I))
                 det["techGrades"] = dartlib.tech_grades(plain)
                 if not det["techGrades"] and len(dartlib.TECH_MISS) < 120:
@@ -1591,7 +1618,12 @@ def main():
         mc = parse_won(it["marcap"])
         if mc and it.get("price") and det.get("market"):
             if det.get("marketAt") is None or not det.get("sharesOut") or det.get("sharesAdj") != it.get("adj"):
-                det["sharesOut"] = round(mc / it["price"])          # 받은 날 기준 상장주식수
+                so_new = round(mc / it["price"])                    # 받은 날 기준 상장주식수
+                so_old = det.get("sharesOut")
+                # 시총이 '억' 단위 반올림이라 역산 주식수가 매일 조금씩 흔들림 → 반올림 오차 안이면 기존 값 유지(공모시총 떨림 방지)
+                tol = max(0.002, 0.6e8 / mc)
+                if not (so_old and det.get("sharesAdj") == it.get("adj") and abs(so_new / so_old - 1) <= tol):
+                    det["sharesOut"] = so_new
                 det["marketAt"] = it["asOf"]
                 det["sharesAdj"] = it.get("adj")
         so = det.get("sharesOut")
