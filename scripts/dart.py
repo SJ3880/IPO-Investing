@@ -1111,6 +1111,81 @@ def discount_rate(plain):
     return None
 
 
+# ---- 수요예측 결과(투자설명서 '공모방법' 수요예측 참여 내역) → 기관 경쟁률·의무보유확약 비율
+#      38커뮤니케이션 값이 없을 때만 쓰는 보조값
+def _dm_cells(tr):
+    out = []
+    for m in re.finditer(r"<(T[DHEU])\b([^>]*)>(.*?)</\1>", tr, re.S | re.I):
+        t = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", m.group(3)).replace("&cr;", " "))).strip()
+        out.append(t)
+    return out
+
+
+def _dm_num(s):
+    s = s.replace(",", "").strip()
+    if s in ("-", "", "–"):
+        return 0
+    return int(s) if re.fullmatch(r"\d+", s) else 0
+
+
+_DM_LOCK = re.compile(r"^\d+(개월|일|주)")
+_DM_ALLOC = re.compile(r"기관투자자\s*배정\s*주식수\s*[:：]?\s*([\d,]+)\s*주(?:\s*~\s*([\d,]+)\s*주)?")
+
+
+def demand_from_doc(tables, plain):
+    """확약기간별 참여 내역 표(…확약/미확약/합계 행, 마지막 '합계' 칸) → 총 신청수량·확약 수량.
+    경쟁률: 표에 '경쟁률' 행이 있으면 그 합계, 없으면 신청수량 ÷ 기관투자자 배정주식수(범위면 큰 값)."""
+    best, comp = None, None
+    for t in tables:
+        flat = re.sub(r"\s", "", t)
+        if "경쟁률" in flat and "건수" in flat and "수량" in flat and comp is None:
+            for tr in re.findall(r"<TR\b.*?</TR>", t, re.S | re.I):
+                c = _dm_cells(tr)
+                if c and re.sub(r"\s", "", c[0]) == "경쟁률":
+                    v = re.findall(r"([\d,]+(?:\.\d+)?)\s*:\s*1", " ".join(c[1:]))
+                    if v:
+                        comp = float(v[-1].replace(",", ""))
+        if "미확약" not in flat:
+            continue
+        trs = re.findall(r"<TR\b.*?</TR>", t, re.S | re.I)
+        cells = [_dm_cells(tr) for tr in trs]
+        k0 = next((i for i, c in enumerate(cells) if c and re.match(r"^(\d+(개월|일|주)|미확약)", re.sub(r"\s", "", c[0]))), None)
+        if k0 is None:
+            continue
+        head = re.sub(r"\s", "", "".join(x for c in cells[:k0] for x in c))
+        if "합계" not in head:                 # 합계 칸이 없는 표(국내 기관만 따로 나눈 앞쪽 표)
+            continue
+        g = 3 if "신청가격" in head else 2
+        lock, un, tot = 0, None, None
+        for c in cells[k0:]:
+            if len(c) < 3:
+                continue
+            lab = re.sub(r"\s", "", c[0])
+            q = _dm_num(c[-2] if g == 3 else c[-1])
+            if _DM_LOCK.match(lab):
+                lock += q
+            elif lab.startswith("미확약"):
+                un = q
+            elif lab in ("합계", "계", "총계"):
+                tot = q
+        if un is None:
+            continue
+        if not tot or abs(tot - (lock + un)) > max(5, 0.01 * tot):
+            tot = lock + un
+        if tot > 0:
+            best = (tot, lock)                  # 정정 전·후가 같이 있으면 뒤의 표(정정 후)
+    if not best:
+        return None
+    if comp is None:
+        ms = list(_DM_ALLOC.finditer(re.sub(r"\s+", " ", plain)))
+        if ms:
+            a = int((ms[-1].group(2) or ms[-1].group(1)).replace(",", ""))
+            if a > 0:
+                comp = round(best[0] / a, 2)
+    return {"instComp": comp if comp and 0.1 <= comp < 5000 else None,
+            "commit": round(best[1] / best[0] * 100, 2), "qty": best[0]}
+
+
 def analyze_document(xml_text):
     """문서 전체를 파싱하지 않고, 필요한 표와 '사업의 내용' 부분만 잘라서 읽는다(빠름)"""
     out = {"lockupTables": [], "lockup": []}
@@ -1162,6 +1237,12 @@ def analyze_document(xml_text):
     if out["floatAtListing"] is None:                 # 표를 못 읽으면 본문 문장에서
         out["floatAtListing"] = float_from_text(plain)
         out["floatSrc"] = "본문" if out["floatAtListing"] is not None else None
+    try:
+        dtabs = [m.group(0) for m in re.finditer(r"<TABLE\b.*?</TABLE>", xml_text, re.S | re.I)
+                 if len(m.group(0)) < 300000 and ("미확약" in m.group(0) or "경쟁률" in m.group(0))]
+        out["demandDoc"] = demand_from_doc(dtabs, plain)
+    except Exception:
+        out["demandDoc"] = None
     return out
 
 

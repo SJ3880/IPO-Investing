@@ -989,14 +989,18 @@ def doc_with_fallback(dt, f, corp, listed, allow=True):
 FIX_VER = 1   # 비교회사·상장일 유통물량을 못 읽은 문서만 한 번 더 읽기(1: 공모가 장 표 400개까지 + 유통물량 본문 문장)
 
 
-def needs_fix(det, spac=False):
-    if spac or det.get("fixVer", 0) >= FIX_VER:
+def needs_fix(det, spac=False, want_demand=False):
+    if spac:
+        return False
+    if want_demand and "demandDoc" not in det:     # 38에 기관 경쟁률·확약비율이 없는 종목: 투자설명서 수요예측 결과 표를 한 번 읽음
+        return True
+    if det.get("fixVer", 0) >= FIX_VER:
         return False
     v = det.get("valuation") or {}
     return not v.get("peers") or det.get("floatAtListing") is None
 
 
-def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, light=True, tech=False):
+def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, light=True, tech=False, want_demand=False):
     """det(기존 상세)를 갱신. 무거운 작업(문서 파싱·요약)은 한 번만."""
     corp = dt.corp_code(code)
     if not corp:
@@ -1006,7 +1010,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
         return ai_budget
     tried = det.get("dartTried")
     retry = not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
-    reparse = det.get("dartDone") and det.get("rcpNo") and (det.get("parseVer", 1) < PARSE_VER or peers_bad(det) or needs_fix(det, spac))
+    reparse = det.get("dartDone") and det.get("rcpNo") and (det.get("parseVer", 1) < PARSE_VER or peers_bad(det) or needs_fix(det, spac, want_demand))
     need_doc = heavy and (retry or reparse)
     if (mins() < LIGHT_UNTIL_MIN and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 10):
         try:                                       # 기술평가 등급만 새로 읽기(신고서 전체를 다시 분석하지 않음)
@@ -1043,6 +1047,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
                 det["parseVer"] = PARSE_VER
                 det["fixVer"] = FIX_VER
                 det["floatSrc"] = info.get("floatSrc")
+                det["demandDoc"] = info.get("demandDoc")
                 det.pop("listingType", None)
                 det["_bizText"] = info["bizText"]
                 for k in ("uwFeeRateDoc", "uwFeeAmtDoc", "perfFeeRate"):
@@ -1535,6 +1540,7 @@ def main():
                 light = recent2y or not disc_at or (today - date.fromisoformat(disc_at)).days >= 7   # 오래된 종목 공시는 주 1회
                 ai_budget = dart_detail(dt, it["code"], it["name"], date.fromisoformat(it["listed"]), det, ai_budget, heavy,
                                        spac=bool(it.get("spac")), light=light,
+                                       want_demand=(it.get("instComp") is None or it.get("commit") is None) and it.get("listType") == "신규상장",
                                        tech=has_tech_eval(resolve_track(it, det.get("track"), det.get("trackEvidence") or "")[0]))
             except Exception as e:
                 log(f"  - {it['name']} DART 전체 실패: {e}")
@@ -1549,6 +1555,15 @@ def main():
             det["lockup"] = tl_fix
             det["floatAtListing"] = next((p_["pct"] for p_ in tl_fix if p_["m"] == 0), det.get("floatAtListing"))
         it["floatAtListing"] = det.get("floatAtListing")
+        dd = det.get("demandDoc") or {}            # 38에 없을 때만 투자설명서 수요예측 결과로 채움
+        for k_ in ("instComp", "commit"):
+            if dd.get(k_) is None:
+                continue
+            if it.get(k_) is None:
+                it[k_] = dd[k_]
+                it[k_ + "Src"] = "투자설명서"
+            elif k_ == "instComp" and abs(it[k_] - dd[k_]) > max(1, 0.1 * it[k_]):
+                log(f"[점검] {it['name']} 기관경쟁률 38 {it[k_]} vs 투자설명서 {dd[k_]}")
         # 공모가 산정 근거(증권신고서 'Ⅳ. 인수인의 의견') → 상장완료 표에 바로 보이도록 요약
         v = valuation.sanitize(det.get("valuation")) or {}   # 비교회사 평균 = 적용 배수 재검증(제외 회사·기간 칸 정리)
         fair = v.get("fairValue")
