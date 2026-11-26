@@ -986,6 +986,16 @@ def doc_with_fallback(dt, f, corp, listed, allow=True):
         raise
 
 
+FIX_VER = 1   # 비교회사·상장일 유통물량을 못 읽은 문서만 한 번 더 읽기(1: 공모가 장 표 400개까지 + 유통물량 본문 문장)
+
+
+def needs_fix(det, spac=False):
+    if spac or det.get("fixVer", 0) >= FIX_VER:
+        return False
+    v = det.get("valuation") or {}
+    return not v.get("peers") or det.get("floatAtListing") is None
+
+
 def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, light=True, tech=False):
     """det(기존 상세)를 갱신. 무거운 작업(문서 파싱·요약)은 한 번만."""
     corp = dt.corp_code(code)
@@ -996,7 +1006,7 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
         return ai_budget
     tried = det.get("dartTried")
     retry = not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
-    reparse = det.get("dartDone") and det.get("rcpNo") and (det.get("parseVer", 1) < PARSE_VER or peers_bad(det))
+    reparse = det.get("dartDone") and det.get("rcpNo") and (det.get("parseVer", 1) < PARSE_VER or peers_bad(det) or needs_fix(det, spac))
     need_doc = heavy and (retry or reparse)
     if (mins() < LIGHT_UNTIL_MIN and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 10):
         try:                                       # 기술평가 등급만 새로 읽기(신고서 전체를 다시 분석하지 않음)
@@ -1031,6 +1041,8 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
                 det["totalShares"] = info["totalShares"]
                 det["trackEvidence"] = info["trackEvidence"]
                 det["parseVer"] = PARSE_VER
+                det["fixVer"] = FIX_VER
+                det["floatSrc"] = info.get("floatSrc")
                 det.pop("listingType", None)
                 det["_bizText"] = info["bizText"]
                 for k in ("uwFeeRateDoc", "uwFeeAmtDoc", "perfFeeRate"):

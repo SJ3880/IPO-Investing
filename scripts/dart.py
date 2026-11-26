@@ -1159,7 +1159,44 @@ def analyze_document(xml_text):
     out["market"] = "코스피" if y > k else "코스닥" if k else ("코넥스" if x else "코스닥")
     out["totalShares"] = total_shares([out.pop("_allRows", None) or []] + out["lockupTables"]) or shares_from_text(plain)
     out["floatAtListing"] = next((p["pct"] for p in out["lockup"] if p["m"] == 0), None)
+    if out["floatAtListing"] is None:                 # 표를 못 읽으면 본문 문장에서
+        out["floatAtListing"] = float_from_text(plain)
+        out["floatSrc"] = "본문" if out["floatAtListing"] is not None else None
     return out
+
+
+# 유통가능물량 표를 못 읽었을 때: 투자위험요소 본문 문장에서 '상장 직후 유통가능 물량 비율'을 찾는다
+_PCT = r"(\d{1,2}(?:\.\d+)?)\s*%"
+FLOAT_PATS = [
+    re.compile(r"상장\s*예정\s*주식\s*(?:수|총수)?[^.%]{0,40}?중\s*(?:약\s*)?" + _PCT + r"\s*(?:에\s*)?해당하는\s*[\d,]+\s*주\s*[은는이가]?\s*상장\s*(?:직후|일)[^.]{0,10}유통\s*가능"),
+    re.compile(r"상장\s*예정\s*주식\s*(?:수|총수)?\s*의\s*(?:약\s*)?" + _PCT + r"\s*(?:에\s*)?해당하는\s*[\d,]+\s*주\s*[은는이가]?\s*(?:상장\s*(?:직후|일)\s*)?유통\s*가능"),
+    re.compile(r"[\d,]+\s*주\s*\(\s*공모\s*후\s*(?:지분율\s*|기준\s*)?" + _PCT + r"\s*\)\s*[은는]\s*상장\s*(?:직후|일)[^.]{0,15}유통\s*가능"),
+    re.compile(r"[\d,]+\s*주\s*[은는]\s*상장\s*(?:직후|일)[^.]{0,15}유통\s*가능한\s*물량이며\s*,?\s*상장\s*예정\s*주식\s*수\s*기준으로\s*(?:약\s*)?" + _PCT),
+    re.compile(r"상장\s*일\s*유통\s*가능\s*(?:주식\s*수?|물량)?\s*[\d,]+\s*(?:주\s*)?" + _PCT),
+    re.compile(r"유통\s*가능\s*(?:주식|물량)\s*인\s*[\d,]+\s*주\s*\(\s*(?:공모\s*후\s*)?(?:지분율|기준)?\s*" + _PCT),
+    re.compile(r"상장\s*(?:직후|일)[^.]{0,15}유통\s*가능\s*(?:주식\s*수?|물량)[은는이가]?\s*[\d,]+\s*주\s*\(\s*[^)]{0,15}?" + _PCT),
+]
+LOCKED_PAT = re.compile(r"총\s*[\d,]+\s*주\s*\(\s*(?:공모\s*후\s*)?(?:기준|지분율)?\s*" + _PCT + r"\s*\)\s*[가이]\s*[^.]{0,60}매각이\s*제한")
+
+
+def float_from_text(plain):
+    t = re.sub(r"\s+", " ", plain.replace("&cr;", " "))
+    hits = []                                   # 정정 전 문구는 빼고, 가장 많이 나온 값(본문 최종값)
+    for rx in FLOAT_PATS:
+        for m in rx.finditer(t):
+            if "정정 전" in t[max(0, m.start() - 200): m.start()]:
+                continue
+            v = float(m.group(1))
+            if 1 <= v <= 95:
+                hits.append(round(v, 2))
+    if hits:
+        from collections import Counter
+        return Counter(hits).most_common(1)[0][0]
+    for m in LOCKED_PAT.finditer(t):
+        v = float(m.group(1))
+        if 5 <= v <= 99:
+            return round(100 - v, 2)
+    return None
 
 
 def merger_prices(xml_text):

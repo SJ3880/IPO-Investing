@@ -402,7 +402,7 @@ def valuation_info(xml_text):
     plain = _plain(sec)
     tables = re.findall(r"<TABLE\b.*?</TABLE>", sec, re.S | re.I)
     grids, pos = [], []
-    for t in tables[:80]:
+    for t in tables[:400]:
         if len(t) > 400000:
             continue
         soup = BeautifulSoup(t, "html.parser")
