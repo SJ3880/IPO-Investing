@@ -1556,6 +1556,8 @@ def main():
             det["floatAtListing"] = next((p_["pct"] for p_ in tl_fix if p_["m"] == 0), det.get("floatAtListing"))
         it["floatAtListing"] = det.get("floatAtListing")
         dd = det.get("demandDoc") or {}            # 38에 없을 때만 투자설명서 수요예측 결과로 채움
+        if (dd.get("qty") or 0) < 1_000_000:       # 신청수량이 너무 적으면 다른 표(우리사주 등)를 읽은 것(LG씨엔에스) → 안 씀
+            dd = {}
         for k_ in ("instComp", "commit"):
             if dd.get(k_) is None:
                 continue

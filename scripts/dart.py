@@ -1172,7 +1172,7 @@ def demand_from_doc(tables, plain):
             continue
         if not tot or abs(tot - (lock + un)) > max(5, 0.01 * tot):
             tot = lock + un
-        if tot > 0:
+        if tot >= 1_000_000:
             best = (tot, lock)                  # 정정 전·후가 같이 있으면 뒤의 표(정정 후)
     if not best:
         return None
