@@ -54,7 +54,10 @@ def _multiple(s):
 
 # 표의 다른 칸이 회사명으로 읽힌 것: 선정 여부(O/X·제외·선정), 회계기준, 학력, 자금 표, 주식수, 기간 기준, '조정사항 없음'
 NOT_COMPANY = re.compile(r"^(O|X|○|×|제외|선정|미선정|적정|부적정|적합|부적합|개별|K-?IFRS개별|비경상제외|박사(\(의사포함\))?|석사|학사|"
-                         r"총소요자금|지출예정|백만위안|[\d,]+주|`?\d{2,4}년.*기준|(조정|해당|특이)?사항\s*없음|없음|해당\s*없음)$", re.I)
+                         r"총소요자금|지출예정|백만위안|[\d,]+주|`?\d{2,4}년.*기준|(조정|해당|특이)?사항\s*없음|없음|해당\s*없음|"
+                         # 상장 시장 칸(비교회사 표의 '상장시장' 열): AJ네트웍스 LON·NASDAQ, HLB바이오스텝 KOSDAQ·NYSE, 우양에이치씨 코스닥시장
+                         r"LON|LSE|NASDAQ|NYSE|AMEX|KOSDAQ|KOSPI|KONEX|TSE|TYO|HKEX|HKSE|SSE|SZSE|SGX|코스닥(시장)?|코스피(시장)?|"
+                         r"유가증권(시장)?|코넥스(시장)?|나스닥|뉴욕증권거래소|상장시장|거래소)$", re.I)
 
 
 def _is_name(s):
@@ -522,6 +525,8 @@ def sanitize(v):
     · 평균이 적용 배수와 정확히 맞는지 확인하고, 안 맞으면 빠진 회사를 덜어내 맞춰 본다"""
     if not v:
         return v
+    if v.get("method") == "PER" and v.get("appliedMult") is not None and v["appliedMult"] < 1:
+        v["method"] = None          # PER 1배 미만은 있을 수 없음 → PBR·P/EV 등을 PER로 잘못 읽은 것(미래에셋생명 0.77배)
     ps, marked = [], set()
     junk = any(NOT_COMPANY.match(_name(p.get("name") or "").replace(" ", "")) for p in v.get("peers") or [])
     for p in v.get("peers") or []:

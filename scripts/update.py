@@ -986,6 +986,9 @@ def doc_with_fallback(dt, f, corp, listed, allow=True):
         raise
 
 
+ALT_VER = 1   # '원문 없음'으로 실패한 회사: 대체 문서(이전 투자설명서·증권신고서) 찾기 버그를 고친 뒤 한 번 바로 다시 읽기
+
+
 FIX_VER = 1   # 비교회사·상장일 유통물량을 못 읽은 문서만 한 번 더 읽기(1: 공모가 장 표 400개까지 + 유통물량 본문 문장)
 
 
@@ -1010,8 +1013,12 @@ def dart_detail(dt, code, name, listed, det, ai_budget, heavy=True, spac=False, 
         return ai_budget
     tried = det.get("dartTried")
     retry = not det.get("dartDone") and (not tried or (date.today() - date.fromisoformat(tried)).days >= 7)
-    reparse = det.get("dartDone") and det.get("rcpNo") and (det.get("parseVer", 1) < PARSE_VER or peers_bad(det) or needs_fix(det, spac, want_demand))
+    alt_retry = "원문 없음" in (det.get("dartStatus") or "") and det.get("altVer", 0) < ALT_VER and not spac
+    retry = retry or (alt_retry and not det.get("dartDone"))
+    reparse = det.get("dartDone") and det.get("rcpNo") and (alt_retry or det.get("parseVer", 1) < PARSE_VER or peers_bad(det) or needs_fix(det, spac, want_demand))
     need_doc = heavy and (retry or reparse)
+    if need_doc and alt_retry:
+        det["altVer"] = ALT_VER
     if (mins() < LIGHT_UNTIL_MIN and not need_doc and tech and not spac and det.get("rcpNo") and det.get("techVer") != 10):
         try:                                       # 기술평가 등급만 새로 읽기(신고서 전체를 다시 분석하지 않음)
             xml, g = doc_with_fallback(dt, {"rcept_no": det["rcpNo"]}, corp, listed, allow=not spac)
